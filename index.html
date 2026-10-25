@@ -24,11 +24,11 @@
   --body:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
   --fs:15px; color-scheme:light;
 }
-html,body{height:100%;margin:0}
+html,body{height:100%;min-height:100dvh;margin:0}
 /* Safari stops fixed layers above its bottom toolbar; paint the canvas to match the wall's bottom so no pale strip shows */
 html{background:#e3edf3}
 /* iOS home-screen apps leave out the status bar's height from the viewport, so full-screen layers stop short; JS sets --app-h to the real screen height there */
-.wall,.home,.app,.sheet,.call,.lock{bottom:auto;height:var(--app-h,100%);box-sizing:border-box}
+.wall,.home,.app,.sheet,.call,.lock{bottom:auto;height:var(--app-h,100dvh);min-height:100%;box-sizing:border-box}
 body{background:linear-gradient(180deg,#f8fbfc 0%,#eef4f8 55%,#e3edf3 100%) fixed;color:var(--ink);font:var(--fs)/1.6 var(--body);overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -812,7 +812,7 @@ function fitHome(){
 }
 function setAppH(){
   const sa=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
-  if(!sa){document.documentElement.style.removeProperty('--app-h');return}
+  if(!sa){document.documentElement.style.setProperty('--app-h',Math.max(screen.height,innerHeight,document.documentElement.clientHeight)+'px');return}
   const land=innerWidth>innerHeight,sw=screen.width,sh=screen.height,h=land?Math.min(sw,sh):Math.max(sw,sh);
   document.documentElement.style.setProperty('--app-h',Math.max(h,innerHeight)+'px')}
 setAppH();
