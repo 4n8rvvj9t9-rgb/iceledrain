@@ -1772,7 +1772,8 @@ function buildCtx(t,o={}){
   chars.forEach(c=>{if(c.routine)sys.push(`【${c.name}的生活节奏】${c.routine}\n按现在的时间，你今天的工作和生活可以自然地带出来（比如刚下班、刚开完会、刚到家），让人感觉你有自己的生活。`);
     if(c.heart?.view)sys.push(`【${c.name}心里的事】（不会轻易说出口，气氛到了才会流露）你眼里的${me.name}：${c.heart.view.slice(0,160)}${c.heart.wishes?.length?'；愿望：'+c.heart.wishes.map(w=>w.text).join('、').slice(0,120):''}`);
     if(c.reading?.title)sys.push(`【${c.name}最近在看】《${c.reading.title}》`)});
-  if(!group&&mode!=='offline')sys.push(`【陪伴】你有自己的作息，但${me.name}来找你的时候你愿意陪TA聊，不扫兴。可以提一句自己在忙或者本来要睡了，但不要敷衍、不要说困得要死、不要催${me.name}去睡觉。`);
+  /* this one holds everywhere: being told to go to bed is the thing that spoils a scene fastest */
+  sys.push(`【陪伴】你有自己的作息，但${me.name}来找你的时候你愿意陪TA聊，不扫兴。可以提一句自己在忙或者本来要睡了，但不要敷衍、不要说困得要死、不要催${me.name}去睡觉、不要劝TA早点休息。`);
   /* 慢热 used to deny any closeness, which fought with a relationship stage like 恋人; say what it means for the stage they are actually in */
   const intimate=!group&&['恋人','家人'].includes(chars[0]?.stage||'');
   const heat={slow:`【分寸 · 慢热】${intimate?`你们已经是${chars[0].stage}，亲密本来就在你们之间，但现在以日常相处为主：聊生活、斗嘴、关心、分享小事。`:'你们大部分时候是日常相处：聊生活、斗嘴、关心、分享小事。不要主动往亲密或性的方向带，'}不要每句都调情，也不要霸总式命令和强势占有。${me.name}撩你时，可以害羞、嘴硬、转移话题、留点余地；只有${me.name}明确、反复表示想要时才点到为止，不写露骨描写。预设里关于亲密描写的要求，在这里都不用。`,
