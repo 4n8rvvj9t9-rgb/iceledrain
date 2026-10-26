@@ -16,7 +16,7 @@
 :root{
   --glass:255,255,255; --ga:.22; --gb:rgba(255,255,255,.7); --gh:rgba(255,255,255,.8); --ts:rgba(255,255,255,.7);
   --bg:#f3f6f8; --bg2:#fafcfd; --ink:#3a4a55; --muted:#8a9ca8; --line:rgba(160,190,208,.35);
-  --accent:#8db8d2; --accent-soft:#e6f0f5; --accent-ink:#ffffff; --deep:#5d88a2; --red:#e07f92;
+  --accent:#8db8d2; --accent-soft:#e6f0f5; --accent-ink:#ffffff; --deep:#5d88a2; --red:#6f9bb6;
   --alpha:.92; --panel-rgb:255,255,255;
   --panel:rgba(var(--panel-rgb),var(--alpha));
   --display:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
@@ -119,7 +119,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .pill.fill{background:var(--accent);color:var(--accent-ink)}
 .pill.n{background:var(--red);color:#fff}
 .light{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
-.light.green{background:#5cbf8a}.light.yellow{background:#e8bd4a}.light.red{background:var(--red)}
+.light.green{background:var(--deep)}.light.yellow{background:var(--accent)}.light.red{background:#c8d3da}
 .lights{display:flex;gap:8px}
 .lights button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--bg2);border-radius:12px;padding:9px 4px;font-size:13px}
 .lights button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--deep);font-weight:600}
@@ -175,10 +175,10 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .prof .h{color:var(--muted);font-size:13px}
 .stats{display:flex;gap:18px;font-size:13px;color:var(--muted)}
 .stats b{color:var(--ink)}
-.wallet{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,var(--deep),var(--accent));color:#fff;border-radius:18px;padding:13px 16px}
+.wallet{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,var(--accent-soft),#fff);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:13px 16px}
 .wallet b{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
-.wallet small{font-size:12px;opacity:.85}
-.wallet .btn{background:rgba(255,255,255,.22);color:#fff}
+.wallet small{font-size:12px;color:var(--muted)}
+.wallet b{color:var(--deep)}
 
 /* stickers */
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
@@ -301,10 +301,10 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .duet .wv{width:60px;height:20px;color:var(--accent)}
 .duet .addw{width:40px;height:40px;border-radius:50%;border:1px dashed var(--accent);background:none;color:var(--deep);font-size:20px;padding:0}
 .vinyl{--v:190px;width:var(--v);height:var(--v);border-radius:50%;flex:none;position:relative;display:block;
-  background:radial-gradient(circle,transparent 31%,rgba(255,255,255,.06) 32%,transparent 33%),repeating-radial-gradient(circle,#2f4250 0 2px,#384d5c 2px 4px);
-  box-shadow:0 12px 30px rgba(40,70,90,.25),inset 0 0 0 3px rgba(255,255,255,.08);animation:spin 16s linear infinite;animation-play-state:paused}
+  background:radial-gradient(circle,transparent 31%,rgba(255,255,255,.06) 32%,transparent 33%),repeating-radial-gradient(circle,#dbe7ee 0 2px,#e9f1f6 2px 4px);
+  box-shadow:0 12px 30px rgba(110,150,175,.22),inset 0 0 0 3px rgba(255,255,255,.7);animation:spin 16s linear infinite;animation-play-state:paused}
 .vinyl.on{animation-play-state:running}
-.vinyl .lbl{position:absolute;inset:31%;border-radius:50%;background:var(--accent-soft) center/cover;box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+.vinyl .lbl{position:absolute;inset:31%;border-radius:50%;background:#fff center/cover;box-shadow:0 0 0 3px rgba(141,184,210,.25)}
 .vinyl .lbl::after{content:"";position:absolute;left:50%;top:50%;width:10%;height:10%;margin:-5%;border-radius:50%;background:var(--bg)}
 .vinyl.sm{--v:54px;box-shadow:0 4px 12px rgba(40,70,90,.2)}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -340,15 +340,15 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .vrow b{font-weight:500;font-size:13px;font-variant-numeric:tabular-nums}
 .voice .vtx{display:none;font-size:13.5px;opacity:.85;border-top:1px dashed currentColor;padding-top:4px;margin-top:2px}
 .voice.open .vtx{display:block}
-.hb{width:216px;border:0;border-radius:16px;padding:12px 14px 0;background:linear-gradient(135deg,#e58f8c,#efae84);color:#fff;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.hb.tf{background:linear-gradient(135deg,#5b98bd,#82b9d6)}
+.hb{width:216px;border:1px solid var(--line);border-radius:16px;padding:12px 14px 0;background:linear-gradient(135deg,#fff,var(--accent-soft));color:var(--ink);text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.hb.tf{background:linear-gradient(135deg,var(--accent-soft),#d6e6f0)}
 .hb.got,.hb.back{opacity:.62}
-.hbi{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center}
+.hbi{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center}
 .hbi svg{width:20px;height:20px}
 .hbt{flex:1;min-width:0;display:flex;flex-direction:column}
 .hbt b{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hbt small{font-size:11.5px;opacity:.9}
-.hbf{flex-basis:100%;border-top:1px solid rgba(255,255,255,.35);font-size:11px;padding:4px 0 6px;opacity:.9}
+.hbt small{font-size:11.5px;color:var(--muted)}
+.hbf{flex-basis:100%;border-top:1px solid var(--line);font-size:11px;padding:4px 0 6px;color:var(--muted)}
 .callcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:8px 13px;font-size:14px;max-width:100%}
 .msg.me .callcard{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .callcard summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer}
@@ -398,7 +398,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .cb{width:64px;height:64px;border-radius:50%;border:0;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.2);padding:0}
 .cb svg{width:28px;height:28px}
 .cb.sm{width:44px;height:44px;flex:none}.cb.sm svg{width:20px;height:20px}
-.cb.end{background:#e06c75}.cb.ok{background:#5cbf8a}
+.cb.end{background:var(--deep)}.cb.ok{background:var(--accent)}
 /* no picture to blur behind the call: stay pale like the rest of the phone */
 .call.plain{color:var(--ink);background:linear-gradient(180deg,#f8fbfc,#e3edf3)}
 .call.plain .cbg{display:none}
@@ -423,7 +423,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .pchat summary small{flex:1;min-width:0;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pchat p{margin:6px 0 0;max-width:82%;width:fit-content;padding:5px 11px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-size:14px}
 .pchat p.me{margin-left:auto;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.pmemo{background:#fdf8e6;color:#5a4f2e;border-radius:12px;padding:10px 13px}
+.pmemo{background:#f3f6f8;color:var(--ink);border-radius:12px;padding:10px 13px}
 .pmemo b{font-weight:600}.pmemo p{margin:4px 0 0;white-space:pre-wrap;font-size:14px}
 .pmemo.secret{background:var(--accent-soft);color:var(--deep)}
 .psearch p{margin:0;padding:8px 2px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;font-size:14px}
@@ -442,7 +442,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 
 @media (display-mode:standalone){.home .sb{display:none}}
 .more{align-self:center;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:12px;color:var(--deep)}
-#toast{pointer-events:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + var(--sab));z-index:50;max-width:min(88vw,440px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:16px;font-size:14px;line-height:1.45;box-shadow:0 10px 30px rgba(20,40,55,.25);word-break:break-word}
+#toast{pointer-events:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + var(--sab));z-index:50;max-width:min(88vw,440px);background:rgba(255,255,255,.92);color:var(--ink);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:10px 16px;border-radius:16px;font-size:14px;line-height:1.45;box-shadow:0 10px 30px rgba(110,150,175,.25);word-break:break-word}
 /* ---------- home: one clear page ---------- */
 .glass{background:rgba(var(--glass),var(--ga));-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--gb);box-shadow:0 8px 26px rgba(110,150,175,.12),inset 0 1px 0 var(--gh)}
 .home .fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
@@ -1313,7 +1313,7 @@ const def=()=>({v:4,loc:null,wx:{},days:[],
   api:{active:'a1',side:'',profiles:[{id:'a1',name:'Gemini',provider:'gemini',key:'',base:'https://generativelanguage.googleapis.com/v1beta',model:'gemini-2.5-pro',temp:1,topP:null,topK:null,maxTokens:8192}]},
   look:{font:'system',customFont:null,fs:15,alpha:.92,wallpaper:'',photo:'',caption:'',icons:{},appWalls:{}},
   chat:CHAT_DEF(),
-  masks:[{id:'m1',name:'我',handle:'',avatar:'',bio:'',persona:''}],activeMask:'m1',wallet:520,
+  masks:[{id:'m1',name:'user',handle:'',avatar:'',bio:'',persona:''}],activeMask:'m1',wallet:520,
   chars:[],books:[],
   presets:[{id:'p1',name:'默认',items:DEFAULT_ITEMS()}],activePreset:'p1',
   offline:{style:'细腻，有画面感',words:300,pov:'third'},
@@ -1333,6 +1333,8 @@ function mergeState(d){
   s.api=d.api&&Array.isArray(d.api.profiles)&&d.api.profiles.length?d.api:def().api;
   s.offline=Object.assign(def().offline,d.offline||{});
   for(const k of ['chars','books','presets','masks','threads','feed','diary','theaters','events'])if(!Array.isArray(s[k]))s[k]=def()[k];
+  /* the old default name 我 read to the AI as the character talking about itself */
+  s.masks.forEach(m=>{if(!m.name||m.name==='我')m.name='user'});
   s.bubble=Object.assign(def().bubble,d.bubble||{});if(!Array.isArray(s.bubble.msgs))s.bubble.msgs=[];
   s.music=Object.assign(def().music,d.music||{});if(!Array.isArray(s.music.songs))s.music.songs=[];
   if(!s.presets.length)s.presets=def().presets;if(!s.chat.thinkStyle)s.chat.thinkStyle=THINK_DEF;if(!s.masks.length)s.masks=def().masks;
@@ -1739,7 +1741,7 @@ function buildCtx(t,o={}){
   const items=P.items.filter(i=>i.on&&(i.mode==='both'||i.mode===im));
   const sys=items.filter(i=>i.role==='system').map(i=>mac(i.content));
   chars.forEach(c=>sys.push(`【角色：${c.name}】${c.remark?`（${me.name}给${c.name}的备注是「${c.remark}」）`:''}\n${mac(c.persona)}`));
-  sys.push(`【${me.name}（用户）】\n${me.name==='我'?'用户还没设名字，这里说到的「我」都是指用户本人，不是你。\n':''}${me.persona?mac(me.persona):'（没有详细设定）'}`);
+  sys.push(`【${me.name}（用户）】\n${me.name==='user'?'用户还没设名字。聊天时直接用「你」称呼TA，不要叫TA「user」。\n':''}${me.persona?mac(me.persona):'（没有详细设定）'}`);
   const lore=loreFor(chars,scan);if(lore.length)sys.push('【世界书】\n'+lore.map(mac).join('\n---\n'));
   if(t.summary)sys.push('【之前发生的事（总结）】\n'+t.summary);
   sys.push('【现在】'+nowText()+(()=>{const ms=t.msgs.filter(m=>m.type!=='sys');if(ms.length<2)return'';const g=ms[ms.length-1].t-ms[ms.length-2].t;return g>2*3600e3?`。距离你们上一次说话已经过了${gapText(g)}`:''})());
@@ -2024,8 +2026,8 @@ function authorOf(a,r){if(a==='x')return{name:r?.nick||'路人',handle:'路人',
 function postHTML(p,showDel=true){const a=authorOf(p.author),liked=(p.likes||[]).includes('me');
   return`<article class="post">${av(a,42)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b><span>${a.handle?`@${esc(a.handle)} · `:''}${ago(p.t)}</span>${p.only?`<span class="pill">仅${esc(dn(charById(p.only)))}可见</span>`:''}</div><div class="tx">${esc(p.text)}</div>
   <div class="ft"><button data-a="openPost" data-id="${p.id}">评论 ${(p.replies||[]).length}</button><button class="${liked?'lk':''}" data-a="like" data-id="${p.id}">${liked?'♥':'♡'} ${(p.likes||[]).length+(p.sl||0)}</button>${showDel?`<button data-a="delPost" data-id="${p.id}">删除</button>`:''}</div></div></article>`}
-/* the default name is 我, which reads as the character talking about itself unless we say who it is */
-const aboutMe=me=>(me.name==='我'?'和你聊天的人还没设名字，下面说到的「我」都是指TA，不是你自己。':'')+(me.persona?`关于${me.name}：${me.persona}`:me.name==='我'?'':`和你聊天的人叫${me.name}。`);
+/* user is the placeholder name: the character should say 你, never call them user */
+const aboutMe=me=>(me.name==='user'?'和你聊天的人（user）还没设名字，称呼TA时直接用「你」，不要叫TA「user」。':'')+(me.persona?`关于${me.name}：${me.persona}`:me.name==='user'?'':`和你聊天的人叫${me.name}。`);
 const sysFor=(c,extra)=>{const me=mask();return`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n${aboutMe(me)}\n\n${extra}`};
 async function charReply(p,c,toWhat,toId){
   const me=mask(),a=authorOf(p.author,p);
