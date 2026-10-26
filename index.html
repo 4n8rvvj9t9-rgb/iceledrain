@@ -17,7 +17,10 @@
   --glass:255,255,255; --ga:.22; --gb:rgba(255,255,255,.7); --gh:rgba(255,255,255,.8); --ts:rgba(255,255,255,.7);
   --bg:#f3f6f8; --bg2:#fafcfd; --ink:#3a4a55; --muted:#8a9ca8; --line:rgba(160,190,208,.35);
   --accent:#8db8d2; --accent-soft:#e6f0f5; --accent-ink:#ffffff; --deep:#5d88a2; --red:#6f9bb6;
-  --alpha:.92; --panel-rgb:255,255,255;
+  --alpha:.92; --panel-rgb:255,255,255; --accent-rgb:141,184,210;
+  --bub:rgba(var(--panel-rgb),max(.24,calc(var(--alpha) - .36)));
+  --bub-me:rgba(var(--accent-rgb),max(.5,calc(var(--alpha) - .14)));
+  --lift:0 1px 10px rgba(93,136,162,.055);
   --panel:rgba(var(--panel-rgb),var(--alpha));
   --display:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
   --cute:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
@@ -78,7 +81,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .foot .sq.go{background:var(--accent);color:var(--accent-ink)}
 .foot .sq svg{width:20px;height:20px}
 
-.panel{background:var(--panel);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--panel);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--lift)}
 .panel h2{margin:0;font:400 17px var(--display);color:var(--deep);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .hint{margin:0;font-size:12.5px;color:var(--muted);line-height:1.55}
 .f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted)}
@@ -112,7 +115,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .tabs button{flex:1;background:none;border:0;padding:8px 10px;border-radius:12px;color:var(--muted);white-space:nowrap;font-size:14px}
 .tabs button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
 
-.row{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--panel);border:1px solid var(--line);border-radius:18px;width:100%;text-align:left;box-sizing:border-box}
+.row{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--panel);border:1px solid var(--line);border-radius:18px;width:100%;text-align:left;box-sizing:border-box;box-shadow:var(--lift)}
 .row .meta{flex:1;min-width:0;background:none;border:0;padding:0;text-align:left}
 .row b{display:block;font-weight:600}
 .row small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -140,13 +143,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .msg .who{font-size:11.5px;color:var(--muted);margin:0 0 2px 4px}
 .msg .col{display:flex;flex-direction:column;gap:4px;max-width:76%;min-width:0}
 .msg.me .col{align-items:flex-end}
-.bub{padding:9px 13px;border-radius:20px;background:var(--panel);border:1px solid var(--line);white-space:pre-wrap;word-break:break-word;text-align:left;font:inherit;color:inherit;border-top-left-radius:6px}
-.msg.me .bub{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);border-top-left-radius:20px;border-top-right-radius:6px}
+.bub{padding:9px 13px;border-radius:20px;background:var(--bub);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(255,255,255,.6);box-shadow:var(--lift);white-space:pre-wrap;word-break:break-word;text-align:left;font:inherit;color:inherit;border-top-left-radius:6px}
+.msg.me .bub{background:var(--bub-me);color:var(--accent-ink);border-color:rgba(255,255,255,.45);border-top-left-radius:20px;border-top-right-radius:6px;text-shadow:0 1px 2px rgba(64,98,122,.22)}
 .stk{border:0;background:none;padding:0}
 .stk img{width:112px;height:112px;object-fit:contain;display:block}
-.narr{align-self:stretch;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px 17px;white-space:pre-wrap;font:calc(var(--fs) + 1px)/1.85 var(--display);text-align:left;color:inherit}
-.narr.me{background:var(--accent-soft);border-color:transparent}
-.stamp{align-self:center;font-size:11.5px;color:var(--muted);background:var(--panel);padding:1px 10px;border-radius:999px}
+.narr{align-self:stretch;background:var(--bub);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.55);box-shadow:var(--lift);border-radius:18px;padding:15px 17px;white-space:pre-wrap;font:calc(var(--fs) + 1px)/1.85 var(--display);text-align:left;color:inherit}
+.narr.me{background:rgba(var(--accent-rgb),.22);border-color:rgba(255,255,255,.5)}
+.stamp{align-self:center;font-size:11.5px;color:var(--muted);background:var(--bub);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:1px 10px;border-radius:999px}
 .fold{align-self:stretch;border-radius:14px;font-size:13.5px}
 .fold summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--deep);font-size:12px;padding:2px 10px;border-radius:999px;background:var(--accent-soft)}
 .fold summary::-webkit-details-marker{display:none}
@@ -162,7 +165,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .sumcard{background:var(--accent-soft);border-radius:16px;padding:10px 13px;font-size:13px;color:var(--deep);text-align:left;border:0}
 
 /* plaza */
-.post{display:flex;gap:10px;padding:13px;background:var(--panel);border:1px solid var(--line);border-radius:20px;width:100%;box-sizing:border-box}
+.post{display:flex;gap:10px;padding:13px;background:var(--panel);border:1px solid var(--line);border-radius:20px;width:100%;box-sizing:border-box;box-shadow:var(--lift)}
 .post .pb{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
 .post .hd{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;font-size:14px}
 .post .hd b{font-weight:600}
@@ -276,11 +279,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .bbhead small{display:block;color:var(--muted);font-size:12px}
 .bbfeed{display:flex;flex-direction:column;gap:7px}
 .bbme{align-self:flex-end;max-width:80%;display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin:6px 0 2px}
-.bbme .bub{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);border-radius:20px;border-top-right-radius:6px}
+.bbme .bub{background:var(--bub-me);color:var(--accent-ink);border-color:rgba(255,255,255,.45);border-radius:20px;border-top-right-radius:6px;text-shadow:0 1px 2px rgba(64,98,122,.22)}
 .bbme .q{font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px 10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box}
 .bbme small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .fan{display:flex;gap:7px;align-items:flex-start;max-width:88%;background:none;border:0;padding:0;text-align:left;animation:pop .25s ease-out}
-.fan .fb{background:var(--panel);border:1px solid var(--line);border-radius:16px;border-top-left-radius:5px;padding:4px 11px 6px;font-size:14px;line-height:1.5;min-width:0;word-break:break-word;white-space:pre-wrap}
+.fan .fb{background:var(--bub);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:var(--lift);border:1px solid rgba(255,255,255,.55);border-radius:16px;border-top-left-radius:5px;padding:4px 11px 6px;font-size:14px;line-height:1.5;min-width:0;word-break:break-word;white-space:pre-wrap}
 .fan .fb b{display:block;font-size:11.5px;font-weight:600;color:var(--fc,var(--deep))}
 .fan.known .fb{border-color:var(--accent);background:var(--accent-soft)}
 .fan .fd{width:26px;height:26px;border-radius:50%;flex:none;background:var(--accent-soft)}
@@ -363,12 +366,6 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .gvs{display:flex;align-items:center;gap:16px;font-size:34px}
 .gvs b{font-size:12px;color:var(--muted)}
 .die{width:44px;height:44px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 22px var(--body);color:var(--deep)}
-.gcard.bj{gap:8px}
-.bjr{display:flex;align-items:center;gap:8px;width:100%}
-.bjr b{font:400 12px var(--body);color:var(--muted);width:20px}
-.bjr i{margin-left:auto;font-style:normal;font:600 15px var(--body);color:var(--deep)}
-.bjh{display:flex;gap:4px}
-.card{min-width:26px;height:36px;padding:0 4px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 14px var(--body);color:var(--deep)}
 .ttt{display:grid;grid-template-columns:repeat(3,48px);gap:5px}
 .ttt button{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);font-size:24px;color:var(--deep);padding:0}
 .ttt button:disabled{cursor:default;opacity:1}
@@ -500,7 +497,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .goods button{border:1px solid var(--line);background:var(--bg2);border-radius:14px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;color:var(--ink)}
 .goods button i{font-style:normal;font-size:22px;line-height:1.2}.goods button small{font-size:11.5px;color:var(--muted)}
 .goods button.on{border-color:var(--accent);background:var(--accent-soft)}
-.letter{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 15px;display:flex;flex-direction:column;gap:8px}
+.letter{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 15px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--lift)}
 .letter .lh{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted)}
 .letter .lh b{color:var(--deep);font-weight:600}
 .letter p{margin:0;white-space:pre-wrap;word-break:break-word;line-height:1.7}
@@ -1268,15 +1265,11 @@ TA在翻…=They're looking…
 词语接龙=Word chain
 掷骰子比大小=Dice roll
 井字棋=Tic-tac-toe
-21点=Blackjack
-要牌=Hit
-停牌=Stand
 我从没有过=Never have I ever
 二选一=This or that
 二十问=20 questions
 一来一回，TA 陪你聊着玩=Back and forth with them
 几十秒一局=A round in under a minute
-轮流要牌，爆了就输=Take turns; bust and you lose
 你是 ✕=You are ✕
 一把定胜负=One throw decides it
 纯看运气=Pure luck
@@ -1324,6 +1317,8 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
   root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(e=>{for(const a of ['placeholder','aria-label','title']){const v=e.getAttribute(a);if(v)e.setAttribute(a,trS(v))}})}
 
 /* ================= storage ================= */
+/* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
+const VER='2026.10.26';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1331,6 +1326,8 @@ const DB={db:null,
   del(k){return new Promise(r=>{if(!this.db)return r();try{const t=this.db.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>r();t.onerror=()=>r()}catch(e){r()}})}};
 let saveT;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>DB.set('state',JSON.stringify(S)),250)}
+/* Ask once, quietly: without this a phone may clear the whole app's storage on its own. Safari decides silently, so it never nags. */
+try{navigator.storage?.persisted?.().then(p=>{if(!p)navigator.storage.persist?.().catch(()=>{})}).catch(()=>{})}catch(e){}
 addEventListener('pagehide',()=>{clearTimeout(saveT);DB.set('state',JSON.stringify(S))});
 
 /* ================= state ================= */
@@ -2304,13 +2301,7 @@ const RPS=['石头','剪刀','布'],RPSI={石头:'✊',剪刀:'✌️',布:'🖐
 function tttWin(b){for(const [a,c,d] of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]])if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.every(Boolean)?'draw':''}
 function tttMove(b){const free=b.map((v,i)=>v?-1:i).filter(i=>i>=0);const tw=p=>free.find(i=>{const x=[...b];x[i]=p;return tttWin(x)===p});
   let m=tw('O');if(m===undefined&&Math.random()<.85)m=tw('X');if(m===undefined&&!b[4]&&Math.random()<.7)m=4;if(m===undefined)m=free[Math.floor(Math.random()*free.length)];return m}
-/* 21点: m.a is your hand, m.b is theirs, each card 1-13. An ace counts 11 until that would bust. */
-const BJN=['','A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-const bjDraw=()=>1+Math.floor(Math.random()*13);
-function bjVal(cs){let n=0,a=0;for(const c of cs||[]){n+=c===1?11:c>10?10:c;if(c===1)a++}while(n>21&&a){n-=10;a--}return n}
-function bjEnd(m){const x=bjVal(m.a),y=bjVal(m.b);m.res=x>21?'lose':y>21?'win':x>y?'win':x<y?'lose':'draw';m.done=1}
 function gameText(m){const me=mask().name;
-  if(m.g==='bj')return`21点：${me} ${bjVal(m.a)}点，TA ${bjVal(m.b)}点，${m.res==='win'?me+'赢了':m.res==='lose'?'TA赢了':'平局'}`;
   if(m.g==='rps')return`石头剪刀布：${me}出了${m.a}，TA出了${m.b}，${m.res==='win'?me+'赢了':m.res==='lose'?'TA赢了':'平局'}`;
   if(m.g==='dice')return`掷骰子比大小：${me}${m.a}点，TA${m.b}点，${m.a>m.b?me+'赢了':m.a<m.b?'TA赢了':'平局'}`;
   if(m.g==='ttt')return`井字棋（${me}是X，TA是O）${m.res?'：'+(m.res==='X'?me+'赢了':m.res==='O'?'TA赢了':'平局'):'：进行中'}`;
@@ -2318,12 +2309,6 @@ function gameText(m){const me=mask().name;
 function gameCard(t,m,i){
   if(m.g==='rps')return`<div class="gcard"><small>石头剪刀布</small><div class="gvs"><span>${RPSI[m.a]}</span><b>VS</b><span>${RPSI[m.b]}</span></div><small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small></div>`;
   if(m.g==='dice')return`<div class="gcard"><small>掷骰子</small><div class="gvs"><span class="die">${m.a}</span><b>VS</b><span class="die">${m.b}</span></div><small>${m.a>m.b?'你赢啦':m.a<m.b?'TA赢了':'平局'}</small></div>`;
-  if(m.g==='bj'){const hand=(cs,hide)=>cs.map((c,k)=>`<span class="card">${hide&&k?'?':BJN[c]}</span>`).join('');
-    return`<div class="gcard bj"><small>21点</small>
-      <div class="bjr"><b>TA</b><span class="bjh">${hand(m.b,!m.done)}</span><i>${m.done?bjVal(m.b):'?'}</i></div>
-      <div class="bjr"><b>你</b><span class="bjh">${hand(m.a)}</span><i>${bjVal(m.a)}</i></div>
-      ${m.done?`<small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small>`
-        :`<div class="btns">${m.lock?'<small>TA在要牌…</small>':`<button class="btn" data-a="bjHit" data-i="${i}">要牌</button><button class="btn o" data-a="bjStand" data-i="${i}">停牌</button>`}</div>`}</div>`}
   if(m.g==='ttt'){const live=!m.res;return`<div class="gcard"><small>井字棋 · 你是 ✕</small><div class="ttt">${m.b.map((v,k)=>`<button ${live&&!v?`data-a="ttt" data-i="${i}" data-k="${k}"`:'disabled'} aria-label="格子${k+1}">${v==='X'?'✕':v==='O'?'○':''}</button>`).join('')}</div><small>${m.res?(m.res==='X'?'你赢啦':m.res==='O'?'TA赢了':'平局'):'轮到你'}</small></div>`}
   return''}
 
@@ -2893,7 +2878,6 @@ games(v){const chars=S.chars.filter(visible),who=charById(v.who)||chars[0];
     ${row('soup','海龟汤','TA 出题，你来问')}
     ${row('chain','词语接龙','接不上的人受罚')}
     <div class="sec">几十秒一局</div>
-    ${row('bj','21点','轮流要牌，爆了就输')}
     ${row('ttt','井字棋','你是 ✕')}
     ${row('rps','石头剪刀布','一把定胜负')}
     ${row('dice','掷骰子比大小','纯看运气')}`}},
@@ -2912,6 +2896,9 @@ data(v){
       <div class="btns"><button class="btn" data-a="dl">下载备份文件</button><button class="btn o" data-a="copyBk">复制备份文本</button></div></div>
     <div class="panel"><h2>冰雨机里有什么</h2><div class="grid2">${rows.map(([k,n])=>`<div class="mi"><b>${n}</b><span>${k}</span></div>`).join('')}</div>
       <p class="hint">文字数据约 ${mb(size)}<span id="dataUse"></span></p></div>
+    <div class="panel"><h2>更新<span class="pill">${VER}</span></h2>
+      <p class="hint">更新不用动桌面图标：打开冰雨机就是新的，角色和聊天都在手机里，不会跟着网页走。没变的话点一下下面这个。</p>
+      <button class="btn o" data-a="chkUpd" style="align-self:flex-start">检查更新</button></div>
     <div class="panel"><h2>别被清掉</h2><span id="dataPersist" class="hint"></span>
       <button class="btn o" data-a="persist" style="align-self:flex-start">保护我的数据</button></div>
 `,
@@ -2999,7 +2986,7 @@ settings(v){
       <label class="f">桌面动效<select id="l-fxs" data-s="look" data-k="fxs">${[['drop','雨滴'],['bubble','泡泡'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.fx===false?'off':L.fxs==='bubble'?'bubble':'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="panel"><h2>每个App的背景</h2>
       ${[['messages','消息'],['plaza','雨巷'],['bubble','泡泡'],['mail','信箱'],['music','一起听'],['games','游戏'],['novel','雨书'],['drawer','抽屉'],['shop','下单'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
-    <div class="panel"><h2>桌面图标</h2><p class="hint">换完要把手机桌面上的「冰雨机」删掉，再从 Safari 重新「添加到主屏幕」才会变。</p>
+    <div class="panel"><h2>桌面图标</h2><p class="hint">换完要把桌面上的「冰雨机」删掉再重新添加才会变——<b>删图标会把冰雨机存在手机里的东西一起清掉</b>，先去「数据」下载一份备份。平时更新不用这么做。</p>
       <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
     <div class="panel"><h2>应用图标</h2>
       <div class="icons" style="margin:0">${APPS.map(a=>`<label class="ic-app"><span class="ic-g">${L.icons[a.id]?`<img src="${esc(L.icons[a.id])}" alt="">`:ICONS[a.id]}</span><span class="ic-n">${a.name}</span><input type="file" accept="image/*" data-img="icon" data-id="${a.id}" class="vh" aria-label="更换${a.name}图标"></label>`).join('')}</div>
@@ -3230,7 +3217,7 @@ const A={
   pPeek(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>让${esc(dn(c))}查你的手机</h3><button class="opt" data-a="peekGo" data-h="open">把手机递给TA</button><button class="opt" data-a="peekGo" data-h="sneak">假装没注意，让TA偷偷看</button><p class="hint" style="text-align:center">TA会看到你真实的聊天、动态、泡泡和歌单</p>`)},
   peekGo(el){const t=thread(cur().id);closeSheet();go({v:'peek',id:t.chars[0],how:el.dataset.h})},
   pGame(){const t=thread(cur().id),dm=t.type==='dm';const g=(a,l,ex='')=>`<button class="opt" data-a="${a}" ${ex}>${l}</button>`;
-    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋')+g('gBj','21点'):''}${Object.keys(GAME_RULES).map(k=>g('gChat',GAME_NAMES[k],`data-g="${k}"`)).join('')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
+    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋'):''}${Object.keys(GAME_RULES).map(k=>g('gChat',GAME_NAMES[k],`data-g="${k}"`)).join('')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
   gRps(){sheet(`<h3>出什么？</h3><div class="gvs" style="justify-content:center">${RPS.map(x=>`<button class="opt" data-a="gRpsGo" data-k="${x}" style="font-size:34px;padding:10px 16px" aria-label="${x}">${RPSI[x]}</button>`).join('')}</div>`)},
   gRpsGo(el){const a=el.dataset.k,b=RPS[Math.floor(Math.random()*3)],beat={石头:'剪刀',剪刀:'布',布:'石头'};closeSheet();pushMine(thread(cur().id),{type:'game',g:'rps',a,b,res:a===b?'draw':beat[a]===b?'win':'lose'})},
   gDice(){closeSheet();const r=()=>1+Math.floor(Math.random()*6);pushMine(thread(cur().id),{type:'game',g:'dice',a:r(),b:r()})},
@@ -3239,19 +3226,12 @@ const A={
     m.b[k]='X';let w=tttWin(m.b);m.lock=1;refreshChat();
     if(!w){await sleep(500);m.b[tttMove(m.b)]='O';w=tttWin(m.b)}
     m.lock=0;if(w)m.res=w;save();refreshChat();if(w&&!busy.has(t.id))reply(t)},
-  gBj(){closeSheet();pushMine(thread(cur().id),{type:'game',g:'bj',a:[bjDraw(),bjDraw()],b:[bjDraw(),bjDraw()],res:'',done:0},false)},
-  bjHit(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m||m.done||m.lock)return;
-    m.a.push(bjDraw());if(bjVal(m.a)>21)bjEnd(m);save();refreshChat();if(m.done&&!busy.has(t.id))reply(t)},
-  async bjStand(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m||m.done||m.lock)return;
-    m.lock=1;refreshChat();
-    while(bjVal(m.b)<17){await sleep(450);m.b.push(bjDraw());refreshChat()}
-    m.lock=0;bjEnd(m);save();refreshChat();if(!busy.has(t.id))reply(t)},
   /* the 游戏 app opens the chat and starts the game there, so there is only one place a game can live */
   gWho(el){cur().who=el.dataset.id;render(true)},
   gFrom(el){const c=charById(el.dataset.id);if(!c)return;const t=dmFor(c.id),g=el.dataset.g;
     stack=[{v:'threads'}];go({v:'chat',id:t.id});
     if(GAME_RULES[g]){t.game=g;sysMsg(t,'开始玩「'+GAME_NAMES[g]+'」');save();render(true);reply(t,'（游戏开始了，你先来。）');return}
-    ({rps:A.gRps,dice:A.gDice,ttt:A.gTtt,bj:A.gBj})[g]?.()},
+    ({rps:A.gRps,dice:A.gDice,ttt:A.gTtt})[g]?.()},
   gChat(el){const t=thread(cur().id),g=el.dataset.g;t.game=g;sysMsg(t,'开始玩「'+GAME_NAMES[g]+'」');save();closeSheet();render(true);reply(t,'（游戏开始了，你先来。）')},
   gEnd(){const t=thread(cur().id);sysMsg(t,'「'+GAME_NAMES[t.game]+'」结束了');t.game=null;save();closeSheet();render(true)},
   /* plaza comments */
@@ -3458,6 +3438,12 @@ ${talk?`你们刚才在聊这一章：\n${talk}\n\n接着${me}的话，用${c.na
     const other=m.to==='me'?m.from:m.to;if(other!=='me'&&(other!=='x'||Math.random()<.6))m.due=Date.now()+(1+Math.random()*4)*60e3;
     if(other!=='x'&&other!=='me')logEvent(other,`${me}在信箱里${m.to==='me'?'回了'+charById(other)?.name+'的信':'给'+charById(other)?.name+'的信留言'}：「${tx}」`);else logEvent(null,`${me}回了陌生人「${m.nick||''}」的信：「${tx}」`);
     save();closeSheet();render(true)},
+  async chkUpd(el){const b=el;b.disabled=true;b.textContent='看看…';
+    try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'reload'});const m=(await r.text()).match(/const VER='([^']+)'/);
+      if(!m)throw 0;
+      if(m[1]===VER){b.disabled=false;b.textContent='检查更新';toast('已经是最新的了 · '+VER)}
+      else{b.textContent='有新的，正在换…';toast('有新版本 '+m[1]+'，马上刷新',2500);setTimeout(()=>location.reload(),1200)}}
+    catch(e){b.disabled=false;b.textContent='检查更新';toast('没连上，检查一下网络')}},
   persist(){(navigator.storage?.persist?navigator.storage.persist():Promise.resolve(false)).then(ok=>{toast(ok?'好了，浏览器不会随便清掉冰雨机的数据':'浏览器没答应，记得常备份');render(true)})},
   imp(){const t=$('#impTa').value.trim();if(!t){toast('先选文件或粘贴备份');return}
     try{const d=JSON.parse(t);if(![2,3,4].includes(d.v))throw 0;const old=S;S=mergeState(d);S.api.profiles.forEach(p=>{if(!p.key){const o=old.api.profiles.find(x=>x.id===p.id)||old.api.profiles.find(x=>x.provider===p.provider&&x.key);if(o?.key)p.key=o.key}});save();applyLook();stack=[];appEl.classList.remove('open');renderHome();toast('恢复好了')}catch(e){toast('这不是冰雨机的备份')}},
