@@ -27,10 +27,13 @@
 html,body{height:100%;min-height:100dvh;margin:0}
 /* Safari stops fixed layers above its bottom toolbar; paint the canvas to match the wall's bottom so no pale strip shows */
 html{background:#e3edf3}
-/* iOS home-screen apps can report a viewport shorter than the screen. Pages keep the viewport's height so nothing falls off the bottom edge,
-   while the wall alone runs past it to the screen's height, so the leftover strip shows the wallpaper instead of blank paper */
-.home,.app,.sheet,.call{bottom:auto;height:var(--app-h,100dvh);min-height:100%;box-sizing:border-box}
-.wall{bottom:auto;height:var(--wall-h,var(--app-h,100dvh));min-height:100%;box-sizing:border-box}
+/* Pages are sized by the browser itself: they keep their inset:0 and so fill exactly the box it paints, re-measured on every
+   viewport change. Do not put a JS-computed height back here. A home-screen app reports a stale viewport on its first paint,
+   and a page pinned to that number ends up taller than the screen, with its last panels impossible to scroll into view.
+   --app-h is set only by fitPage(), and only once a page has been measured as actually hanging off the bottom.
+   The wall alone runs on to the screen's height, so a strip left below a short viewport shows the wallpaper, not blank paper. */
+.home,.app,.sheet,.call{height:var(--app-h,auto);box-sizing:border-box}
+.wall{bottom:auto;height:var(--wall-h,100dvh);min-height:100%;box-sizing:border-box}
 body{background:linear-gradient(180deg,#f8fbfc 0%,#eef4f8 55%,#e3edf3 100%) fixed;color:var(--ink);font:var(--fs)/1.6 var(--body);overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -1592,11 +1595,38 @@ function setAppH(){
   const land=innerWidth>innerHeight,sh=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height),vh=safeP.offsetHeight||innerHeight;
   if(ios&&!t)t=59;if(ios&&!b)b=34;
   r.setProperty('--sat',Math.max(0,t+(+L.topX||0))+'px');r.setProperty('--sab',Math.max(0,b+(+L.botX||0))+'px');
-  /* Pages are exactly as tall as the box the browser actually shows, so the bottom bar always lands on screen.
-     The wall runs on to the screen's full height, filling the strip iOS leaves over when a home-screen app's viewport is short. */
-  r.setProperty('--app-h',vh+'px');r.setProperty('--wall-h',Math.max(sh,vh,innerHeight)+'px')}
+  /* The wall runs on to the screen's full height, filling the strip iOS leaves over when a home-screen app's viewport is short.
+     Page height is the browser's own business (see the CSS) apart from the overflow check below. */
+  r.setProperty('--wall-h',Math.max(sh,vh,innerHeight)+'px');fitPage()}
+/* A home-screen app can be laid out against a viewport taller than the screen it really paints, and then the page hangs off the
+   bottom: the bottom bar and the last panels sit below the glass and no amount of scrolling reaches them. Don't predict that —
+   measure the page as laid out, and shrink it only when it is genuinely taller than what the browser says is visible. */
+function fitPage(){
+  const r=document.documentElement.style,a=document.activeElement;
+  /* only in a home-screen app: a browser tab's own toolbars make the visible box smaller than the page on purpose */
+  if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)){r.removeProperty('--app-h');return}
+  if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;/* an open keyboard shrinks the visible box; that is not an overflow */
+  r.removeProperty('--app-h');
+  let vis=0;try{vis=Math.round(visualViewport.height*(visualViewport.scale||1))}catch(e){}
+  if(!vis)return;
+  const page=appEl.classList.contains('open')?appEl:homeEl;
+  if(page&&page.offsetHeight>vis+1)r.setProperty('--app-h',Math.max(320,vis)+'px')}
+/* Printed under the two sliders in 设置 · 外观, so a layout problem on a real phone can be read off the screen instead of guessed at */
+function metrics(){
+  const c=getComputedStyle(document.documentElement),sa=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+  let vv=0;try{vv=Math.round(visualViewport.height)}catch(e){}
+  const page=appEl.classList.contains('open')?appEl:homeEl;
+  const w=[screen.width+'×'+screen.height,innerWidth+'×'+(page?page.offsetHeight:innerHeight),String(vv||innerHeight),c.getPropertyValue('--sat').trim(),c.getPropertyValue('--sab').trim()];
+  return isEn()?`Measured: screen ${w[0]} · page ${w[1]} · visible ${w[2]} · safe area top ${w[3]}, bottom ${w[4]} · ${sa?'home screen':'browser'}`
+              :`量到的：屏幕 ${w[0]} · 页面 ${w[1]} · 看得见 ${w[2]} · 安全区 上 ${w[3]} 下 ${w[4]} · ${sa?'主屏幕':'浏览器'}`;
+}
 setAppH();
-{let ft;const refit=()=>{setAppH();clearTimeout(ft);ft=setTimeout(()=>{setAppH();if(!isOpen())fitHome()},120)};addEventListener('resize',refit);addEventListener('orientationchange',refit);try{visualViewport.addEventListener('resize',refit)}catch(e){}}
+/* iOS gives a home-screen app a stale viewport and stale safe-area insets on its first paint and sends no resize afterwards,
+   so re-measure when the page finishes loading, when it comes back to the foreground, and a few beats after launch. */
+{let ft;const refit=()=>{setAppH();clearTimeout(ft);ft=setTimeout(()=>{setAppH();if(!isOpen())fitHome()},120)};
+ addEventListener('resize',refit);addEventListener('orientationchange',refit);addEventListener('load',refit);addEventListener('pageshow',refit);
+ addEventListener('visibilitychange',()=>{if(!document.hidden)refit()});[60,300,1000].forEach(d=>setTimeout(refit,d));
+ try{visualViewport.addEventListener('resize',refit);visualViewport.addEventListener('scroll',refit)}catch(e){}}
 function renderHome(){
   const d=new Date(),L=S.look,sc=$('#hm')?.scrollTop||0;
   homeEl.innerHTML=`<canvas class="fx" id="fx" aria-hidden="true"></canvas>
@@ -2887,7 +2917,8 @@ settings(v){
     <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
     <div class="panel"><h2>顶栏和底栏</h2><p class="hint">0 就是跟着手机自己的安全区。觉得挤或者太空，再往两边挪一点。</p>
       <label class="f">顶栏微调<span class="inline"><input type="range" id="l-topx" min="-30" max="60" step="1" data-s="look" data-k="topX" value="${L.topX||0}"><output>${L.topX||0}</output></span></label>
-      <label class="f">底栏微调<span class="inline"><input type="range" id="l-botx" min="-30" max="60" step="1" data-s="look" data-k="botX" value="${L.botX||0}"><output>${L.botX||0}</output></span></label></div>
+      <label class="f">底栏微调<span class="inline"><input type="range" id="l-botx" min="-30" max="60" step="1" data-s="look" data-k="botX" value="${L.botX||0}"><output>${L.botX||0}</output></span></label>
+      <p class="hint">${metrics()}</p></div>
     <div class="panel"><h2>字体和大小</h2>
       <label class="f">字体<select id="l-font" data-s="look" data-k="font">${[['system','系统默认'],...(L.customFont?[['custom','自己的字体 · '+L.customFont.name]]:[])].map(([k,l])=>`<option value="${k}" ${L.font===k?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f">字号<span class="inline"><input type="range" id="l-fs" min="12" max="20" step="1" data-s="look" data-k="fs" value="${L.fs}"><output>${L.fs}</output></span></label>
