@@ -504,12 +504,11 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pad=n=>String(n).padStart(2,'0');
 const WK='日一二三四五六';
-const CN_MON=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
-function cnDay(n){const a='〇一二三四五六七八九';if(n<=10)return n===10?'十':a[n];if(n<20)return'十'+a[n%10];return a[Math.floor(n/10)]+'十'+(n%10?a[n%10]:'')}
 function ago(t){const s=(Date.now()-t)/1000;if(s<60)return'刚刚';if(s<3600)return Math.floor(s/60)+'分钟前';if(s<86400)return Math.floor(s/3600)+'小时前';const d=new Date(t);return(d.getMonth()+1)+'/'+d.getDate()}
 function hm(t){const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes())}
 let toastT;
 function toast(m,ms=3200){const t=$('#toast');t.textContent=trS(m);t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms)}
+const CANCEL='<button class="opt" data-a="closeSheet">取消</button>';
 function sheet(html){$('#sheetIn').innerHTML=html;tr($('#sheetIn'));$('#sheet').hidden=false}
 function closeSheet(){$('#sheet').hidden=true}
 $('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
@@ -1286,6 +1285,9 @@ const mask=()=>S.masks.find(m=>m.id===S.activeMask)||S.masks[0];
 const preset=()=>S.presets.find(p=>p.id===S.activePreset)||S.presets[0];
 const api=()=>S.api.profiles.find(p=>p.id===S.api.active)||S.api.profiles[0];
 const thread=id=>S.threads.find(t=>t.id===id);
+const presetById=id=>S.presets.find(p=>p.id===id);
+const maskById=id=>S.masks.find(m=>m.id===id);
+const apiById=id=>S.api.profiles.find(p=>p.id===id);
 const allStickers=()=>S.stickers.groups.flatMap(g=>g.items);
 const rel=c=>c.rel||(c.rel={youBlocked:false,youDeleted:false,theyBlocked:false,theyDeleted:false,soft:0,at:0});
 const tideOf=c=>Math.max(0,Math.min(100,Math.round(num(c?.tide)??60)));
@@ -1374,9 +1376,8 @@ const APPS=[
   {id:'mail',name:'信箱',v:'mail'},{id:'music',name:'一起听',v:'music'},{id:'drawer',name:'抽屉',v:'drawer'},{id:'theater',name:'小剧场',v:'drawer',t:'theater'},
   {id:'takeout',name:'外卖',v:'takeout'},{id:'shop',name:'网购',v:'mall'},{id:'novel',name:'雨书',v:'novel'},{id:'sched',name:'日程',v:'sched'},
   {id:'days',name:'日历',v:'cal'},{id:'drop',name:'经期',v:'cal',t:'cycle'},{id:'library',name:'设定库',v:'library'},{id:'settings',name:'设置',v:'settings'}];
-const bkDue=()=>S.chars.length>0&&(!S.lastBackup||Date.now()-S.lastBackup>7*864e5);
 function appIcon(a){const img=S.look.icons[a.id];const n=a.id==='messages'?S.threads.reduce((s,t)=>s+(t.unread||0),0):a.id==='bubbleApp'?(S.bubble.unread||0):a.id==='mail'?mailUnread():0;
-  return`<button type="button" class="ic-app" data-a="open" data-v="${a.v}"${a.t?` data-t="${a.t}"`:''} aria-label="${a.name}"><span class="ic-g">${img?`<img src="${esc(img)}" alt="">`:ICONS[a.id]}${n?`<span class="badge">${n>99?'99+':n}</span>`:''}</span><span class="ic-n">${a.name}</span></button>`}
+  return`<button class="ic-app" data-a="open" data-v="${a.v}"${a.t?` data-t="${a.t}"`:''} aria-label="${a.name}"><span class="ic-g">${img?`<img src="${esc(img)}" alt="">`:ICONS[a.id]}${n?`<span class="badge">${n>99?'99+':n}</span>`:''}</span><span class="ic-n">${a.name}</span></button>`}
 
 /* ================= world: weather, festivals, days ================= */
 const WX={0:'晴',1:'晴间多云',2:'多云',3:'阴',45:'有雾',48:'雾凇',51:'毛毛雨',53:'毛毛雨',55:'毛毛雨',56:'冻雨',57:'冻雨',61:'小雨',63:'中雨',65:'大雨',66:'冻雨',67:'冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'阵雨',81:'阵雨',82:'暴雨',85:'阵雪',86:'大雪',95:'雷阵雨',96:'雷阵雨',99:'雷暴'};
@@ -1470,16 +1471,11 @@ function cycleWorld(){const c=CY();if(!c.tell)return'';const n=cyNow();if(!n)ret
 const CY_TAGS=['痛经','腰酸','疲惫','情绪低落','烦躁','想吃甜的','量多','量少','头疼','睡不好'],CY_EN=['Cramps','Backache','Tired','Low mood','Irritable','Sweet tooth','Heavy','Light','Headache','Poor sleep'];
 
 /* ================= mascot & fx ================= */
-function homeTips(){const L=[],un=S.threads.reduce((s,t)=>s+(t.unread||0),0);
-  if(un)L.push(`有 ${un} 条消息在等你`);const w=wxNow(S.loc);if(w&&/雨/.test(w.desc))L.push('外面真的在下雨 记得带伞');if(w&&w.temp<=8)L.push('好冷 多穿一点');
-  const n=cyNow();if(n&&CY().remind){if(n.on)L.push(`经期第${n.day}天 抱抱你`);else if(!n.late&&n.inDays<=3)L.push(`月经大概还有${n.inDays}天来`)}
-  const up=myDays().find(x=>x.in<=3);if(up)L.push(up.in===0?`今天是${up.name}`:`${up.in}天后是${up.name}`);const f=festOf(new Date());if(f.length)L.push(`今天是${f[0]}耶`);
-  return L}
 function moodChar(){const t=[...S.threads].filter(t=>t.type==='dm'&&visible(charById(t.chars[0]))&&t.msgs.length).sort((a,b)=>(b.t||0)-(a.t||0))[0];return t?charById(t.chars[0]):null}
 function avaHTML(){const c=moodChar()||S.chars.find(visible),R='<span class="ring"><i></i><i></i><i></i>';
-  if(!c)return`<button type="button" class="ava" data-a="open" data-v="threads" data-t="people">${R}<span class="av" style="--s:92px">+</span></span><b class="nm">还没有 TA</b><small class="sg">点我去添加</small></button>`;
+  if(!c)return`<button class="ava" data-a="open" data-v="threads" data-t="people">${R}<span class="av" style="--s:92px">+</span></span><b class="nm">还没有 TA</b><small class="sg">点我去添加</small></button>`;
   const t=S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id),im=t&&[...t.msgs].reverse().find(m=>m.inner&&m.from===c.id),v=tideOf(c),line=im?im.inner.split(/(?<=[。！？!?…~])/)[0].trim().slice(0,24):v>=80?'(๑>ᴗ<๑)':v>=60?'(・ω・)':v>=40?'(´-ω-`)':v>=20?'(｡•́︿•̀｡)':'(╥﹏╥)';
-  return`<button type="button" class="ava" data-a="tideOpen" data-id="${c.id}" aria-label="和${esc(dn(c))}聊天">${R}${av(c,92)}</span><b class="nm">${esc(dn(c))}${S.chat.tide&&c.mood?' · '+esc(c.mood):''}</b><small class="sg">${esc(line)}</small></button>`}
+  return`<button class="ava" data-a="tideOpen" data-id="${c.id}" aria-label="和${esc(dn(c))}聊天">${R}${av(c,92)}</span><b class="nm">${esc(dn(c))}${S.chat.tide&&c.mood?' · '+esc(c.mood):''}</b><small class="sg">${esc(line)}</small></button>`}
 /* tap sounds: tiny synthesized drops, ice and bubbles, no audio files */
 let sfxAC;
 function sfx(k){if(!k||k==='off')return;try{sfxAC=sfxAC||new (window.AudioContext||window.webkitAudioContext)();if(sfxAC.state==='suspended')sfxAC.resume()}catch(e){return}
@@ -1560,14 +1556,14 @@ function render(keep){
   const v=cur();if(!v)return;const r=VIEWS[v.v](v);const sc=keep?$('#content')?.scrollTop:0;
   const kept={};if(keep)for(const id of ['msgIn','mIn','bbIn','postIn','replyIn','callIn']){const x=document.getElementById(id);if(x&&x.value)kept[id]=x.value}
   const wp=viewWall(v);
-  appEl.innerHTML=`<div class="wall2 wall" style="${wp?`background:url(${wp}) center/cover no-repeat`:''}"></div><header class="bar"><button type="button" class="bk" data-a="back" aria-label="返回">${ICONS.back}<span>返回</span></button><h1>${esc(r.title)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</h1><div class="br">${r.right||''}</div></header>
+  appEl.innerHTML=`<div class="wall2 wall" style="${wp?`background:url(${wp}) center/cover no-repeat`:''}"></div><header class="bar"><button class="bk" data-a="back" aria-label="返回">${ICONS.back}<span>返回</span></button><h1>${esc(r.title)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</h1><div class="br">${r.right||''}</div></header>
   <main class="content ${r.cls||''}" id="content">${r.body}</main>${r.foot?`<footer class="foot ${r.footCls||''}">${r.foot}</footer>`:''}`;
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
   tr(appEl);if(keep)$('#content').scrollTop=sc;r.after&&r.after();
 }
 const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',bubble:'bubble',bubbleSet:'bubble',music:'music',drawer:'drawer',theaterFull:'drawer',days:'days',cal:'days',library:'library',bookEdit:'library',entryEdit:'library',presetEdit:'library',itemEdit:'library',settings:'settings',apiEdit:'settings',data:'settings',takeout:'takeout',mall:'shop',wallet:'wallet',mail:'mail',novel:'novel',novelRead:'novel',sched:'sched'};
 function viewWall(v){const aw=S.look.appWalls||{};if(v.v==='chat'||v.v==='music'){const t=v.v==='chat'?thread(v.id):null;const c=t?(t.type==='dm'?charById(t.chars[0]):null):charById(S.music.with);if(t?.wall)return t.wall;if(c?.wall)return c.wall;if(v.v==='music'&&aw.music)return aw.music}else if(APPWALL[v.v]&&aw[APPWALL[v.v]])return aw[APPWALL[v.v]];return S.look.wallpaper}
-const tabs=(list,on,act='tab')=>`<div class="tabs" role="tablist">${list.map(([k,l])=>`<button type="button" class="${k===on?'on':''}" data-a="${act}" data-t="${k}">${l}</button>`).join('')}</div>`;
+const tabs=(list,on,act='tab')=>`<div class="tabs" role="tablist">${list.map(([k,l])=>`<button class="${k===on?'on':''}" data-a="${act}" data-t="${k}">${l}</button>`).join('')}</div>`;
 
 /* ================= AI ================= */
 const PROVIDERS={gemini:{name:'Gemini',base:'https://generativelanguage.googleapis.com/v1beta',model:'gemini-2.5-pro'},openai:{name:'OpenAI 格式',base:'https://api.openai.com/v1',model:'gpt-4o'},claude:{name:'Claude',base:'https://api.anthropic.com',model:'claude-sonnet-5-5'}};
@@ -1580,7 +1576,7 @@ function normalize(msgs){
 }
 const num=v=>v===null||v===undefined||v===''||isNaN(+v)?null:+v;
 async function callAI(system,messages,o={}){
-  const p=(o.side&&S.api.side&&S.api.profiles.find(x=>x.id===S.api.side))||api();if(!p)throw new Error('先在「设置 · 接口」里添加一个接口');
+  const p=(o.side&&S.api.side&&apiById(S.api.side))||api();if(!p)throw new Error('先在「设置 · 接口」里添加一个接口');
   const key=(p.key||'').trim(),model=(p.model||'').trim(),base=(p.base||'').trim().replace(/\/+$/,'');
   if(!key)throw new Error('还没填 API Key，去「设置 · 接口」填一下');
   if(!model)throw new Error('还没填模型名，去「设置 · 接口」填一下');
@@ -1796,28 +1792,28 @@ function bubble(t,m,i){
   if(m.type==='sys')return`<div class="stamp">${esc(m.content)}</div>${m.letter?`<div class="letter">${esc(m.letter)}</div>`:''}${m.inner&&S.chat.inner?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
   if(m.type==='theater'){const x=S.theaters.find(x=>x.id===m.thId);return x?thCard(x,i):`<div class="stamp">这出小剧场已经撕掉了</div>`}
   const mine=m.from==='me',c=mine?null:charById(m.from),grp=t.type==='group';
-  if(m.type==='narr')return`<button type="button" class="narr${mine?' me':''}" data-a="msg" data-i="${i}">${esc(m.content)}</button>${folds(m)?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
-  const inner=m.type==='sticker'?(()=>{const s=findSticker(m.content);return`<button type="button" class="stk" data-a="msg" data-i="${i}">${s?`<img src="${esc(s.src)}" alt="${esc(m.content)}">`:`<span class="bub">[${esc(m.content)}]</span>`}</button>`})()
+  if(m.type==='narr')return`<button class="narr${mine?' me':''}" data-a="msg" data-i="${i}">${esc(m.content)}</button>${folds(m)?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
+  const inner=m.type==='sticker'?(()=>{const s=findSticker(m.content);return`<button class="stk" data-a="msg" data-i="${i}">${s?`<img src="${esc(s.src)}" alt="${esc(m.content)}">`:`<span class="bub">[${esc(m.content)}]</span>`}</button>`})()
     :richBody(t,m,i,mine,c);
   return`<div class="msg ${mine?'me':'ai'}">${mine?'':av(c||{name:'?'},36)}<div class="col">${grp&&!mine?`<span class="who">${esc(dn(c))}</span>`:''}${inner}${mine?(m.rejected?'<span class="rej"><i>!</i>被拒收</span>':''):folds(m)}</div>${mine?av(mask(),36):''}</div>`;
 }
 function richBody(t,m,i,mine,c){const tap=`data-a="msg" data-i="${i}"`;
   switch(m.type){
-    case'img':return`<button type="button" class="pmsg" ${tap}><img src="${esc(m.img)}" alt="照片"></button>${m.content?`<button type="button" class="bub" ${tap}>${esc(m.content)}</button>`:''}`;
-    case'pic':return m.img?`<button type="button" class="pmsg" ${tap}><img src="${esc(m.img)}" alt="${esc(m.content)}"></button><span class="pcap">${esc(m.content)}</span>`
-      :`<div class="tphoto"><button type="button" class="tp-in" ${tap}>${ICONS.camera}<span>${esc(m.content)}</span></button><span class="tp-f"><small>照片</small><button type="button" class="tb" data-a="develop" data-i="${i}" ${m.dev?'disabled':''}>${m.dev?'冲洗中…':'冲洗成真照片'}</button></span></div>`;
-    case'order':{const left=Math.max(1,Math.round((m.eta-Date.now())/60e3));return`<button type="button" class="order ${m.state==='done'?'done':''}" ${tap}><small>${ICONS.bowl}外卖 · ${mine?'送给TA':'TA给你点的'}</small><b>${esc(m.content)}</b><span class="os">¥${(+m.amt).toFixed(2)} · ${m.state==='done'?'已送达':'骑手在路上 · 约'+left+'分钟'}</span></button>`}
-    case'parcel':return`<button type="button" class="order ${m.state==='done'?'done':''}" ${tap}><small>${ICONS.shop}网购 · ${mine?'寄给TA':'TA寄给你的'}</small><b>${esc(m.content)}</b><span class="os">¥${(+m.amt).toFixed(2)} · ${parcelStage(m)}</span></button>`;
-    case'voice':return`<button type="button" class="bub voice${m.open?' open':''}" data-a="voice" data-i="${i}"><span class="vrow">${ICONS.wave}<b>${m.dur||voiceDur(m.content)}″</b></span><span class="vtx">${esc(m.content)}</span></button>`;
+    case'img':return`<button class="pmsg" ${tap}><img src="${esc(m.img)}" alt="照片"></button>${m.content?`<button class="bub" ${tap}>${esc(m.content)}</button>`:''}`;
+    case'pic':return m.img?`<button class="pmsg" ${tap}><img src="${esc(m.img)}" alt="${esc(m.content)}"></button><span class="pcap">${esc(m.content)}</span>`
+      :`<div class="tphoto"><button class="tp-in" ${tap}>${ICONS.camera}<span>${esc(m.content)}</span></button><span class="tp-f"><small>照片</small><button class="tb" data-a="develop" data-i="${i}" ${m.dev?'disabled':''}>${m.dev?'冲洗中…':'冲洗成真照片'}</button></span></div>`;
+    case'order':{const left=Math.max(1,Math.round((m.eta-Date.now())/60e3));return`<button class="order ${m.state==='done'?'done':''}" ${tap}><small>${ICONS.bowl}外卖 · ${mine?'送给TA':'TA给你点的'}</small><b>${esc(m.content)}</b><span class="os">¥${(+m.amt).toFixed(2)} · ${m.state==='done'?'已送达':'骑手在路上 · 约'+left+'分钟'}</span></button>`}
+    case'parcel':return`<button class="order ${m.state==='done'?'done':''}" ${tap}><small>${ICONS.shop}网购 · ${mine?'寄给TA':'TA寄给你的'}</small><b>${esc(m.content)}</b><span class="os">¥${(+m.amt).toFixed(2)} · ${parcelStage(m)}</span></button>`;
+    case'voice':return`<button class="bub voice${m.open?' open':''}" data-a="voice" data-i="${i}"><span class="vrow">${ICONS.wave}<b>${m.dur||voiceDur(m.content)}″</b></span><span class="vtx">${esc(m.content)}</span></button>`;
     case'hb':case'tf':{const hb=m.type==='hb',st=m.state||'new';
-      return`<button type="button" class="hb ${hb?'':'tf'} ${st}" data-a="money" data-i="${i}"><span class="hbi">${hb?ICONS.gift:ICONS.yen}</span><span class="hbt"><b>${hb?esc(m.content||'恭喜发财'):'¥'+(+m.amt).toFixed(2)}</b><small>${st==='got'?(mine?'对方已收下':'已收下'):st==='back'?'已退回':mine?'等TA收':(hb?'点开领取':'点开收款')}${!hb&&m.content?' · '+esc(m.content):''}</small></span><span class="hbf">${hb?'红包':'转账'}</span></button>`}
+      return`<button class="hb ${hb?'':'tf'} ${st}" data-a="money" data-i="${i}"><span class="hbi">${hb?ICONS.gift:ICONS.yen}</span><span class="hbt"><b>${hb?esc(m.content||'恭喜发财'):'¥'+(+m.amt).toFixed(2)}</b><small>${st==='got'?(mine?'对方已收下':'已收下'):st==='back'?'已退回':mine?'等TA收':(hb?'点开领取':'点开收款')}${!hb&&m.content?' · '+esc(m.content):''}</small></span><span class="hbf">${hb?'红包':'转账'}</span></button>`}
     case'call':return`<details class="callcard"><summary>${m.kind==='video'?ICONS.video:ICONS.phone}<span>${m.kind==='video'?'视频':'语音'}通话 ${fmt(m.dur||0)}</span></summary><div>${esc(m.content||'（没说什么）')}</div></details>`;
     case'game':return gameCard(t,m,i);
-    default:return`<button type="button" class="bub" ${tap}>${esc(m.content)}</button>`}}
+    default:return`<button class="bub" ${tap}>${esc(m.content)}</button>`}}
 function msgsHTML(t){
   let h='',last=0;const lim=(cur()?.id===t.id&&cur().more)||120,st=Math.max(0,t.msgs.length-lim);
-  if(t.summary)h+=`<button type="button" class="sumcard" data-a="editSummary">${ICONS.drop.replace('<svg','<svg width="12" height="12"')} 前情总结 · 点开查看或修改</button>`;
-  if(st)h+=`<button type="button" class="more" data-a="moreMsgs">看更早的 ${st} 条</button>`;
+  if(t.summary)h+=`<button class="sumcard" data-a="editSummary">${ICONS.drop.replace('<svg','<svg width="12" height="12"')} 前情总结 · 点开查看或修改</button>`;
+  if(st)h+=`<button class="more" data-a="moreMsgs">看更早的 ${st} 条</button>`;
   t.msgs.forEach((m,i)=>{if(i<st)return;if(m.t-last>40*60e3)h+=`<div class="stamp">${ago(m.t)} · ${hm(m.t)}</div>`;last=m.t;h+=bubble(t,m,i)});
   if(t.pending&&busy!==t.id)h+=`<div class="stamp">TA好像在忙 · 晚点会回你</div>`;
   if(busy===t.id)h+=`<div class="msg ai">${av(charById(t.chars[0])||{name:'?'},36)}<div class="col"><span class="bub"><span class="dots"><i></i><i></i><i></i></span></span></div></div>`;
@@ -1952,7 +1948,7 @@ function maybeAutoDiary(c,t){
 function authorOf(a,r){if(a==='x')return{name:r?.nick||'路人',handle:'路人',avatar:''};if(a==='me'){const m=mask();return{name:m.name,handle:m.handle,avatar:m.avatar}}const c=charById(a);return c?{name:dn(c),handle:c.handle||c.name,avatar:c.avatar}:{name:'（已删除）',handle:'deleted',avatar:''}}
 function postHTML(p,showDel=true){const a=authorOf(p.author),liked=(p.likes||[]).includes('me');
   return`<article class="post">${av(a,42)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b><span>@${esc(a.handle)} · ${ago(p.t)}</span>${p.only?`<span class="pill">仅${esc(dn(charById(p.only)))}可见</span>`:''}</div><div class="tx">${esc(p.text)}</div>
-  <div class="ft"><button type="button" data-a="openPost" data-id="${p.id}">评论 ${(p.replies||[]).length}</button><button type="button" class="${liked?'lk':''}" data-a="like" data-id="${p.id}">${liked?'♥':'♡'} ${(p.likes||[]).length+(p.sl||0)}</button>${showDel?`<button type="button" data-a="delPost" data-id="${p.id}">删除</button>`:''}</div></div></article>`}
+  <div class="ft"><button data-a="openPost" data-id="${p.id}">评论 ${(p.replies||[]).length}</button><button class="${liked?'lk':''}" data-a="like" data-id="${p.id}">${liked?'♥':'♡'} ${(p.likes||[]).length+(p.sl||0)}</button>${showDel?`<button data-a="delPost" data-id="${p.id}">删除</button>`:''}</div></div></article>`}
 const sysFor=(c,extra)=>{const me=mask();return`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n关于${me.name}：${me.persona||''}\n\n${extra}`};
 async function charReply(p,c,toWhat,toId){
   const me=mask(),a=authorOf(p.author,p);
@@ -1978,7 +1974,7 @@ function theaterDoc(html){return`<!doctype html><html><head><meta charset="utf-8
 addEventListener('message',e=>{const h=e.data&&e.data.__thH;if(!h)return;document.querySelectorAll('iframe[data-th]').forEach(f=>{if(f.contentWindow===e.source&&!f.classList.contains('thfull'))f.style.height=Math.min(1800,Math.max(60,Math.ceil(h)))+'px'})});
 function thCard(x,i){const c=charById(x.charId);
   return`<article class="thc"><header>${ICONS.theater}<b>${esc(x.title||'小剧场')}</b><span>${esc(dn(c))} · ${ago(x.t)}</span></header><iframe data-th="${x.id}" sandbox="allow-scripts" title="${esc(x.title||'小剧场')}" srcdoc="${esc(theaterDoc(x.html))}"></iframe>
-  <footer><button type="button" class="tb" data-a="thOpen" data-id="${x.id}">全屏看</button>${i===undefined?`<button type="button" class="tb" data-a="thCopy" data-id="${x.id}">复制代码</button><button type="button" class="tb" data-a="thDel" data-id="${x.id}">撕掉</button>`:`<button type="button" class="tb" data-a="msg" data-i="${i}">···</button>`}</footer></article>`}
+  <footer><button class="tb" data-a="thOpen" data-id="${x.id}">全屏看</button>${i===undefined?`<button class="tb" data-a="thCopy" data-id="${x.id}">复制代码</button><button class="tb" data-a="thDel" data-id="${x.id}">撕掉</button>`:`<button class="tb" data-a="msg" data-i="${i}">···</button>`}</footer></article>`}
 async function makeTheater(c,topic,into){
   const me=mask(),ctxT=into||S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id);
   const recent=ctxT?ctxT.msgs.slice(-20).filter(m=>m.type!=='theater').map(m=>(m.from==='me'?me.name:m.from==='sys'?'系统':(charById(m.from)?.name||'?'))+'：'+pv(m)).join('\n'):'';
@@ -2052,10 +2048,10 @@ function idol(){const m=mask(),b=S.bubble;return{name:b.name||m.name,avatar:m.av
 function gapText(ms){const m=ms/60e3;return m<60?Math.round(m)+'分钟':m<1440?Math.round(m/60)+'个小时':Math.round(m/1440)+'天'}
 function bbHTML(){const b=S.bubble;let h='',last=0;
   b.msgs.slice(-300).forEach(m=>{if(m.t-last>40*60e3)h+=`<div class="stamp">${ago(m.t)} · ${hm(m.t)}</div>`;last=m.t;
-    if(m.from==='me')h+=`<div class="bbme">${m.q?`<span class="q">↪ ${esc(m.q.nick)}：${esc(m.q.text)}</span>`:''}<button type="button" class="bub" data-a="bbMsg" data-id="${m.id}">${esc(m.content)}</button><small>♡ ${kfmt(m.likes)} · 已读 ${kfmt(m.reads)}</small></div>`;
+    if(m.from==='me')h+=`<div class="bbme">${m.q?`<span class="q">↪ ${esc(m.q.nick)}：${esc(m.q.text)}</span>`:''}<button class="bub" data-a="bbMsg" data-id="${m.id}">${esc(m.content)}</button><small>♡ ${kfmt(m.likes)} · 已读 ${kfmt(m.reads)}</small></div>`;
     else if(m.from==='away')h+=`<div class="away">${esc(m.content)}</div>`;
     else{const c=m.charId?charById(m.charId):null;
-      h+=`<button type="button" class="fan ${c?'known':''}" data-a="bbMsg" data-id="${m.id}" style="--fc:${fanColor(m.nick)}">${c?av(c,26):`<span class="fd">${esc([...m.nick][0]||'?')}</span>`}<span class="fb"><b>${esc(c?dn(c)+' · 认识的人':m.nick)}</b>${esc(m.content)}</span></button>`}});
+      h+=`<button class="fan ${c?'known':''}" data-a="bbMsg" data-id="${m.id}" style="--fc:${fanColor(m.nick)}">${c?av(c,26):`<span class="fd">${esc([...m.nick][0]||'?')}</span>`}<span class="fb"><b>${esc(c?dn(c)+' · 认识的人':m.nick)}</b>${esc(m.content)}</span></button>`}});
   if(bbBusy)h+=`<div class="away"><span class="dots"><i></i><i></i><i></i></span>粉丝们正在疯狂打字</div>`;
   if(!b.msgs.length&&!bbBusy)h+=``;
   return h}
@@ -2116,9 +2112,9 @@ function renderCall(){let e=$('#call');if(!call){if(e)e.remove();return}
   ${video&&on?`<div class="pip">${me.avatar?`<img src="${esc(me.avatar)}" alt="">`:esc([...me.name][0]||'我')}</div>`:''}
   <div class="chead">${video&&on?'':av(c,100)}<div class="cwho">${esc(dn(c))}</div><div class="cst" id="callSt">${callStatus()}</div></div>
   <div class="subs" id="callSubs">${callSubsHTML()}</div>
-  ${on?`<div class="cin"><input type="text" id="callIn" placeholder="说点什么…" autocomplete="off" aria-label="说话">${SR?`<button type="button" class="cb sm" data-a="callMic" aria-label="语音输入">${ICONS.mic}</button>`:''}<button type="button" class="cb sm" data-a="callSend" aria-label="说">${ICONS.send}</button></div>`:''}
-  <div class="cbtns">${call.status==='in'?`<button type="button" class="cb end" data-a="callEnd" aria-label="拒接">${ICONS.hang}</button><button type="button" class="cb ok" data-a="callAccept" aria-label="接听">${video?ICONS.video:ICONS.phone}</button>`
-    :`<button type="button" class="cb" data-a="callTts" aria-label="${call.tts?'关掉朗读':'打开朗读'}">${call.tts?ICONS.speaker:ICONS.mute}</button><button type="button" class="cb end" data-a="callEnd" aria-label="挂断">${ICONS.hang}</button>`}</div>`;
+  ${on?`<div class="cin"><input type="text" id="callIn" placeholder="说点什么…" autocomplete="off" aria-label="说话">${SR?`<button class="cb sm" data-a="callMic" aria-label="语音输入">${ICONS.mic}</button>`:''}<button class="cb sm" data-a="callSend" aria-label="说">${ICONS.send}</button></div>`:''}
+  <div class="cbtns">${call.status==='in'?`<button class="cb end" data-a="callEnd" aria-label="拒接">${ICONS.hang}</button><button class="cb ok" data-a="callAccept" aria-label="接听">${video?ICONS.video:ICONS.phone}</button>`
+    :`<button class="cb" data-a="callTts" aria-label="${call.tts?'关掉朗读':'打开朗读'}">${call.tts?ICONS.speaker:ICONS.mute}</button><button class="cb end" data-a="callEnd" aria-label="挂断">${ICONS.hang}</button>`}</div>`;
   const s=$('#callSubs');if(s)s.scrollTop=s.scrollHeight}
 function updCall(){const s=$('#callSubs');if(s){s.innerHTML=callSubsHTML();s.scrollTop=s.scrollHeight}const st=$('#callSt');if(st)st.textContent=callStatus()}
 function startCall(t,kind){if(call)return;const c=charById(t.chars[0]);if(!reachable(c)){toast('现在打不通');return}if(!api()?.key){toast('先去「设置 · 接口」填 Key');return}
@@ -2164,7 +2160,7 @@ function gameText(m){const me=mask().name;
 function gameCard(t,m,i){
   if(m.g==='rps')return`<div class="gcard"><small>石头剪刀布</small><div class="gvs"><span>${RPSI[m.a]}</span><b>VS</b><span>${RPSI[m.b]}</span></div><small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small></div>`;
   if(m.g==='dice')return`<div class="gcard"><small>掷骰子</small><div class="gvs"><span class="die">${m.a}</span><b>VS</b><span class="die">${m.b}</span></div><small>${m.a>m.b?'你赢啦':m.a<m.b?'TA赢了':'平局'}</small></div>`;
-  if(m.g==='ttt'){const live=!m.res;return`<div class="gcard"><small>井字棋 · 你是 ✕</small><div class="ttt">${m.b.map((v,k)=>`<button type="button" ${live&&!v?`data-a="ttt" data-i="${i}" data-k="${k}"`:'disabled'} aria-label="格子${k+1}">${v==='X'?'✕':v==='O'?'○':''}</button>`).join('')}</div><small>${m.res?(m.res==='X'?'你赢啦':m.res==='O'?'TA赢了':'平局'):'轮到你'}</small></div>`}
+  if(m.g==='ttt'){const live=!m.res;return`<div class="gcard"><small>井字棋 · 你是 ✕</small><div class="ttt">${m.b.map((v,k)=>`<button ${live&&!v?`data-a="ttt" data-i="${i}" data-k="${k}"`:'disabled'} aria-label="格子${k+1}">${v==='X'?'✕':v==='O'?'○':''}</button>`).join('')}</div><small>${m.res?(m.res==='X'?'你赢啦':m.res==='O'?'TA赢了':'平局'):'轮到你'}</small></div>`}
   return''}
 
 /* ================= phone check ================= */
@@ -2184,7 +2180,7 @@ function phoneView(c,v){const P=c.phone,d=P?.data,tab=v.tab||'chats',me=mask(),t
   else if(tab==='search')body=`<div class="psearch">${(d.search||[]).map(s=>`<p>${ICONS.search}<span>${esc(s)}</span></p>`).join('')}</div>`;
   else if(tab==='album')body=`<div class="palbum">${(d.album||[]).map(s=>`<div class="tphoto"><span class="tp-in">${ICONS.camera}<span>${esc(s)}</span></span></div>`).join('')}</div>`;
   else if(tab==='orders')body=(d.orders||[]).map(x=>`<div class="row"><span class="meta"><b>${esc(x.item)}</b><small>${esc(x.note||'')}</small></span></div>`).join('');
-  else body=v.reveal?`<div class="pmemo secret"><b>藏起来的东西</b><p>${esc(d.secret||'什么也没有')}</p></div>`:`<div class="empty"><big>这里好像藏了东西</big><button type="button" class="btn o" data-a="phoneReveal">要看吗</button></div>`;
+  else body=v.reveal?`<div class="pmemo secret"><b>藏起来的东西</b><p>${esc(d.secret||'什么也没有')}</p></div>`:`<div class="empty"><big>这里好像藏了东西</big><button class="btn o" data-a="phoneReveal">要看吗</button></div>`;
   return`<div class="pframe"><div class="plock">${ICONS.lock}<span>${esc(d.lock||'')}</span></div>${tabs(T,tab)}<div class="pbody">${body||''}</div></div>`}
 async function genPeek(c,how){const me=mask(),t=dmFor(c.id);
   const L=[];S.threads.filter(x=>!(x.type==='dm'&&x.chars[0]===c.id)&&x.msgs.some(m=>m.type!=='sys')).sort((a,b)=>b.t-a.t).slice(0,5).forEach(x=>L.push(`聊天「${threadTitle(x)}」最近：`+x.msgs.filter(m=>m.type!=='sys').slice(-4).map(m=>(m.from==='me'?'我':charById(m.from)?.name||'?')+'：'+pv(m)).join(' / ')));
@@ -2215,13 +2211,13 @@ function shopView(v,kind){const my=(S.shop||={food:[],goods:[]})[kind]||(S.shop[
   const head=tabs([['buy',food?'点外卖':'逛逛'],['list',food?'订单':'包裹']],tab);
   if(tab==='list'){const L=[...(S.orders||[]).filter(o=>o.kind===kind).map(o=>({t:o.t,who:'我自己',from:'me',m:o})),
       ...S.threads.filter(t=>t.type==='dm').flatMap(t=>t.msgs.filter(m=>m.type===(food?'order':'parcel')&&!m.hide).map(m=>({t:m.t,who:dn(charById(t.chars[0])),from:m.from,m})))].sort((a,b)=>b.t-a.t).slice(0,60);
-    return{title:food?'外卖':'网购',body:head+(L.map(x=>`<div class="row"><span class="meta"><b>${esc(x.m.content)}</b><small>${x.from==='me'?'我 → '+esc(x.who):esc(x.who)+' → 我'} · ${ago(x.t)}</small></span><span class="side"><span>${money(x.m.amt)}</span><span class="pill">${food?(x.m.state==='done'?'已送达':'配送中'):parcelStage(x.m)}</span><button type="button" class="tb red" data-a="ordDel" data-id="${x.m.id}">删除</button></span></div>`).join('')+(L.length?`<button type="button" class="btn red" data-a="ordClr" data-k="${kind}" style="align-self:flex-start">清空记录</button>`:'')||`<div class="empty"><big>还没有${food?'订单':'包裹'}</big></div>`)}}
-  const card=([e,n,p])=>`<button type="button" data-a="shopPick" data-n="${n}" data-p="${p}">${n}<small>¥${p}</small></button>`;
+    return{title:food?'外卖':'网购',body:head+(L.map(x=>`<div class="row"><span class="meta"><b>${esc(x.m.content)}</b><small>${x.from==='me'?'我 → '+esc(x.who):esc(x.who)+' → 我'} · ${ago(x.t)}</small></span><span class="side"><span>${money(x.m.amt)}</span><span class="pill">${food?(x.m.state==='done'?'已送达':'配送中'):parcelStage(x.m)}</span><button class="tb red" data-a="ordDel" data-id="${x.m.id}">删除</button></span></div>`).join('')+(L.length?`<button class="btn red" data-a="ordClr" data-k="${kind}" style="align-self:flex-start">清空记录</button>`:'')||`<div class="empty"><big>还没有${food?'订单':'包裹'}</big></div>`)}}
+  const card=([e,n,p])=>`<button data-a="shopPick" data-n="${n}" data-p="${p}">${n}<small>¥${p}</small></button>`;
   return{title:food?'外卖':'网购',body:head+`
-    <div class="panel"><h2>${food?'送到哪':'寄给谁'}<button type="button" class="pill" data-a="open" data-v="wallet" style="border:0">钱包 ${money(S.wallet)}</button></h2><div class="chips">${[['me','我自己'],...chars.map(c=>[c.id,dn(c)])].map(([k,l])=>`<button type="button" class="${to===k?'on':''}" data-a="shopTo" data-id="${k}">${esc(l)}</button>`).join('')}</div></div>
-    <div class="panel"><h2>${food?'我的菜单':'我的货架'}<span class="btns"><button type="button" class="tb" data-a="shopAdd" data-k="${kind}">添加</button>${my.length?`<button type="button" class="tb" data-a="shopMng" data-k="${kind}">管理</button>`:''}</span></h2>${my.length?`<div class="goods">${my.map(x=>card(['',esc(x.n),x.p])).join('')}</div>`:`<p class="hint">还没有，点「添加」自己写</p>`}</div>
+    <div class="panel"><h2>${food?'送到哪':'寄给谁'}<button class="pill" data-a="open" data-v="wallet" style="border:0">钱包 ${money(S.wallet)}</button></h2><div class="chips">${[['me','我自己'],...chars.map(c=>[c.id,dn(c)])].map(([k,l])=>`<button class="${to===k?'on':''}" data-a="shopTo" data-id="${k}">${esc(l)}</button>`).join('')}</div></div>
+    <div class="panel"><h2>${food?'我的菜单':'我的货架'}<span class="btns"><button class="tb" data-a="shopAdd" data-k="${kind}">添加</button>${my.length?`<button class="tb" data-a="shopMng" data-k="${kind}">管理</button>`:''}</span></h2>${my.length?`<div class="goods">${my.map(x=>card(['',esc(x.n),x.p])).join('')}</div>`:`<p class="hint">还没有，点「添加」自己写</p>`}</div>
     <div class="panel"><h2>${food?'下单':'买它'}</h2><input type="text" id="spN" placeholder="${food?'点什么，可以写备注':'买什么'}" aria-label="名字"><input type="number" id="spA" min="1" step="0.1" placeholder="多少钱" inputmode="decimal" aria-label="价格">
-      <button type="button" class="btn" data-a="shopGo" data-k="${kind}" style="align-self:flex-start">${food?'下单':'付款'}</button><p class="hint">${food?'几分钟就送到。':'快递要等一阵子，半小时到几个小时。'}TA 们都会知道你${food?'点了什么':'买了什么'}。</p></div>`}}
+      <button class="btn" data-a="shopGo" data-k="${kind}" style="align-self:flex-start">${food?'下单':'付款'}</button><p class="hint">${food?'几分钟就送到。':'快递要等一阵子，半小时到几个小时。'}TA 们都会知道你${food?'点了什么':'买了什么'}。</p></div>`}}
 
 /* ================= 雨书 · 作息 · 心事 ================= */
 const pj=(txt,arr)=>{const m=String(txt||'').match(arr?/\[[\s\S]*\]/:/\{[\s\S]*\}/);try{return m?JSON.parse(m[0]):null}catch(e){return null}};
@@ -2251,31 +2247,31 @@ async function heartGen(c){const me=mask().name;
 async function routineGen(c){const txt=await callAI(sysFor(c,''),[{role:'user',content:`按你的人设，写你平时的作息：工作日和周末分别几点起床、上班或上课的时间和地点、下班后常做什么、几点睡。4到6行，简洁。只输出作息。`}],{max:512,side:true});c.routine=String(txt).trim().slice(0,400);save()}
 async function nowDoing(c){const txt=await callAI(sysFor(c,(c.routine?'你的作息：'+c.routine+'\n':'')+extraFor(c)),[{role:'user',content:`现在是${nowText()}。用一句话说你此刻在做什么（第三人称，20字以内，比如「在公司开会，偷偷看手机」）。只输出这句话。`}],{max:256,side:true});c.nowDoing={text:String(txt).trim().slice(0,40),t:Date.now()};save()}
 function heartView(v,head){const chars=S.chars.filter(visible),who=charById(v.who)||moodChar()||chars[0];
-  const pick=`<div class="chips">${chars.map(c=>`<button type="button" class="${who?.id===c.id?'on':''}" data-a="heartWho" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`;
+  const pick=`<div class="chips">${chars.map(c=>`<button class="${who?.id===c.id?'on':''}" data-a="heartWho" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`;
   if(!who)return{title:'抽屉',sub:'心事',body:head+``};const h=who.heart;
-  return{title:'抽屉',sub:'心事',right:`<button type="button" class="tb" data-a="heartGen" data-id="${who.id}">偷看一下</button>`,body:head+pick+(h?`
+  return{title:'抽屉',sub:'心事',right:`<button class="tb" data-a="heartGen" data-id="${who.id}">偷看一下</button>`,body:head+pick+(h?`
     <div class="panel"><h2>${esc(dn(who))}眼里的你<small class="hint">${ago(h.t)}</small></h2><p style="margin:0;line-height:1.8">${esc(h.view)}</p></div>
     <div class="panel"><h2>愿望清单</h2>${(h.wishes||[]).map(w=>`<div class="ck">${w.done?'☑':'☐'} <span style="${w.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(w.text)}</span></div>`).join('')||''}</div>
     <div class="panel"><h2>说不出口的话</h2>${(h.unsaid||[]).map(u=>`<div class="letter"><div class="lh"><span class="pill">${esc(u.mood||'')}</span></div><p>${esc(u.text)}</p></div>`).join('')||''}</div>`
     :``)}}
 function novelView(v){const N=NV(),tab=v.tab||'rank',chars=S.chars.filter(visible),head=tabs([['rank','排行榜'],['shelf','书架'],['write','写一本'],['theirs','TA们在看']],tab);
-  if(tab==='shelf'){const L=[...N.books].sort((a,b)=>b.t-a.t);return{title:'雨书',body:head+(L.map(b=>`<button type="button" class="row" data-a="novelOpen" data-id="${b.id}"><span class="meta"><b>《${esc(b.title)}》</b><small>${esc(b.genre)}${leadNames(b)?' · 主角 '+esc(leadNames(b)):''} · ${b.chapters.length} 章</small></span><span class="side">${ago(b.t)}</span></button>`).join('')||``)}}
+  if(tab==='shelf'){const L=[...N.books].sort((a,b)=>b.t-a.t);return{title:'雨书',body:head+(L.map(b=>`<button class="row" data-a="novelOpen" data-id="${b.id}"><span class="meta"><b>《${esc(b.title)}》</b><small>${esc(b.genre)}${leadNames(b)?' · 主角 '+esc(leadNames(b)):''} · ${b.chapters.length} 章</small></span><span class="side">${ago(b.t)}</span></button>`).join('')||``)}}
   if(tab==='write'){const G=v.genres||[],L=v.lead||'both';
-    return{title:'雨书',body:head+`<div class="panel"><h2>题材（可以不选）</h2><div class="chips">${GENRES.map(g=>`<button type="button" class="${G.includes(g)?'on':''}" data-a="novelGenre" data-g="${g}">${g}</button>`).join('')}</div><input type="text" id="nvG" value="${esc(v.g||'')}" placeholder="或者自己写题材" aria-label="题材"></div>
-      <div class="panel"><h2>主角</h2><div class="seg">${[['me','我'],['char','TA'],['both','我和TA'],['other','别人']].map(([k,l])=>`<button type="button" class="${L===k?'on':''}" data-a="novelLead" data-l="${k}">${l}</button>`).join('')}</div>
-        ${L==='char'||L==='both'?`<div class="chips">${chars.map(c=>`<button type="button" class="${(v.lc||chars[0]?.id)===c.id?'on':''}" data-a="novelLeadChar" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`:''}
+    return{title:'雨书',body:head+`<div class="panel"><h2>题材（可以不选）</h2><div class="chips">${GENRES.map(g=>`<button class="${G.includes(g)?'on':''}" data-a="novelGenre" data-g="${g}">${g}</button>`).join('')}</div><input type="text" id="nvG" value="${esc(v.g||'')}" placeholder="或者自己写题材" aria-label="题材"></div>
+      <div class="panel"><h2>主角</h2><div class="seg">${[['me','我'],['char','TA'],['both','我和TA'],['other','别人']].map(([k,l])=>`<button class="${L===k?'on':''}" data-a="novelLead" data-l="${k}">${l}</button>`).join('')}</div>
+        ${L==='char'||L==='both'?`<div class="chips">${chars.map(c=>`<button class="${(v.lc||chars[0]?.id)===c.id?'on':''}" data-a="novelLeadChar" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`:''}
         ${L==='other'?`<input type="text" id="nvO" value="${esc(v.o||'')}" placeholder="主角是谁（名字和一句话设定，可以空着让作者定）" aria-label="主角">`:''}</div>
       <div class="panel"><h2>书名和内容</h2><input type="text" id="nvT" value="${esc(v.ti||'')}" placeholder="书名（可以空着，让作者起）" aria-label="书名"><textarea id="nvC" placeholder="想看什么样的故事（可以空着）" aria-label="内容">${esc(v.co||'')}</textarea>
-        <button type="button" class="btn" data-a="novelWrite" style="align-self:flex-start">开写</button></div>`}}
-  if(tab==='theirs')return{title:'雨书',body:head+(chars.map(c=>`<div class="letter"><div class="lh"><span><b>${esc(dn(c))}</b> 最近在看</span><span>${c.reading?ago(c.reading.t):''}</span></div>${c.reading?`<p>《${esc(c.reading.title)}》</p><small class="hint">「${esc(c.reading.note)}」</small>`:''}<button type="button" class="btn o" data-a="readingGen" data-id="${c.id}" style="align-self:flex-start">${c.reading?'换一本':'问问 TA'}</button></div>`).join('')||``)};
-  return{title:'雨书',right:`<button type="button" class="tb" data-a="novelRank">刷新</button>`,body:head+(N.rank.map((r,i)=>`<div class="letter"><div class="lh"><span><b>No.${i+1} 《${esc(r.title)}》</b></span><span>${esc(r.hot||'')}</span></div><small class="hint">${esc(r.author||'')} · ${esc((r.tags||[]).join(' / '))}</small><p>${esc(r.blurb||'')}</p><button type="button" class="btn o" data-a="novelFromRank" data-i="${i}" style="align-self:flex-start">开始看</button></div>`).join('')||``)}}
+        <button class="btn" data-a="novelWrite" style="align-self:flex-start">开写</button></div>`}}
+  if(tab==='theirs')return{title:'雨书',body:head+(chars.map(c=>`<div class="letter"><div class="lh"><span><b>${esc(dn(c))}</b> 最近在看</span><span>${c.reading?ago(c.reading.t):''}</span></div>${c.reading?`<p>《${esc(c.reading.title)}》</p><small class="hint">「${esc(c.reading.note)}」</small>`:''}<button class="btn o" data-a="readingGen" data-id="${c.id}" style="align-self:flex-start">${c.reading?'换一本':'问问 TA'}</button></div>`).join('')||``)};
+  return{title:'雨书',right:`<button class="tb" data-a="novelRank">刷新</button>`,body:head+(N.rank.map((r,i)=>`<div class="letter"><div class="lh"><span><b>No.${i+1} 《${esc(r.title)}》</b></span><span>${esc(r.hot||'')}</span></div><small class="hint">${esc(r.author||'')} · ${esc((r.tags||[]).join(' / '))}</small><p>${esc(r.blurb||'')}</p><button class="btn o" data-a="novelFromRank" data-i="${i}" style="align-self:flex-start">开始看</button></div>`).join('')||``)}}
 function novelReadView(v){const b=NV().books.find(x=>x.id===v.id);if(!b)return{title:'不见了',body:''};const i=Math.min(v.ch??b.chapters.length-1,b.chapters.length-1),ch=b.chapters[i],chars=S.chars.filter(visible),w=v.with||chars[0]?.id;
-  if(!ch)return{title:'《'+b.title+'》',body:`<div class="empty"><big>还没写好</big><button type="button" class="btn o" data-a="novelNext">写第一章</button></div>`};
+  if(!ch)return{title:'《'+b.title+'》',body:`<div class="empty"><big>还没写好</big><button class="btn o" data-a="novelNext">写第一章</button></div>`};
   return{title:'《'+b.title+'》',sub:ch.title,body:`<div class="letter"><p>${esc(ch.text)}</p></div>
     ${(ch.comments||[]).map(x=>`<div class="letter"><div class="lh"><span><b>${esc(x.c==='me'?mask().name:dn(charById(x.c)))}</b></span><span>${ago(x.t)}</span></div><p>${esc(x.text)}</p></div>`).join('')}
-    ${(ch.comments||[]).length?`<div class="minput"><textarea id="nvIn" rows="1" placeholder="回 TA…" aria-label="回复"></textarea><button type="button" class="sq" data-a="novelAsk" aria-label="发送">${ICONS.send}</button></div>`:''}
-    <div class="panel"><h2>一起看</h2><div class="chips">${chars.map(c=>`<button type="button" class="${w===c.id?'on':''}" data-a="novelWith" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div><button type="button" class="btn o" data-a="novelAsk" style="align-self:flex-start">问问 TA 怎么看</button></div>
-    <div class="btns">${i>0?'<button type="button" class="btn o" data-a="novelNav" data-d="-1">上一章</button>':''}<button type="button" class="btn" data-a="novelNav" data-d="1">${i<b.chapters.length-1?'下一章':'写下一章'}</button></div>`,
+    ${(ch.comments||[]).length?`<div class="minput"><textarea id="nvIn" rows="1" placeholder="回 TA…" aria-label="回复"></textarea><button class="sq" data-a="novelAsk" aria-label="发送">${ICONS.send}</button></div>`:''}
+    <div class="panel"><h2>一起看</h2><div class="chips">${chars.map(c=>`<button class="${w===c.id?'on':''}" data-a="novelWith" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div><button class="btn o" data-a="novelAsk" style="align-self:flex-start">问问 TA 怎么看</button></div>
+    <div class="btns">${i>0?'<button class="btn o" data-a="novelNav" data-d="-1">上一章</button>':''}<button class="btn" data-a="novelNav" data-d="1">${i<b.chapters.length-1?'下一章':'写下一章'}</button></div>`,
     after(){if(v._c!==i){v._c=i;$('#content').scrollTop=0}}}}
 function keepNv(v){const g=k=>{const e=document.getElementById(k);return e?e.value:undefined};const a=g('nvG'),b=g('nvT'),c=g('nvC'),d=g('nvO');if(a!==undefined)v.g=a;if(b!==undefined)v.ti=b;if(c!==undefined)v.co=c;if(d!==undefined)v.o=d}
 function novelGo(b){if(nvBusy)return;nvBusy=true;go({v:'novelRead',id:b.id});toast('作者在写第一章…',60000);
@@ -2286,13 +2282,13 @@ function mailWho(id,m){if(id==='me')return mask().name;if(id==='x')return(m?.nic
 function mailFrom(m){return m.anon&&m.from!=='x'?'匿名':mailWho(m.from,m)}
 function letterHTML(m,canReply){return`<div class="letter${m.unseen?' new':''}"><div class="lh"><span><b>${esc(mailFrom(m))}</b> → ${esc(mailWho(m.to))}</span><span>${ago(m.t)}</span></div><p>${esc(m.text)}</p>
   ${(m.replies||[]).length?`<div class="rp">${m.replies.map(r=>`<div><b>${esc(r.from===m.from&&m.anon&&r.from!=='me'?'匿名':mailWho(r.from,m))}</b>${esc(r.text)}</div>`).join('')}</div>`:''}
-  ${m.due?'<small class="hint">对方在写回信…</small>':''}${canReply?`<button type="button" class="btn o" data-a="mailReply" data-id="${m.id}" style="align-self:flex-start">${m.to==='me'?'回信':'留言'}</button>`:''}</div>`}
-function mailView(v){const tab=v.tab||'mine',chars=S.chars.filter(visible),head=tabs([['mine','我的信箱'],['theirs','TA们的信箱'],['write','写信']],tab),right=`<button type="button" class="tb" data-a="mailFetch">收信</button>`;
-  if(tab==='write')return{title:'信箱',right,body:head+`<div class="panel"><h2>写给谁</h2><div class="chips">${chars.map(c=>`<button type="button" class="${v.to===c.id?'on':''}" data-a="mailTo" data-id="${c.id}">${esc(dn(c))}</button>`).join('')||'<span class="hint">还没有角色</span>'}</div>
+  ${m.due?'<small class="hint">对方在写回信…</small>':''}${canReply?`<button class="btn o" data-a="mailReply" data-id="${m.id}" style="align-self:flex-start">${m.to==='me'?'回信':'留言'}</button>`:''}</div>`}
+function mailView(v){const tab=v.tab||'mine',chars=S.chars.filter(visible),head=tabs([['mine','我的信箱'],['theirs','TA们的信箱'],['write','写信']],tab),right=`<button class="tb" data-a="mailFetch">收信</button>`;
+  if(tab==='write')return{title:'信箱',right,body:head+`<div class="panel"><h2>写给谁</h2><div class="chips">${chars.map(c=>`<button class="${v.to===c.id?'on':''}" data-a="mailTo" data-id="${c.id}">${esc(dn(c))}</button>`).join('')||'<span class="hint">还没有角色</span>'}</div>
     <label class="ck"><input type="checkbox" id="mlAnon" ${v.anon?'checked':''}>匿名（TA 不知道是你写的）</label>
-    <textarea id="mlTx" aria-label="信"></textarea><button type="button" class="btn" data-a="mailSend" style="align-self:flex-start">寄出</button></div>`};
+    <textarea id="mlTx" aria-label="信"></textarea><button class="btn" data-a="mailSend" style="align-self:flex-start">寄出</button></div>`};
   if(tab==='theirs'){const who=v.who||chars[0]?.id,L=(S.mail||[]).filter(m=>m.to===who).sort((a,b)=>b.t-a.t);
-    return{title:'信箱',right,body:head+`<div class="chips">${chars.map(c=>`<button type="button" class="${who===c.id?'on':''}" data-a="mailWhoSet" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`+(L.map(m=>letterHTML(m,true)).join('')||``)}}
+    return{title:'信箱',right,body:head+`<div class="chips">${chars.map(c=>`<button class="${who===c.id?'on':''}" data-a="mailWhoSet" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`+(L.map(m=>letterHTML(m,true)).join('')||``)}}
   const L=(S.mail||[]).filter(m=>m.to==='me'||m.from==='me').sort((a,b)=>b.t-a.t);
   return{title:'信箱',right,body:head+(L.map(m=>letterHTML(m,true)).join('')||``),
     after(){let ch=false;L.forEach(m=>{if(m.unseen){m.unseen=false;ch=true}});if(ch){save()}}}}
@@ -2443,31 +2439,31 @@ const ROLE={system:'系统',user:'用户',assistant:'角色'},MODE={both:'线上
 const VIEWS={
 threads(v){
   const tab=v.tab||'dm';
-  if(tab==='people')return{title:'消息',right:`<button type="button" class="tb" data-a="charMenu">添加</button>`,
-    body:tabs([['dm','单聊'],['group','群聊'],['people','通讯录']],tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button type="button" class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
-    (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button type="button" class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button type="button" class="tb red" data-a="delChar" data-id="${c.id}">永久删除</button></span></div>`).join(''):'')+
-    `<div class="sec" style="display:flex;justify-content:space-between;align-items:center">我的面具 · 角色看到的是你戴着的那个<button type="button" class="tb" data-a="newMask">新面具</button></div>`+
-    S.masks.map(m=>`<div class="row">${av(m)}<button type="button" class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>@${esc(m.handle)} · ${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button type="button" class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
+  if(tab==='people')return{title:'消息',right:`<button class="tb" data-a="charMenu">添加</button>`,
+    body:tabs([['dm','单聊'],['group','群聊'],['people','通讯录']],tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
+    (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">永久删除</button></span></div>`).join(''):'')+
+    `<div class="sec" style="display:flex;justify-content:space-between;align-items:center">我的面具 · 角色看到的是你戴着的那个<button class="tb" data-a="newMask">新面具</button></div>`+
+    S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>@${esc(m.handle)} · ${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
   const list=S.threads.filter(t=>t.type===tab&&!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
   const rows=list.map(t=>{const cs=t.chars.map(charById).filter(Boolean);const lm=t.msgs[t.msgs.length-1];
-    return`<button type="button" class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'}):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><b>${esc(threadTitle(t))}</b><small>${esc(lastPreview(t))}</small></span><span class="side">${lm?ago(lm.t):''}${t.unread?`<span class="pill n">${t.unread}</span>`:t.mode==='offline'?'<span class="pill">线下</span>':''}</span></button>`}).join('');
-  return{title:'消息',right:`<button type="button" class="tb" data-a="newThread">新建</button>`,
+    return`<button class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'}):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><b>${esc(threadTitle(t))}</b><small>${esc(lastPreview(t))}</small></span><span class="side">${lm?ago(lm.t):''}${t.unread?`<span class="pill n">${t.unread}</span>`:t.mode==='offline'?'<span class="pill">线下</span>':''}</span></button>`}).join('');
+  return{title:'消息',right:`<button class="tb" data-a="newThread">新建</button>`,
     body:tabs([['dm','单聊'],['group','群聊'],['people','通讯录']],tab)+(rows||`<div class="empty"><big>${tab==='dm'?'很安静 T_T':'还没有群'}</big></div>`)};
 },
 chat(v){
   const t=thread(v.id);if(!t)return{title:'不见了',body:''};if(t.unread){t.unread=0;save()}
   const c0=t.type==='dm'?charById(t.chars[0]):null,r=c0?rel(c0):{};
-  let foot=`<button type="button" class="sq" data-a="plus" aria-label="更多">${ICONS.plus}</button><button type="button" class="sq" data-a="stickerPicker" aria-label="表情包">${ICONS.smile}</button><textarea id="msgIn" rows="1" placeholder="${t.mode==='offline'?'写你的动作和话…':'发消息…'}" title="空着点发送＝让TA回" enterkeyhint="send" aria-label="消息"></textarea><button type="button" class="sq go" data-a="send" aria-label="发送">${ICONS.send}</button>`;
+  let foot=`<button class="sq" data-a="plus" aria-label="更多">${ICONS.plus}</button><button class="sq" data-a="stickerPicker" aria-label="表情包">${ICONS.smile}</button><textarea id="msgIn" rows="1" placeholder="${t.mode==='offline'?'写你的动作和话…':'发消息…'}" title="空着点发送＝让TA回" enterkeyhint="send" aria-label="消息"></textarea><button class="sq go" data-a="send" aria-label="发送">${ICONS.send}</button>`;
   let footCls='';
-  const blk=()=>{const sf=Math.round(r.soft||0);footCls='wrap';return`<div class="blk"><span>${r.theyDeleted?'TA删了你':'TA拉黑了你'}</span><span class="meter" role="img" aria-label="回心 ${sf}"><i style="width:${sf}%"></i></span><span>回心 ${sf}</span><button type="button" class="btn o" data-a="coax">哄哄TA</button></div>`};
-  if(r.youBlocked)foot=`<div class="notice">你已拉黑${esc(dn(c0))}<button type="button" class="btn o" data-a="unblock">解除拉黑</button></div>`;
-  else if(r.theyDeleted&&t.mode!=='offline')foot=blk()+`<input type="text" id="reqIn" placeholder="验证消息：我是${esc(mask().name)}…" aria-label="朋友验证"><button type="button" class="btn" data-a="friendReq">申请加回</button>`;
+  const blk=()=>{const sf=Math.round(r.soft||0);footCls='wrap';return`<div class="blk"><span>${r.theyDeleted?'TA删了你':'TA拉黑了你'}</span><span class="meter" role="img" aria-label="回心 ${sf}"><i style="width:${sf}%"></i></span><span>回心 ${sf}</span><button class="btn o" data-a="coax">哄哄TA</button></div>`};
+  if(r.youBlocked)foot=`<div class="notice">你已拉黑${esc(dn(c0))}<button class="btn o" data-a="unblock">解除拉黑</button></div>`;
+  else if(r.theyDeleted&&t.mode!=='offline')foot=blk()+`<input type="text" id="reqIn" placeholder="验证消息：我是${esc(mask().name)}…" aria-label="朋友验证"><button class="btn" data-a="friendReq">申请加回</button>`;
   else if(r.theyBlocked&&t.mode!=='offline')foot=blk()+foot;
-  else if(t.game){footCls='wrap';foot=`<div class="blk"><span>正在玩「${GAME_NAMES[t.game]}」</span><span style="flex:1"></span><button type="button" class="btn o" data-a="gEnd">结束游戏</button></div>`+foot}
+  else if(t.game){footCls='wrap';foot=`<div class="blk"><span>正在玩「${GAME_NAMES[t.game]}」</span><span style="flex:1"></span><button class="btn o" data-a="gEnd">结束游戏</button></div>`+foot}
   const listening=c0&&S.music.with===c0.id&&mState.playing;
   return{title:threadTitle(t),sub:t.type==='group'?(t.chars.length+1)+' 人'+(t.mode==='offline'?' · 线下':''):(t.mode==='offline'?'线下 · 见面中':(listening?'一起听歌中':(c0?.sign?c0.sign:'在线'))+(S.chat.tide&&c0?' · '+(c0.mood||'平静'):'')),cls:'chat',footCls,
-    right:`<button type="button" class="tb" data-a="chatMenu" aria-label="聊天设置">···</button>`,
-    body:(!mask().persona&&!S.hintMask?`<div class="panel" style="gap:8px"><p class="hint">你的面具「${esc(mask().name)}」还没写人设，TA 不知道你是谁。</p><div class="btns"><button type="button" class="btn o" data-a="editMask" data-id="${mask().id}">去写</button><button type="button" class="tb" data-a="hideMaskHint">不再提示</button></div></div>`:'')+msgsHTML(t),foot,
+    right:`<button class="tb" data-a="chatMenu" aria-label="聊天设置">···</button>`,
+    body:(!mask().persona&&!S.hintMask?`<div class="panel" style="gap:8px"><p class="hint">你的面具「${esc(mask().name)}」还没写人设，TA 不知道你是谁。</p><div class="btns"><button class="btn o" data-a="editMask" data-id="${mask().id}">去写</button><button class="tb" data-a="hideMaskHint">不再提示</button></div></div>`:'')+msgsHTML(t),foot,
     after(){const c=$('#content');c.scrollTop=c.scrollHeight;const ta=$('#msgIn');if(ta)ta.addEventListener('input',()=>{ta.style.height='40px';ta.style.height=Math.min(140,ta.scrollHeight)+'px'})}};
 },
 offline(v){
@@ -2477,35 +2473,35 @@ offline(v){
     <label class="f">字数<span class="inline"><input type="range" id="o-words" min="80" max="1500" step="20" data-s="off" data-k="words" value="${o.words}"><output>${o.words}</output></span></label>
     <label class="f">人称<select id="o-pov" data-s="off" data-k="pov">${[['first','第一人称（我）'],['second','第二人称（你）'],['third','第三人称']].map(([k,l])=>`<option value="${k}" ${o.pov===k?'selected':''}>${l}</option>`).join('')}</select></label>
     </div>
-    <div class="btns"><button type="button" class="btn o" data-a="offDefault">设为新聊天的默认</button></div>`};
+    <div class="btns"><button class="btn o" data-a="offDefault">设为新聊天的默认</button></div>`};
 },
 summaryEdit(v){
   const t=thread(v.id);
   return{title:'前情总结',sub:threadTitle(t),body:`<div class="panel">
     <textarea class="tall" id="sum-ta" data-s="thread" data-k="summary" aria-label="总结">${esc(t.summary||'')}</textarea>
-    <div class="btns"><button type="button" class="btn" data-a="sumNow">现在总结一次</button><button type="button" class="btn red" data-a="sumClear">清空总结</button></div></div>`};
+    <div class="btns"><button class="btn" data-a="sumNow">现在总结一次</button><button class="btn red" data-a="sumClear">清空总结</button></div></div>`};
 },
 groupEdit(v){
   const t=thread(v.id);
-  return{title:'群设置',body:`<div class="panel"><label class="f">群名<input type="text" id="g-title" data-s="thread" data-k="title" value="${esc(t.title)}"></label><div class="btns">${fileBtn('群聊壁纸','accept="image/*" data-img="twall"')}${t.wall?'<button type="button" class="btn o" data-a="clrTW">去掉壁纸</button>':''}</div></div>
+  return{title:'群设置',body:`<div class="panel"><label class="f">群名<input type="text" id="g-title" data-s="thread" data-k="title" value="${esc(t.title)}"></label><div class="btns">${fileBtn('群聊壁纸','accept="image/*" data-img="twall"')}${t.wall?'<button class="btn o" data-a="clrTW">去掉壁纸</button>':''}</div></div>
   <div class="panel"><h2>成员</h2>${S.chars.map(c=>`<label class="ck"><input type="checkbox" data-a2="member" data-id="${c.id}" ${t.chars.includes(c.id)?'checked':''}>${esc(dn(c))}</label>`).join('')}</div>`};
 },
 plaza(v){
   const tab=v.tab||'feed';
   if(tab==='me'){
     const m=mask(),mine=S.feed.filter(p=>p.author==='me').sort((a,b)=>b.t-a.t),likes=S.feed.reduce((s,p)=>s+(p.likes||[]).filter(x=>x!=='me').length,0);
-    return{title:'雨巷',right:`<button type="button" class="tb" data-a="switchMask">换面具</button>`,body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="prof">
+    return{title:'雨巷',right:`<button class="tb" data-a="switchMask">换面具</button>`,body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="prof">
       <label class="banner" style="${(m.banner||S.look.photo)?`background-image:url(${m.banner||S.look.photo})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label>${av(m,84)}
       <div><h3>${esc(m.name)}</h3><div class="h">@${esc(m.handle)} · ID ${String(m.id).slice(-6).toUpperCase()}</div></div>
       ${m.bio?`<div>${esc(m.bio)}</div>`:''}
       <div class="stats"><span><b>${S.chars.length}</b> 关注</span><span><b>${S.chars.length}</b> 粉丝</span><span><b>${likes}</b> 获赞</span></div>
-      <div class="wallet"><div><small>钱包余额</small><br><b>¥${(+S.wallet||0).toFixed(2)}</b></div><button type="button" class="btn" data-a="open" data-v="wallet">打开钱包</button></div>
-      <div class="btns"><button type="button" class="btn o" data-a="editMask" data-id="${m.id}">编辑资料</button></div></div>`+
+      <div class="wallet"><div><small>钱包余额</small><br><b>¥${(+S.wallet||0).toFixed(2)}</b></div><button class="btn" data-a="open" data-v="wallet">打开钱包</button></div>
+      <div class="btns"><button class="btn o" data-a="editMask" data-id="${m.id}">编辑资料</button></div></div>`+
       (mine.map(p=>postHTML(p)).join('')||``)};
   }
   const list=[...S.feed].filter(p=>p.author==='me'||visible(charById(p.author))).sort((a,b)=>b.t-a.t);
-  return{title:'雨巷',right:`<button type="button" class="tb" data-a="charPostPick">让TA发</button>`,
-    body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="panel"><div class="inline" style="align-items:flex-start;flex-wrap:nowrap">${av(mask(),40)}<textarea id="postIn" style="min-height:70px" aria-label="新动态"></textarea></div><div class="btns" style="justify-content:flex-end"><button type="button" class="btn" data-a="myPost">发布</button></div></div>`+
+  return{title:'雨巷',right:`<button class="tb" data-a="charPostPick">让TA发</button>`,
+    body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="panel"><div class="inline" style="align-items:flex-start;flex-wrap:nowrap">${av(mask(),40)}<textarea id="postIn" style="min-height:70px" aria-label="新动态"></textarea></div><div class="btns" style="justify-content:flex-end"><button class="btn" data-a="myPost">发布</button></div></div>`+
       (list.map(p=>postHTML(p)).join('')||``)};
 },
 post(v){
@@ -2513,176 +2509,176 @@ post(v){
   const rs=p.replies||[];rs.forEach(r=>{if(!r.id)r.id=uid()});
   return{title:'动态',body:postHTML(p,false)+rs.map(r=>{const a=authorOf(r.author,r),lk=(r.likes||[]).includes('me'),to=r.to?rs.find(x=>x.id===r.to):null;
     return`<article class="post cmt">${av(a,32)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b>${r.author==='x'?'<span class="pill">路人</span>':''}<span>${ago(r.t)}</span></div><div class="tx">${to?`<span class="rto">回复 ${esc(authorOf(to.author,to).name)}：</span>`:''}${esc(r.text)}</div>
-    <div class="ft">${r.author!=='me'?`<button type="button" data-a="rReply" data-id="${r.id}">回复</button>`:''}<button type="button" class="${lk?'lk':''}" data-a="rLike" data-id="${r.id}">${lk?'♥':'♡'} ${(r.likes||[]).length}</button></div></div></article>`}).join(''),
+    <div class="ft">${r.author!=='me'?`<button data-a="rReply" data-id="${r.id}">回复</button>`:''}<button class="${lk?'lk':''}" data-a="rLike" data-id="${r.id}">${lk?'♥':'♡'} ${(r.likes||[]).length}</button></div></div></article>`}).join(''),
     footCls:v.rq?'wrap':'',
-    foot:(v.rq?`<div class="qbar"><span>↪ 回复 ${esc(v.rq.name)}</span><button type="button" data-a="rUnq" aria-label="取消回复">×</button></div>`:'')+`<textarea id="replyIn" rows="1" placeholder="${v.rq?'回复 '+esc(v.rq.name)+'…':'写评论…'}" aria-label="评论"></textarea><button type="button" class="sq go" data-a="replyPost" aria-label="发送评论">${ICONS.send}</button>`};
+    foot:(v.rq?`<div class="qbar"><span>↪ 回复 ${esc(v.rq.name)}</span><button data-a="rUnq" aria-label="取消回复">×</button></div>`:'')+`<textarea id="replyIn" rows="1" placeholder="${v.rq?'回复 '+esc(v.rq.name)+'…':'写评论…'}" aria-label="评论"></textarea><button class="sq go" data-a="replyPost" aria-label="发送评论">${ICONS.send}</button>`};
 },
 people(v){
   const tab=v.tab||'chars';
-  if(tab==='masks')return{title:'联系人',right:`<button type="button" class="tb" data-a="newMask">新面具</button>`,body:tabs([['chars','角色'],['masks','我的面具']],tab)+
-    ``+S.masks.map(m=>`<div class="row">${av(m)}<button type="button" class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>@${esc(m.handle)} · ${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button type="button" class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
-  return{title:'联系人',right:`<button type="button" class="tb" data-a="charMenu">添加</button>`,
-    body:tabs([['chars','角色'],['masks','我的面具']],tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button type="button" class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':''}</button>`).join('')||``)+
-    (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button type="button" class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button type="button" class="tb red" data-a="delChar" data-id="${c.id}">永久删除</button></span></div>`).join(''):'')};
+  if(tab==='masks')return{title:'联系人',right:`<button class="tb" data-a="newMask">新面具</button>`,body:tabs([['chars','角色'],['masks','我的面具']],tab)+
+    ``+S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>@${esc(m.handle)} · ${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
+  return{title:'联系人',right:`<button class="tb" data-a="charMenu">添加</button>`,
+    body:tabs([['chars','角色'],['masks','我的面具']],tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':''}</button>`).join('')||``)+
+    (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">永久删除</button></span></div>`).join(''):'')};
 },
 charEdit(v){
   const c=charById(v.id);if(!c)return{title:'不见了',body:''};
   const locals=S.books.filter(b=>b.scope==='local');
   return{title:dn(c),sub:'角色',body:`
-  <div class="panel"><div class="inline">${av(c,76)}<div class="btns">${fileBtn('换头像','accept="image/*" data-img="char"')}${c.avatar?'<button type="button" class="btn o" data-a="clearCharAv">去掉</button>':''}</div></div>
+  <div class="panel"><div class="inline">${av(c,76)}<div class="btns">${fileBtn('换头像','accept="image/*" data-img="char"')}${c.avatar?'<button class="btn o" data-a="clearCharAv">去掉</button>':''}</div></div>
     <div class="grid2"><label class="f">名字<input type="text" id="c-name" data-s="char" data-k="name" value="${esc(c.name)}"></label><label class="f">备注<input type="text" id="c-remark" data-s="char" data-k="remark" value="${esc(c.remark)}" placeholder="你给TA的备注"></label></div>
     <label class="f">账号 @<input type="text" id="c-handle" data-s="char" data-k="handle" value="${esc(c.handle)}"></label>
     <label class="f">签名<input type="text" id="c-sign" data-s="char" data-k="sign" value="${esc(c.sign||'')}" placeholder="TA的个性签名"></label>
-    <div class="grid2"><label class="f">生日<input type="text" id="c-bday" data-s="char" data-k="bday" value="${esc(c.bday||'')}"></label><div class="f">在哪个城市<button type="button" class="btn o" data-a="setCity" data-for="${c.id}">${c.loc?esc(c.loc.name):'和你一样'}</button></div></div>
+    <div class="grid2"><label class="f">生日<input type="text" id="c-bday" data-s="char" data-k="bday" value="${esc(c.bday||'')}"></label><div class="f">在哪个城市<button class="btn o" data-a="setCity" data-for="${c.id}">${c.loc?esc(c.loc.name):'和你一样'}</button></div></div>
     <label class="f">外貌（生图时用，比如：黑色短发，下垂眼，常穿白衬衫）<input type="text" id="c-look" data-s="char" data-k="look" value="${esc(c.look||'')}"></label>
     <label class="f">关系阶段（TA会按这个分寸和你相处）<select id="c-stage" data-s="char" data-k="stage">${STAGES.map(s=>`<option value="${s}" ${(c.stage||'')===s?'selected':''}>${s||'不设定'}</option>`).join('')}</select></label></div>
-  ${S.chat.life?`<div class="panel"><h2>TA的今天<button type="button" class="tb" data-a="todayRe">换一个</button></h2><p class="hint">${c.today?.day===dayKey()&&c.today.text?esc(c.today.text):'今天第一次聊天时会自动安排'}</p></div>`:''}
-  <div class="panel"><h2>作息<button type="button" class="tb" data-a="routineGen">按人设生成</button></h2>
+  ${S.chat.life?`<div class="panel"><h2>TA的今天<button class="tb" data-a="todayRe">换一个</button></h2><p class="hint">${c.today?.day===dayKey()&&c.today.text?esc(c.today.text):'今天第一次聊天时会自动安排'}</p></div>`:''}
+  <div class="panel"><h2>作息<button class="tb" data-a="routineGen">按人设生成</button></h2>
     <textarea id="c-routine" data-s="char" data-k="routine" style="min-height:80px">${esc(c.routine||'')}</textarea></div>
   <div class="panel"><h2>壁纸和声音</h2>
-    <div class="btns">${fileBtn('聊天壁纸','accept="image/*" data-img="cwall"')}${c.wall?'<button type="button" class="btn o" data-a="clrCW">去掉</button>':''}${fileBtn('视频通话画面','accept="image/*" data-img="cvbg"')}${c.vbg?'<button type="button" class="btn o" data-a="clrCV">去掉</button>':''}</div>
+    <div class="btns">${fileBtn('聊天壁纸','accept="image/*" data-img="cwall"')}${c.wall?'<button class="btn o" data-a="clrCW">去掉</button>':''}${fileBtn('视频通话画面','accept="image/*" data-img="cvbg"')}${c.vbg?'<button class="btn o" data-a="clrCV">去掉</button>':''}</div>
     
-    ${S.media.tts.provider!=='browser'?`<label class="f">声音 ID（${S.media.tts.provider==='minimax'?'MiniMax 的 voice_id':'voice'}，不填用默认）<input type="text" id="cv-vid" data-s="cvoice" data-k="vid" value="${esc(c.voice?.vid||'')}" autocomplete="off"><button type="button" class="tb" data-a="voicePick" data-for="${c.id}" style="align-self:flex-start;padding:4px 0">选声音</button></label>`:''}
+    ${S.media.tts.provider!=='browser'?`<label class="f">声音 ID（${S.media.tts.provider==='minimax'?'MiniMax 的 voice_id':'voice'}，不填用默认）<input type="text" id="cv-vid" data-s="cvoice" data-k="vid" value="${esc(c.voice?.vid||'')}" autocomplete="off"><button class="tb" data-a="voicePick" data-for="${c.id}" style="align-self:flex-start;padding:4px 0">选声音</button></label>`:''}
     ${TTS||S.media.tts.provider!=='browser'?`<div class="grid2"><label class="f">音调<span class="inline"><input type="range" min="0.5" max="1.8" step="0.05" id="cv-p" data-s="cvoice" data-k="pitch" value="${c.voice?.pitch??1}"><output>${c.voice?.pitch??1}</output></span></label><label class="f">语速<span class="inline"><input type="range" min="0.6" max="1.6" step="0.05" id="cv-r" data-s="cvoice" data-k="rate" value="${c.voice?.rate??1}"><output>${c.voice?.rate??1}</output></span></label></div>
     ${zhVoices().length>1?`<label class="f">声线<select id="cv-i" data-s="cvoice" data-k="idx">${zhVoices().map((x,k)=>`<option value="${k}" ${(+c.voice?.idx||0)===k?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>`:''}
-    <button type="button" class="btn o" data-a="tryVoice" style="align-self:flex-start">试听</button>`:''}</div>
+    <button class="btn o" data-a="tryVoice" style="align-self:flex-start">试听</button>`:''}</div>
   ${S.chat.tide?`<div class="panel"><h2>潮汐<span class="pill">${esc(c.mood||'平静')} · ${tideOf(c)}</span></h2>${spark(c.tideLog)}</div>`:''}
   <div class="panel"><h2>角色卡</h2>
     ${fileBtn('导入文档','data-doc="char"')}<textarea class="tall" id="c-persona" data-s="char" data-k="persona" aria-label="角色卡">${esc(c.persona)}</textarea>
     <label class="f">开场白（可以不写，每行一个气泡）<textarea id="c-greet" data-s="char" data-k="greeting">${esc(c.greeting)}</textarea></label>
     <label class="f">TA专属的${esc(S.chat.innerName||'心声')}风格（可不填）<input type="text" id="c-inner" data-s="char" data-k="innerStyle" value="${esc(c.innerStyle||'')}"></label></div>
   <div class="panel"><h2>局部世界书</h2>${locals.length?locals.map(b=>`<label class="ck"><input type="checkbox" data-a2="charBook" data-id="${b.id}" ${(c.books||[]).includes(b.id)?'checked':''}>${esc(b.name)}</label>`).join(''):''}</div>
-  <div class="btns"><button type="button" class="btn" data-a="messageChar" data-id="${c.id}">发消息</button><button type="button" class="btn o" data-a="exportChar">导出角色卡</button>${rel(c).youBlocked?`<button type="button" class="btn o" data-a="unblockC" data-id="${c.id}">解除拉黑</button>`:''}<button type="button" class="btn red" data-a="delChar">彻底删除角色</button></div>`};
+  <div class="btns"><button class="btn" data-a="messageChar" data-id="${c.id}">发消息</button><button class="btn o" data-a="exportChar">导出角色卡</button>${rel(c).youBlocked?`<button class="btn o" data-a="unblockC" data-id="${c.id}">解除拉黑</button>`:''}<button class="btn red" data-a="delChar">彻底删除角色</button></div>`};
 },
 maskEdit(v){
-  const m=S.masks.find(x=>x.id===v.id);if(!m)return{title:'不见了',body:''};
+  const m=maskById(v.id);if(!m)return{title:'不见了',body:''};
   return{title:m.name||'面具',sub:'面具',body:`<div class="panel"><div class="inline">${av(m,76)}${fileBtn('换头像','accept="image/*" data-img="mask"')}</div>
     <div class="grid2"><label class="f">名字<input type="text" id="m-name" data-s="mask" data-k="name" value="${esc(m.name)}"></label><label class="f">账号 @<input type="text" id="m-handle" data-s="mask" data-k="handle" value="${esc(m.handle)}"></label></div>
     <label class="f">签名（主页显示）<input type="text" id="m-bio" data-s="mask" data-k="bio" value="${esc(m.bio)}"></label>
     <div class="grid2"><label class="f">生日（TA们会记得）<input type="text" id="m-bday" data-s="mask" data-k="bday" value="${esc(m.bday||'')}"></label><label class="f">外貌（生图用）<input type="text" id="m-look" data-s="mask" data-k="look" value="${esc(m.look||'')}"></label></div>
     <label class="f">人设（角色会知道）<textarea class="tall" id="m-persona" data-s="mask" data-k="persona">${esc(m.persona)}</textarea></label>${fileBtn('导入文档','data-doc="mask"')}</div>
-    <div class="btns">${m.id===S.activeMask?'<span class="pill fill">正戴着</span>':`<button type="button" class="btn" data-a="useMask" data-id="${m.id}">戴上这个</button>`}${S.masks.length>1?'<button type="button" class="btn red" data-a="delMask">删除</button>':''}</div>`};
+    <div class="btns">${m.id===S.activeMask?'<span class="pill fill">正戴着</span>':`<button class="btn" data-a="useMask" data-id="${m.id}">戴上这个</button>`}${S.masks.length>1?'<button class="btn red" data-a="delMask">删除</button>':''}</div>`};
 },
 library(v){
   const tab=v.tab||'books',LT=[['books','世界书'],['presets','预设'],['stickers','表情包']];
   if(tab==='stickers'){const r=VIEWS.stickers(v);return{...r,title:'设定库',body:tabs(LT,tab)+r.body}}
-  if(tab==='presets')return{title:'设定库',right:`<button type="button" class="tb" data-a="presetMenu">添加</button>`,body:tabs(LT,tab)+
+  if(tab==='presets')return{title:'设定库',right:`<button class="tb" data-a="presetMenu">添加</button>`,body:tabs(LT,tab)+
     ``+
-    S.presets.map(p=>`<button type="button" class="row" data-a="editPreset" data-id="${p.id}"><span class="meta"><b>${esc(p.name)}</b><small>开启 ${p.items.filter(i=>i.on).length}/${p.items.length} 条</small></span>${p.id===S.activePreset?'<span class="pill fill">使用中</span>':''}</button>`).join('')};
-  return{title:'设定库',right:`<button type="button" class="tb" data-a="bookMenu">添加</button>`,body:tabs(LT,tab)+
+    S.presets.map(p=>`<button class="row" data-a="editPreset" data-id="${p.id}"><span class="meta"><b>${esc(p.name)}</b><small>开启 ${p.items.filter(i=>i.on).length}/${p.items.length} 条</small></span>${p.id===S.activePreset?'<span class="pill fill">使用中</span>':''}</button>`).join('')};
+  return{title:'设定库',right:`<button class="tb" data-a="bookMenu">添加</button>`,body:tabs(LT,tab)+
     ``+
-    (S.books.map(b=>{const g=b.entries.filter(e=>e.light==='green').length,y=b.entries.filter(e=>e.light==='yellow').length;return`<button type="button" class="row" data-a="editBook" data-id="${b.id}"><span class="meta"><b>${esc(b.name)}</b><small>${b.entries.length} 条 · ${g} 常亮 · ${y} 关键词${b.scope!=='global'&&!S.chars.some(c=>(c.books||[]).includes(b.id))?' · ⚠ 还没有角色在用，去角色页勾选或设成全局':''}</small></span><span class="pill ${b.scope==='global'?'fill':''}">${b.scope==='global'?'全局':'局部'}</span></button>`}).join('')||``)};
+    (S.books.map(b=>{const g=b.entries.filter(e=>e.light==='green').length,y=b.entries.filter(e=>e.light==='yellow').length;return`<button class="row" data-a="editBook" data-id="${b.id}"><span class="meta"><b>${esc(b.name)}</b><small>${b.entries.length} 条 · ${g} 常亮 · ${y} 关键词${b.scope!=='global'&&!S.chars.some(c=>(c.books||[]).includes(b.id))?' · ⚠ 还没有角色在用，去角色页勾选或设成全局':''}</small></span><span class="pill ${b.scope==='global'?'fill':''}">${b.scope==='global'?'全局':'局部'}</span></button>`}).join('')||``)};
 },
 bookEdit(v){
   const b=S.books.find(x=>x.id===v.id);if(!b)return{title:'不见了',body:''};
   const users=S.chars.filter(c=>(c.books||[]).includes(b.id)).map(dn);
-  return{title:b.name||'世界书',sub:'世界书',right:`<button type="button" class="tb" data-a="newEntry">加条目</button>`,body:`
+  return{title:b.name||'世界书',sub:'世界书',right:`<button class="tb" data-a="newEntry">加条目</button>`,body:`
   <div class="panel"><label class="f">名字<input type="text" id="b-name" data-s="book" data-k="name" value="${esc(b.name)}"></label>
-    <div class="seg"><button type="button" class="${b.scope==='global'?'on':''}" data-a="bookScope" data-sc="global">全局</button><button type="button" class="${b.scope==='local'?'on':''}" data-a="bookScope" data-sc="local">局部</button></div>
+    <div class="seg"><button class="${b.scope==='global'?'on':''}" data-a="bookScope" data-sc="global">全局</button><button class="${b.scope==='local'?'on':''}" data-a="bookScope" data-sc="local">局部</button></div>
     <p class="hint">${b.scope==='global'?'所有聊天都会用。':users.length?'绑定的角色：'+esc(users.join('、')):'还没绑定角色，去角色页勾选它。'}</p></div>`+
-  ([...b.entries].sort((a,c)=>(a.order||0)-(c.order||0)).map(e=>`<button type="button" class="row" data-a="editEntry" data-id="${e.id}"><span class="light ${e.light}"></span><span class="meta"><b>${esc(e.title||'未命名')}</b><small>${e.light==='green'?'常亮':esc(e.keys||'没有关键词')} · ${e.prob??100}%</small></span><span class="side">#${e.order||0}</span></button>`).join('')||'')+
-  `<div class="btns"><button type="button" class="btn o" data-a="exportBook">复制为 JSON</button><button type="button" class="btn o" data-a="dlBook">下载文件</button><button type="button" class="btn red" data-a="delBook">删除世界书</button></div>`};
+  ([...b.entries].sort((a,c)=>(a.order||0)-(c.order||0)).map(e=>`<button class="row" data-a="editEntry" data-id="${e.id}"><span class="light ${e.light}"></span><span class="meta"><b>${esc(e.title||'未命名')}</b><small>${e.light==='green'?'常亮':esc(e.keys||'没有关键词')} · ${e.prob??100}%</small></span><span class="side">#${e.order||0}</span></button>`).join('')||'')+
+  `<div class="btns"><button class="btn o" data-a="exportBook">复制为 JSON</button><button class="btn o" data-a="dlBook">下载文件</button><button class="btn red" data-a="delBook">删除世界书</button></div>`};
 },
 entryEdit(v){
   const b=S.books.find(x=>x.id===v.id),e=b?.entries.find(x=>x.id===v.eid);if(!e)return{title:'不见了',body:''};
   return{title:e.title||'条目',sub:b.name,body:`<div class="panel">
     <label class="f">标题<input type="text" id="e-title" data-s="entry" data-k="title" value="${esc(e.title)}"></label>
-    <div class="lights" role="group" aria-label="状态">${[['green','常亮'],['yellow','关键词'],['red','关闭']].map(([k,l])=>`<button type="button" class="${e.light===k?'on':''}" data-a="light" data-l="${k}"><span class="light ${k}"></span>${l}</button>`).join('')}</div>
+    <div class="lights" role="group" aria-label="状态">${[['green','常亮'],['yellow','关键词'],['red','关闭']].map(([k,l])=>`<button class="${e.light===k?'on':''}" data-a="light" data-l="${k}"><span class="light ${k}"></span>${l}</button>`).join('')}</div>
     <label class="f">关键词（逗号分开）<input type="text" id="e-keys" data-s="entry" data-k="keys" value="${esc(e.keys)}"></label>
     <label class="f">内容<textarea class="tall" id="e-content" data-s="entry" data-k="content">${esc(e.content)}</textarea></label>
     <div class="grid2"><label class="f">触发概率 %<span class="inline"><input type="range" id="e-prob" min="0" max="100" step="5" data-s="entry" data-k="prob" value="${e.prob??100}"><output>${e.prob??100}</output></span></label>
     <label class="f">顺序<input type="number" id="e-order" data-s="entry" data-k="order" value="${e.order||0}"></label></div></div>
-    <div class="btns"><button type="button" class="btn red" data-a="delEntry">删除条目</button></div>`};
+    <div class="btns"><button class="btn red" data-a="delEntry">删除条目</button></div>`};
 },
 presetEdit(v){
-  const p=S.presets.find(x=>x.id===v.id);if(!p)return{title:'不见了',body:''};
-  return{title:p.name,sub:'预设',right:`<button type="button" class="tb" data-a="newItem">加提示词</button>`,body:`
+  const p=presetById(v.id);if(!p)return{title:'不见了',body:''};
+  return{title:p.name,sub:'预设',right:`<button class="tb" data-a="newItem">加提示词</button>`,body:`
   <div class="panel"><label class="f">名字<input type="text" id="p-name" data-s="preset" data-k="name" value="${esc(p.name)}"></label></div>`+
-  p.items.map((it,i)=>`<div class="row"><input type="checkbox" class="cbx" aria-label="开启 ${esc(it.name)}" data-a2="itemOn" data-id="${it.id}" ${it.on?'checked':''}><button type="button" class="meta" data-a="editItem" data-id="${it.id}"><b>${esc(it.name)}</b><small>${ROLE[it.role]||it.role} · ${MODE[it.mode]||it.mode} · ${esc((it.content||'').replace(/\n/g,' '))}</small></button><span class="side h"><button type="button" class="tb" data-a="moveItem" data-id="${it.id}" data-d="-1" ${i?'':'disabled'} aria-label="上移">↑</button><button type="button" class="tb" data-a="moveItem" data-id="${it.id}" data-d="1" ${i<p.items.length-1?'':'disabled'} aria-label="下移">↓</button></span></div>`).join('')+
-  `<div class="btns">${p.id===S.activePreset?'<span class="pill fill">使用中</span>':'<button type="button" class="btn" data-a="usePreset">用这个预设</button>'}<button type="button" class="btn o" data-a="exportPreset">复制为 JSON</button><button type="button" class="btn o" data-a="dlPreset">下载文件</button>${S.presets.length>1?'<button type="button" class="btn red" data-a="delPreset">删除</button>':''}</div>`};
+  p.items.map((it,i)=>`<div class="row"><input type="checkbox" class="cbx" aria-label="开启 ${esc(it.name)}" data-a2="itemOn" data-id="${it.id}" ${it.on?'checked':''}><button class="meta" data-a="editItem" data-id="${it.id}"><b>${esc(it.name)}</b><small>${ROLE[it.role]||it.role} · ${MODE[it.mode]||it.mode} · ${esc((it.content||'').replace(/\n/g,' '))}</small></button><span class="side h"><button class="tb" data-a="moveItem" data-id="${it.id}" data-d="-1" ${i?'':'disabled'} aria-label="上移">↑</button><button class="tb" data-a="moveItem" data-id="${it.id}" data-d="1" ${i<p.items.length-1?'':'disabled'} aria-label="下移">↓</button></span></div>`).join('')+
+  `<div class="btns">${p.id===S.activePreset?'<span class="pill fill">使用中</span>':'<button class="btn" data-a="usePreset">用这个预设</button>'}<button class="btn o" data-a="exportPreset">复制为 JSON</button><button class="btn o" data-a="dlPreset">下载文件</button>${S.presets.length>1?'<button class="btn red" data-a="delPreset">删除</button>':''}</div>`};
 },
 itemEdit(v){
-  const p=S.presets.find(x=>x.id===v.id),it=p?.items.find(x=>x.id===v.iid);if(!it)return{title:'不见了',body:''};
+  const p=presetById(v.id),it=p?.items.find(x=>x.id===v.iid);if(!it)return{title:'不见了',body:''};
   return{title:it.name||'提示词',sub:p.name,body:`<div class="panel">
     <label class="f">名字<input type="text" id="i-name" data-s="item" data-k="name" value="${esc(it.name)}"></label>
     <div class="grid2"><label class="f">发送身份<select id="i-role" data-s="item" data-k="role">${Object.entries(ROLE).map(([k,l])=>`<option value="${k}" ${it.role===k?'selected':''}>${l}（${k}）</option>`).join('')}</select></label>
     <label class="f">用在<select id="i-mode" data-s="item" data-k="mode">${Object.entries(MODE).map(([k,l])=>`<option value="${k}" ${it.mode===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <label class="f">内容（可以用 {{char}} {{user}}）<textarea class="tall" id="i-content" data-s="item" data-k="content">${esc(it.content)}</textarea></label>
     <label class="ck"><input type="checkbox" id="i-on" data-s="item" data-k="on" ${it.on?'checked':''}>开启</label></div>
-    <div class="btns"><button type="button" class="btn red" data-a="delItem">删除提示词</button></div>`};
+    <div class="btns"><button class="btn red" data-a="delItem">删除提示词</button></div>`};
 },
 stickers(v){
   const g=S.stickers.groups.find(x=>x.id===v.gid)||S.stickers.groups[0];v.gid=g?.id;
-  return{title:'表情包',sub:allStickers().length+' 个',right:`<button type="button" class="tb" data-a="newGroup">新分组</button>`,body:
+  return{title:'表情包',sub:allStickers().length+' 个',right:`<button class="tb" data-a="newGroup">新分组</button>`,body:
   tabs(S.stickers.groups.map(x=>[x.id,x.name]),g?.id,'pickGroup')+
-  (g?`<div class="panel"><h2>${esc(g.name)}<span class="btns"><button type="button" class="tb" data-a="renameGroup">改名</button>${S.stickers.groups.length>1?'<button type="button" class="tb" data-a="delGroup">删除分组</button>':''}</span></h2>
-    <div class="btns">${fileBtn('导入文件','multiple data-stk="1"')}<button type="button" class="btn o" data-a="stkLinks">用链接添加</button></div>
+  (g?`<div class="panel"><h2>${esc(g.name)}<span class="btns"><button class="tb" data-a="renameGroup">改名</button>${S.stickers.groups.length>1?'<button class="tb" data-a="delGroup">删除分组</button>':''}</span></h2>
+    <div class="btns">${fileBtn('导入文件','multiple data-stk="1"')}<button class="btn o" data-a="stkLinks">用链接添加</button></div>
     
-    ${g.items.length?`<div class="sgrid">${g.items.map(s=>`<button type="button" data-a="editSticker" data-id="${s.id}"><img src="${esc(s.src)}" alt="${esc(s.name)}" loading="lazy"><span>${esc(s.name)}</span></button>`).join('')}</div>`:''}</div>`:'')};
+    ${g.items.length?`<div class="sgrid">${g.items.map(s=>`<button data-a="editSticker" data-id="${s.id}"><img src="${esc(s.src)}" alt="${esc(s.name)}" loading="lazy"><span>${esc(s.name)}</span></button>`).join('')}</div>`:''}</div>`:'')};
 },
 diary(){
   const list=[...S.diary].sort((a,b)=>b.t-a.t);
-  return{title:'日记',sub:'TA们的秘密',right:`<button type="button" class="tb" data-a="diaryPick">让TA写</button>`,body:
+  return{title:'日记',sub:'TA们的秘密',right:`<button class="tb" data-a="diaryPick">让TA写</button>`,body:
   `<label class="ck"><input type="checkbox" id="d-auto" data-s="root" data-k="diaryAuto" ${S.diaryAuto?'checked':''}>聊得久了自动写日记</label>`+
-  (list.map(d=>{const c=charById(d.charId);const dt=new Date(d.t);return`<article class="dia"><div class="hd">${av(c||{name:'?'},30)}<b>${esc(dn(c))}</b><span>${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 周${WK[dt.getDay()]} ${hm(d.t)}${d.w?' · '+esc(d.w):''}${d.mood?' · '+esc(d.mood):''}</span></div><div class="tx">${esc(d.text)}</div><div class="btns" style="justify-content:flex-end"><button type="button" class="tb" data-a="delDiary" data-id="${d.id}">撕掉这页</button></div></article>`}).join('')||``)};
+  (list.map(d=>{const c=charById(d.charId);const dt=new Date(d.t);return`<article class="dia"><div class="hd">${av(c||{name:'?'},30)}<b>${esc(dn(c))}</b><span>${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 周${WK[dt.getDay()]} ${hm(d.t)}${d.w?' · '+esc(d.w):''}${d.mood?' · '+esc(d.mood):''}</span></div><div class="tx">${esc(d.text)}</div><div class="btns" style="justify-content:flex-end"><button class="tb" data-a="delDiary" data-id="${d.id}">撕掉这页</button></div></article>`}).join('')||``)};
 },
 drawer(v){
   const tab=v.tab||'diary',head=tabs([['diary','日记'],['heart','心事'],['theater','小剧场']],tab);
   if(tab==='heart')return heartView(v,head);
   if(tab==='theater'){const list=[...S.theaters].sort((a,b)=>b.t-a.t);
-    return{title:'抽屉',sub:'小剧场',right:`<button type="button" class="tb" data-a="thPick">开演</button>`,body:head+``+
+    return{title:'抽屉',sub:'小剧场',right:`<button class="tb" data-a="thPick">开演</button>`,body:head+``+
       (list.map(x=>thCard(x)).join('')||``)}}
   const r=VIEWS.diary(v);return{...r,title:'抽屉',sub:'日记',body:head+r.body};
 },
 phone(v){const c=charById(v.id);if(!c)return{title:'不见了',body:''};
-  return{title:dn(c)+'的手机',sub:c.phone?((c.phone.how==='open'?'当面看':'偷偷看')+' · '+ago(c.phone.t)):'正在拿过来',right:`<button type="button" class="tb" data-a="phoneAgain">再翻一次</button>`,
-    body:v.err&&!c.phone?`<div class="empty"><big>没打开</big><button type="button" class="btn o" data-a="phoneAgain">再试一次</button></div>`:phoneView(c,v),
+  return{title:dn(c)+'的手机',sub:c.phone?((c.phone.how==='open'?'当面看':'偷偷看')+' · '+ago(c.phone.t)):'正在拿过来',right:`<button class="tb" data-a="phoneAgain">再翻一次</button>`,
+    body:v.err&&!c.phone?`<div class="empty"><big>没打开</big><button class="btn o" data-a="phoneAgain">再试一次</button></div>`:phoneView(c,v),
     after(){if(!v.gen&&(v.force||!c.phone)){v.gen=1;v.force=0;v.err=0;phoneGen(c,v)}}}},
 peek(v){const c=charById(v.id);if(!c)return{title:'不见了',body:''};
-  return{title:dn(c)+'在看你的手机',sub:v.how==='open'?'你递给TA的':'TA偷偷拿的',body:`<div class="pframe">${(v.shown||[]).map(peekStep).join('')}${v.done?(v.err&&!(v.shown||[]).length?'':''):'<div class="away"><span class="dots"><i></i><i></i><i></i></span>TA在翻…</div>'}</div>${v.done&&!v.err?`<div class="btns" style="justify-content:center"><button type="button" class="btn" data-a="messageChar" data-id="${c.id}">看TA说了什么</button></div>`:''}`,
+  return{title:dn(c)+'在看你的手机',sub:v.how==='open'?'你递给TA的':'TA偷偷拿的',body:`<div class="pframe">${(v.shown||[]).map(peekStep).join('')}${v.done?(v.err&&!(v.shown||[]).length?'':''):'<div class="away"><span class="dots"><i></i><i></i><i></i></span>TA在翻…</div>'}</div>${v.done&&!v.err?`<div class="btns" style="justify-content:center"><button class="btn" data-a="messageChar" data-id="${c.id}">看TA说了什么</button></div>`:''}`,
     after(){if(!v.gen){v.gen=1;peekRun(c,v)}const ct=$('#content');ct.scrollTop=ct.scrollHeight}}},
 cal(v){const tab=v.tab||'month',C=S.cal||(S.cal={cn:true,us:true,lang:'zh'}),en=isEn()||C.lang==='en';
   const head=tabs([['month',en?'Month':'月历'],['cycle',en?'Period':'经期'],['days',en?'Days':'纪念日']],tab);
-  const right=`<button type="button" class="tb" data-a="calLang" aria-label="切换语言">${en?'中文':'EN'}</button>`;
+  const right=`<button class="tb" data-a="calLang" aria-label="切换语言">${en?'中文':'EN'}</button>`;
   if(tab==='days'){const r=VIEWS.days(v);return{...r,title:en?'Calendar':'日历',right:r.right,body:head+r.body}}
   if(tab==='cycle'){const c=CY(),n=cyNow(),st=cyStats(),t=ds(new Date()),tags=(c.notes||{})[t]||[];
     const big=!n?`<b>${en?'Not logged':'还没记录'}</b><span>${en?'Tap below when it starts':'来的那天点一下下面的按钮'}</span>`:n.on?`<b>${en?'Day '+n.day:'经期第 '+n.day+' 天'}</b><span>${en?'take it easy ♡':'多喝热水 早点睡 ♡'}</span>`:n.late?`<b>${en?n.late+' days late':'推迟 '+n.late+' 天'}</b><span>${en?'tap when it comes':'来了记得点一下'}</span>`:`<b>${n.inDays===0?(en?'Maybe today':'可能今天'):(en?'in '+n.inDays+' days':'还有 '+n.inDays+' 天')}</b><span>${en?'next ≈ ':'下次大约 '}${pdt(n.next).getMonth()+1}/${pdt(n.next).getDate()}</span>`;
     const ot=cyOvu(t),on=cyNextOvu(),ovl=!n?'':ot==='ovu'?(en?'Ovulation day':'今天是排卵日'):ot==='fert'?(en?'Fertile window':'今天在易孕期')+(on>0?(en?` · ovulation in ${on} days`:` · 排卵日还有 ${on} 天`):''):on>0?(en?`Ovulation in ${on} days`:`排卵日还有 ${on} 天`):'';
     return{title:en?'Calendar':'日历',right,body:head+`<div class="cyc glass"><div class="cyc-ring ${n?.on?'on':''}">${big}</div>${ovl?`<p class="hint" style="text-align:center">${ovl}</p>`:''}
-      <div class="btns" style="justify-content:center">${n?.on&&n.open?`<button type="button" class="btn o" data-a="cyEnd" data-d="${t}">${en?'Ended today':'今天结束了'}</button>`:`<button type="button" class="btn" data-a="cyStart" data-d="${t}">${en?'Started today':'今天来了'}</button>`}</div></div>
-    <div class="panel"><h2>${en?'Today':'今天的身体和心情'}</h2><div class="chips">${CY_TAGS.map((x,i)=>`<button type="button" class="${tags.includes(x)?'on':''}" data-a="cyTag" data-t="${x}">${en?CY_EN[i]:x}</button>`).join('')}</div></div>
+      <div class="btns" style="justify-content:center">${n?.on&&n.open?`<button class="btn o" data-a="cyEnd" data-d="${t}">${en?'Ended today':'今天结束了'}</button>`:`<button class="btn" data-a="cyStart" data-d="${t}">${en?'Started today':'今天来了'}</button>`}</div></div>
+    <div class="panel"><h2>${en?'Today':'今天的身体和心情'}</h2><div class="chips">${CY_TAGS.map((x,i)=>`<button class="${tags.includes(x)?'on':''}" data-a="cyTag" data-t="${x}">${en?CY_EN[i]:x}</button>`).join('')}</div></div>
     <div class="panel"><h2>${en?'Settings':'设置'}</h2>
       <div class="grid2"><label class="f">${en?'Cycle length (days)':'平均周期（天）'}<input type="number" id="cy-len" min="18" max="60" data-s="cycle" data-k="len" value="${c.len}"></label><label class="f">${en?'Period length':'经期天数'}<input type="number" id="cy-dur" min="1" max="12" data-s="cycle" data-k="dur" value="${c.dur}"></label></div>
       <p class="hint">${en?`After two logs it learns from you (now: ${st.len}-day cycle · ${st.dur}-day period).`:`记录两次以上会自动按你的记录算（现在按 ${st.len} 天周期 · ${st.dur} 天经期估算）。`}</p>
       <label class="ck"><input type="checkbox" id="cy-rem" data-s="cycle" data-k="remind" ${c.remind?'checked':''}>${en?'Remind me before it comes':'快来的时候提醒我'}</label>
       <label class="ck"><input type="checkbox" id="cy-tell" data-s="cycle" data-k="tell" ${c.tell?'checked':''}>${en?'Let characters know (they will care)':'让角色知道（TA会关心你）'}</label>
-      <button type="button" class="btn o" data-a="cyIcs" style="align-self:flex-start">${en?'Add reminders to iPhone Calendar':'提醒放进 iPhone 日历'}</button>
+      <button class="btn o" data-a="cyIcs" style="align-self:flex-start">${en?'Add reminders to iPhone Calendar':'提醒放进 iPhone 日历'}</button>
       <p class="hint">${en?'The app can’t notify you while closed, so export the next 6 predicted dates to your phone calendar — it alerts the evening before. Estimates only — see a doctor if something feels off.':'冰雨机关着的时候没法提醒你，所以可以把接下来6次的预计日期导进手机日历，前一天晚上会响。只是按记录估算的，不舒服要去看医生。'}</p></div>
-    ${st.L.length?`<div class="sec">${en?'History':'记录'}</div>`+[...st.L].reverse().map(x=>`<div class="row"><span class="meta"><b>${x.start.slice(5).replace('-','/')} → ${x.end?x.end.slice(5).replace('-','/'):'…'}</b><small>${x.end?(diffD(x.start,x.end)+1)+(en?' days':' 天'):(en?'ongoing':'进行中')}</small></span><span class="side"><button type="button" class="tb" data-a="cyDel" data-id="${x.id}">${en?'Delete':'删除'}</button></span></div>`).join(''):''}`}}
+    ${st.L.length?`<div class="sec">${en?'History':'记录'}</div>`+[...st.L].reverse().map(x=>`<div class="row"><span class="meta"><b>${x.start.slice(5).replace('-','/')} → ${x.end?x.end.slice(5).replace('-','/'):'…'}</b><small>${x.end?(diffD(x.start,x.end)+1)+(en?' days':' 天'):(en?'ongoing':'进行中')}</small></span><span class="side"><button class="tb" data-a="cyDel" data-id="${x.id}">${en?'Delete':'删除'}</button></span></div>`).join(''):''}`}}
   const now=new Date();if(!v.ym)v.ym=[now.getFullYear(),now.getMonth()];const [Y,M]=v.ym,first=new Date(Y,M,1),nd=new Date(Y,M+1,0).getDate(),today=ds(now);
   const WD=en?['S','M','T','W','T','F','S']:['日','一','二','三','四','五','六'],MEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const P=myDays();let cells='';for(let i=0;i<first.getDay();i++)cells+='<span></span>';const monthItems=[];
   for(let d=1;d<=nd;d++){const dt=new Date(Y,M,d),s=ds(dt),f=festList(dt),pt=cyDayType(s),pp=P.filter(x=>x.md[0]===M+1&&x.md[1]===d);
     f.forEach(x=>monthItems.push([d,en?x.en:x.zh,x.r]));pp.forEach(x=>monthItems.push([d,x.name,'me']));
-    cells+=`<button type="button" class="cd ${s===today?'today':''} ${pt} ${f.length?'fest':''}" data-a="calDay" data-d="${s}"><b>${d}</b><small>${esc(f.length?(en?f[0].en:f[0].zh):(en?'':lunarShort(dt)))}</small>${pp.length?'<i>♡</i>':''}</button>`}
-  return{title:en?'Calendar':'日历',right,body:head+`<div class="calw glass"><div class="calh"><button type="button" class="tb" data-a="calMove" data-d="-1" aria-label="上个月">‹</button><b>${en?MEN[M]+' '+Y:Y+' 年 '+(M+1)+' 月'}</b><button type="button" class="tb" data-a="calMove" data-d="1" aria-label="下个月">›</button></div>
+    cells+=`<button class="cd ${s===today?'today':''} ${pt} ${f.length?'fest':''}" data-a="calDay" data-d="${s}"><b>${d}</b><small>${esc(f.length?(en?f[0].en:f[0].zh):(en?'':lunarShort(dt)))}</small>${pp.length?'<i>♡</i>':''}</button>`}
+  return{title:en?'Calendar':'日历',right,body:head+`<div class="calw glass"><div class="calh"><button class="tb" data-a="calMove" data-d="-1" aria-label="上个月">‹</button><b>${en?MEN[M]+' '+Y:Y+' 年 '+(M+1)+' 月'}</b><button class="tb" data-a="calMove" data-d="1" aria-label="下个月">›</button></div>
     <div class="calg wd">${WD.map(x=>`<span>${x}</span>`).join('')}</div><div class="calg">${cells}</div>
     <div class="legend"><span><i class="lg log"></i>${en?'period':'经期'}</span><span><i class="lg pred"></i>${en?'predicted':'预计'}</span><span><i class="lg fert"></i>${en?'fertile':'易孕期'}</span><span><i class="lg ovu"></i>${en?'ovulation':'排卵日'}</span><span><i>♡</i>${en?'your days':'你们的日子'}</span></div></div>
-    <div class="chips" style="justify-content:center"><button type="button" class="${C.cn!==false?'on':''}" data-a="calReg" data-r="cn">${en?'China':'中国节日'}</button><button type="button" class="${C.us!==false?'on':''}" data-a="calReg" data-r="us">${en?'USA':'美国节日'}</button></div>
+    <div class="chips" style="justify-content:center"><button class="${C.cn!==false?'on':''}" data-a="calReg" data-r="cn">${en?'China':'中国节日'}</button><button class="${C.us!==false?'on':''}" data-a="calReg" data-r="us">${en?'USA':'美国节日'}</button></div>
     ${monthItems.length?`<div class="panel">${monthItems.map(([d,n,r])=>`<div class="mi"><b>${en?MEN[M].slice(0,3)+' '+d:(M+1)+'/'+d}</b><span>${esc(n)}</span><small>${r==='cn'?(en?'CN':'中'):r==='us'?(en?'US':'美'):r==='me'?'♡':''}</small></div>`).join('')}</div>`:''}`}},
 
 days(){const L=myDays(),F=upcomingFest(60).filter((x,i,a)=>a.findIndex(y=>y.name===x.name)===i).slice(0,6);
-  return{title:'纪念日',right:`<button type="button" class="tb" data-a="dayAdd">添加</button>`,body:``+
-    (L.map(x=>`<div class="row"><span class="meta"><b>${esc(x.name)}</b><small>${x.date?esc(x.date)+(x.since>=0?' · 第 '+x.since+' 天':''):x.md[0]+'月'+x.md[1]+'日'}${x.who?' · '+esc(dn(charById(x.who))):''}</small></span><span class="side h"><b class="dnum">${x.in===0?'今天':x.in+' 天'}</b>${x.id?`<button type="button" class="tb" data-a="dayDel" data-id="${x.id}">删除</button>`:''}</span></div>`).join('')||``)}},
+  return{title:'纪念日',right:`<button class="tb" data-a="dayAdd">添加</button>`,body:``+
+    (L.map(x=>`<div class="row"><span class="meta"><b>${esc(x.name)}</b><small>${x.date?esc(x.date)+(x.since>=0?' · 第 '+x.since+' 天':''):x.md[0]+'月'+x.md[1]+'日'}${x.who?' · '+esc(dn(charById(x.who))):''}</small></span><span class="side h"><b class="dnum">${x.in===0?'今天':x.in+' 天'}</b>${x.id?`<button class="tb" data-a="dayDel" data-id="${x.id}">删除</button>`:''}</span></div>`).join('')||``)}},
 theaterFull(v){const x=S.theaters.find(x=>x.id===v.id);if(!x)return{title:'不见了',body:''};
   return{title:x.title||'小剧场',sub:dn(charById(x.charId)),body:`<iframe class="thfull" data-th="${x.id}" sandbox="allow-scripts" title="${esc(x.title)}" srcdoc="${esc(theaterDoc(x.html))}"></iframe>`}},
 bubble(v){
   const b=S.bubble,I=idol();if(b.unread){b.unread=0;save()}
   const today=b.msgs.filter(m=>m.from==='me'&&new Date(m.t).toDateString()===new Date().toDateString()).length;
-  return{title:'泡泡',sub:'订阅 '+kfmt(b.subs),cls:'chat',right:`<button type="button" class="tb" data-a="bbSet">设置</button>`,
+  return{title:'泡泡',sub:'订阅 '+kfmt(b.subs),cls:'chat',right:`<button class="tb" data-a="bbSet">设置</button>`,
     body:`<div class="bbhead">${av(I,52)}<div style="min-width:0"><div class="nm">${esc(I.name)}</div><small>@${esc(I.handle)} · 订阅 ${kfmt(b.subs)} · 今天发了 ${today} 条</small></div></div><div id="bbfeed" class="bbfeed">${bbHTML()}</div>`,
     footCls:v.q?'wrap':'',
-    foot:(v.q?`<div class="qbar"><span>↪ 回复 ${esc(v.q.nick)}：${esc(v.q.text)}</span><button type="button" data-a="bbUnq" aria-label="取消回复">×</button></div>`:'')+`<textarea id="bbIn" rows="1" placeholder="${v.q?'回复TA…':'给所有粉丝发泡泡…'}" aria-label="泡泡"></textarea><button type="button" class="sq go" data-a="bbSend" aria-label="发送">${ICONS.send}</button>`,
+    foot:(v.q?`<div class="qbar"><span>↪ 回复 ${esc(v.q.nick)}：${esc(v.q.text)}</span><button data-a="bbUnq" aria-label="取消回复">×</button></div>`:'')+`<textarea id="bbIn" rows="1" placeholder="${v.q?'回复TA…':'给所有粉丝发泡泡…'}" aria-label="泡泡"></textarea><button class="sq go" data-a="bbSend" aria-label="发送">${ICONS.send}</button>`,
     after(){const c=$('#content');c.scrollTop=c.scrollHeight;
       const gap=Date.now()-(b.seen||0);if(b.auto&&!bbBusy&&api()?.key&&b.msgs.some(m=>m.from==='me')&&b.seen&&gap>30*60e3)bbFans({type:'away',gap:gapText(gap)});
       b.seen=Date.now();save()}};
@@ -2698,38 +2694,38 @@ bubbleSet(){const b=S.bubble;
     <label class="ck"><input type="checkbox" id="bb-join" data-s="bubble" data-k="charsJoin" ${b.charsJoin?'checked':''}>联系人也订阅了你的泡泡（TA们会知道你在当偶像）</label>
     <label class="ck"><input type="checkbox" id="bb-auto" data-s="bubble" data-k="auto" ${b.auto?'checked':''}>离开半小时以上，回来会收到粉丝的想念</label>
     </div>
-  <div class="btns"><button type="button" class="btn red" data-a="bbClear">清空泡泡记录</button></div>`}},
+  <div class="btns"><button class="btn red" data-a="bbClear">清空泡泡记录</button></div>`}},
 music(v){
   const s=songById(S.music.cur),c=charById(S.music.with),me=mask(),L=S.music.songs;
   const p=hasAudio()?audio.currentTime:mState.pos,d=hasAudio()?(audio.duration||0):mState.dur,cov=c?.avatar||me.avatar;
   const modeIc={all:['all','列表循环'],one:['one','单曲循环'],shuffle:['shuffle','随机']}[S.music.mode]||['all','列表循环'];
-  return{title:'一起听',sub:c?'和 '+dn(c):'一个人',right:`<button type="button" class="tb" data-a="mAdd">添歌</button>`,body:`
+  return{title:'一起听',sub:c?'和 '+dn(c):'一个人',right:`<button class="tb" data-a="mAdd">添歌</button>`,body:`
   <div class="player">
-    <div class="duet">${av(me,40)}<svg class="wv" viewBox="0 0 60 20" aria-hidden="true"><path d="M0 10 Q 7.5 2 15 10 T 30 10 T 45 10 T 60 10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>${c?`<button type="button" class="stk" data-a="mInvite" aria-label="换一起听的人">${av(c,40)}</button>`:`<button type="button" class="addw" data-a="mInvite" aria-label="邀请一起听">+</button>`}</div>
+    <div class="duet">${av(me,40)}<svg class="wv" viewBox="0 0 60 20" aria-hidden="true"><path d="M0 10 Q 7.5 2 15 10 T 30 10 T 45 10 T 60 10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>${c?`<button class="stk" data-a="mInvite" aria-label="换一起听的人">${av(c,40)}</button>`:`<button class="addw" data-a="mInvite" aria-label="邀请一起听">+</button>`}</div>
     <span class="vinyl ${mState.playing?'on':''}" id="vinyl"><span class="lbl" style="${cov?`background-image:url(${esc(cov)})`:''}"></span></span>
     <div class="np"><b>${s?esc(s.title):'还没有在放歌'}</b><small>${s?esc(s.artist||'未知歌手')+(s.local||s.src?'':' · 没有音频，假装在听'):(L.length?'点下面的歌开始':'点右上角「添歌」')}</small></div>
     <div class="prog"><span id="mCur">${fmt(p)}</span><input type="range" id="mRange" min="0" max="1000" value="${d?Math.round(p/d*1000):0}" aria-label="进度"><span id="mDur">${fmt(d)}</span></div>
-    <div class="ctrl"><button type="button" class="mini" data-a="mMode" aria-label="${modeIc[1]}" title="${modeIc[1]}">${ICONS[modeIc[0]]}</button><button type="button" data-a="mPrev" aria-label="上一首">${ICONS.prev}</button><button type="button" class="pp" id="mPP" data-a="mToggle" aria-label="${mState.playing?'暂停':'播放'}">${mState.playing?ICONS.pause:ICONS.play}</button><button type="button" data-a="mNext" aria-label="下一首">${ICONS.next}</button><button type="button" class="mini" data-a="mInvite" aria-label="一起听的人">${ICONS.contacts}</button></div>
+    <div class="ctrl"><button class="mini" data-a="mMode" aria-label="${modeIc[1]}" title="${modeIc[1]}">${ICONS[modeIc[0]]}</button><button data-a="mPrev" aria-label="上一首">${ICONS.prev}</button><button class="pp" id="mPP" data-a="mToggle" aria-label="${mState.playing?'暂停':'播放'}">${mState.playing?ICONS.pause:ICONS.play}</button><button data-a="mNext" aria-label="下一首">${ICONS.next}</button><button class="mini" data-a="mInvite" aria-label="一起听的人">${ICONS.contacts}</button></div>
   </div>
-  ${c?`<div class="panel"><h2>边听边聊<span class="btns"><button type="button" class="tb" data-a="mAsk">让TA点歌</button><button type="button" class="tb" data-a="messageChar" data-id="${c.id}">进聊天</button></span></h2>
+  ${c?`<div class="panel"><h2>边听边聊<span class="btns"><button class="tb" data-a="mAsk">让TA点歌</button><button class="tb" data-a="messageChar" data-id="${c.id}">进聊天</button></span></h2>
     <div class="mchat" id="mchat">${mchatHTML()}</div>
-    <div class="minput"><textarea id="mIn" rows="1" placeholder="说点什么…" title="空着发送＝让TA说" aria-label="消息"></textarea><button type="button" class="sq" data-a="mSend" aria-label="发送">${ICONS.send}</button></div></div>`
+    <div class="minput"><textarea id="mIn" rows="1" placeholder="说点什么…" title="空着发送＝让TA说" aria-label="消息"></textarea><button class="sq" data-a="mSend" aria-label="发送">${ICONS.send}</button></div></div>`
     :``}
-  <div class="panel"><h2>歌单<span class="pill">${L.length} 首</span></h2>${L.map(x=>`<div class="row song ${x.id===S.music.cur?'on':''}"><button type="button" class="meta" data-a="mPlay" data-id="${x.id}"><b>${x.id===S.music.cur&&mState.playing?'♪ ':''}${esc(x.title)}</b><small>${esc(x.artist||'未知歌手')} · ${x.local?'本地':x.src?'链接':'只有歌名'}${x.by&&x.by!=='me'?' · '+esc(dn(charById(x.by)))+'点的':''}</small></button><button type="button" class="tb" data-a="mSongMenu" data-id="${x.id}" aria-label="更多">···</button></div>`).join('')||''}</div>`,
+  <div class="panel"><h2>歌单<span class="pill">${L.length} 首</span></h2>${L.map(x=>`<div class="row song ${x.id===S.music.cur?'on':''}"><button class="meta" data-a="mPlay" data-id="${x.id}"><b>${x.id===S.music.cur&&mState.playing?'♪ ':''}${esc(x.title)}</b><small>${esc(x.artist||'未知歌手')} · ${x.local?'本地':x.src?'链接':'只有歌名'}${x.by&&x.by!=='me'?' · '+esc(dn(charById(x.by)))+'点的':''}</small></button><button class="tb" data-a="mSongMenu" data-id="${x.id}" aria-label="更多">···</button></div>`).join('')||''}</div>`,
   after(){const el=$('#mchat');if(el)el.scrollTop=el.scrollHeight;const ta=$('#mIn');if(ta)ta.addEventListener('input',()=>{ta.style.height='40px';ta.style.height=Math.min(120,ta.scrollHeight)+'px'})}};
 },
 takeout(v){return shopView(v,'food')},
 novel(v){return novelView(v)},
 novelRead(v){return novelReadView(v)},
 sched(v){const chars=S.chars.filter(visible);return{title:'日程',body:``+(chars.map(c=>`<div class="letter"><div class="lh"><span><b>${esc(dn(c))}</b></span><span>${c.nowDoing&&Date.now()-c.nowDoing.t<3600e3?'刚刚：'+esc(c.nowDoing.text):''}</span></div>
-    <p>${c.routine?esc(c.routine):'<span class="hint">还没有作息</span>'}</p><div class="btns"><button type="button" class="btn o" data-a="nowDoing" data-id="${c.id}">TA 在干嘛</button><button type="button" class="btn o" data-a="routineGen" data-id="${c.id}">${c.routine?'重新生成':'按人设生成'}</button><button type="button" class="tb" data-a="editChar" data-id="${c.id}">改</button></div></div>`).join('')||``)}},
+    <p>${c.routine?esc(c.routine):'<span class="hint">还没有作息</span>'}</p><div class="btns"><button class="btn o" data-a="nowDoing" data-id="${c.id}">TA 在干嘛</button><button class="btn o" data-a="routineGen" data-id="${c.id}">${c.routine?'重新生成':'按人设生成'}</button><button class="tb" data-a="editChar" data-id="${c.id}">改</button></div></div>`).join('')||``)}},
 ctxPeek(v){const t=thread(v.id);if(!t)return{title:'不见了',body:''};const x=buildCtx(t);
   return{title:'TA 知道什么',body:`<p class="hint">这是这次聊天会发给 TA 的全部设定（预设、人设、你的人设、命中的世界书、记忆……），后面再跟上最近 ${x.msgs.length} 条聊天记录。缺了什么，一眼就能看出来。</p><div class="letter"><p style="font-size:13px">${esc(x.system)}</p></div>`}},
 mall(v){return shopView(v,'goods')},
 mail(v){return mailView(v)},
 wallet(v){const L=[...(S.orders||[]).map(o=>({t:o.t,n:(o.kind==='food'?'外卖 · ':'网购 · ')+o.content,a:-o.amt})),
     ...S.threads.flatMap(t=>t.msgs.filter(m=>m.from==='me'&&['order','parcel','hb','tf'].includes(m.type)).map(m=>({t:m.t,n:({order:'外卖',parcel:'网购',hb:'红包',tf:'转账'})[m.type]+' · '+dn(charById(t.chars[0]))+(m.content&&m.type!=='hb'?' · '+m.content:''),a:-m.amt})))].sort((a,b)=>b.t-a.t).slice(0,40);
-  return{title:'钱包',body:`<div class="panel" style="align-items:center;text-align:center"><small class="hint">余额</small><b style="font:200 44px/1.1 var(--body)">${money(S.wallet)}</b><button type="button" class="btn o" data-a="editWallet">改余额 / 充值</button></div>
+  return{title:'钱包',body:`<div class="panel" style="align-items:center;text-align:center"><small class="hint">余额</small><b style="font:200 44px/1.1 var(--body)">${money(S.wallet)}</b><button class="btn o" data-a="editWallet">改余额 / 充值</button></div>
     <div class="panel"><h2>最近花的钱</h2>${L.map(x=>`<div class="mi"><b>${money(-x.a)}</b><span>${esc(x.n)}</span><small>${ago(x.t)}</small></div>`).join('')||''}</div>`}},
 data(v){
   const msgs=S.threads.reduce((n,t)=>n+t.msgs.length,0),size=new Blob([JSON.stringify(S)]).size,mb=x=>x>=1048576?(x/1048576).toFixed(1)+' MB':Math.max(1,Math.round(x/1024))+' KB';
@@ -2738,11 +2734,11 @@ data(v){
   return{title:'数据',body:`
     <div class="panel"><h2>上次备份<span class="pill">${esc(last)}</span></h2>
       <label class="ck"><input type="checkbox" id="bk-key2" data-s="root" data-k="bkKey" ${S.bkKey?'checked':''}>备份里带上 API Key</label>
-      <div class="btns"><button type="button" class="btn" data-a="dl">下载备份文件</button><button type="button" class="btn o" data-a="copyBk">复制备份文本</button></div></div>
+      <div class="btns"><button class="btn" data-a="dl">下载备份文件</button><button class="btn o" data-a="copyBk">复制备份文本</button></div></div>
     <div class="panel"><h2>冰雨机里有什么</h2><div class="grid2">${rows.map(([k,n])=>`<div class="mi"><b>${n}</b><span>${k}</span></div>`).join('')}</div>
       <p class="hint">文字数据约 ${mb(size)}<span id="dataUse"></span></p></div>
     <div class="panel"><h2>别被清掉</h2><span id="dataPersist" class="hint"></span>
-      <button type="button" class="btn o" data-a="persist" style="align-self:flex-start">保护我的数据</button></div>
+      <button class="btn o" data-a="persist" style="align-self:flex-start">保护我的数据</button></div>
 `,
     after(){const n=navigator.storage;if(!n)return;n.estimate?.().then(e=>{const x=$('#dataUse');if(x&&e?.usage)x.textContent=`，算上图片和语音一共占了 ${mb(e.usage)}`}).catch(()=>{});
       n.persisted?.().then(p=>{const x=$('#dataPersist');if(x)x.textContent=p?'✓ 已经保护好了':'现在还没保护'}).catch(()=>{})}}
@@ -2754,23 +2750,23 @@ settings(v){
     <div class="panel"><h2>生图</h2>
       <label class="f">接口地址<input type="url" id="mi-base" data-s="mimg" data-k="base" value="${esc(I.base)}" placeholder="https://…/v1" autocomplete="off"></label>
       <label class="f">Key<input type="password" id="mi-key" data-s="mimg" data-k="key" value="${esc(I.key)}" autocomplete="off"></label>
-      <div class="grid2"><label class="f">模型<input type="text" id="mi-model" data-s="mimg" data-k="model" value="${esc(I.model)}" autocomplete="off"><button type="button" class="tb" data-a="fetchModels" data-t="img" style="align-self:flex-start;padding:4px 0">拉取模型列表</button></label>
+      <div class="grid2"><label class="f">模型<input type="text" id="mi-model" data-s="mimg" data-k="model" value="${esc(I.model)}" autocomplete="off"><button class="tb" data-a="fetchModels" data-t="img" style="align-self:flex-start;padding:4px 0">拉取模型列表</button></label>
       <label class="f">尺寸<select id="mi-size" data-s="mimg" data-k="size">${['1024x1024','1024x1536','1536x1024','512x512','auto'].map(x=>`<option ${I.size===x?'selected':''}>${x}</option>`).join('')}</select></label></div>
       <label class="f">画风（每张图都会带上）<textarea id="mi-style" data-s="mimg" data-k="style" style="min-height:70px">${esc(I.style)}</textarea></label>
       <label class="ck"><input type="checkbox" id="mi-auto" data-s="mimg" data-k="auto" ${I.auto?'checked':''}>TA发的照片自动冲洗（会多花生图额度）</label>
-      <button type="button" class="btn o" data-a="testImg" style="align-self:flex-start">测试生图</button></div>
-    <div class="panel"><h2>语音</h2><div class="seg">${[['browser','手机自带'],['minimax','MiniMax'],['openai','OpenAI 格式']].map(([k,l])=>`<button type="button" class="${T.provider===k?'on':''}" data-a="ttsProv" data-p="${k}">${l}</button>`).join('')}</div>
+      <button class="btn o" data-a="testImg" style="align-self:flex-start">测试生图</button></div>
+    <div class="panel"><h2>语音</h2><div class="seg">${[['browser','手机自带'],['minimax','MiniMax'],['openai','OpenAI 格式']].map(([k,l])=>`<button class="${T.provider===k?'on':''}" data-a="ttsProv" data-p="${k}">${l}</button>`).join('')}</div>
       ${T.provider==='browser'?'':`
       <label class="f">接口地址<input type="url" id="mt-base" data-s="mtts" data-k="base" value="${esc(T.base)}" autocomplete="off"></label>
       ${T.provider==='minimax'?'<p class="hint">国内一般是 https://api.minimaxi.com/v1/t2a_v2 ，海外是 https://api.minimax.io/v1/t2a_v2 。有的账号还要填 GroupId。</p>':''}
       <label class="f">Key<input type="password" id="mt-key" data-s="mtts" data-k="key" value="${esc(T.key)}" autocomplete="off"></label>
       ${T.provider==='minimax'?`<label class="f">GroupId（可不填）<input type="text" id="mt-group" data-s="mtts" data-k="group" value="${esc(T.group)}" autocomplete="off"></label>`:''}
-      <div class="grid2"><label class="f">模型<input type="text" id="mt-model" data-s="mtts" data-k="model" value="${esc(T.model)}" placeholder="${T.provider==='minimax'?'speech-02-hd':'tts-1'}" autocomplete="off"><button type="button" class="tb" data-a="fetchModels" data-t="tts" style="align-self:flex-start;padding:4px 0">${T.provider==='minimax'?'选模型':'拉取模型列表'}</button></label>
-      <label class="f">默认声音<input type="text" id="mt-voice" data-s="mtts" data-k="voice" value="${esc(T.voice)}" placeholder="${T.provider==='minimax'?'female-shaonv':'alloy'}" autocomplete="off"><button type="button" class="tb" data-a="voicePick" style="align-self:flex-start;padding:4px 0">选声音</button></label></div>
+      <div class="grid2"><label class="f">模型<input type="text" id="mt-model" data-s="mtts" data-k="model" value="${esc(T.model)}" placeholder="${T.provider==='minimax'?'speech-02-hd':'tts-1'}" autocomplete="off"><button class="tb" data-a="fetchModels" data-t="tts" style="align-self:flex-start;padding:4px 0">${T.provider==='minimax'?'选模型':'拉取模型列表'}</button></label>
+      <label class="f">默认声音<input type="text" id="mt-voice" data-s="mtts" data-k="voice" value="${esc(T.voice)}" placeholder="${T.provider==='minimax'?'female-shaonv':'alloy'}" autocomplete="off"><button class="tb" data-a="voicePick" style="align-self:flex-start;padding:4px 0">选声音</button></label></div>
       `}
-      <button type="button" class="btn o" data-a="testTts" style="align-self:flex-start">试听</button></div>`}}
-  if(tab==='api')return{title:'设置',right:`<button type="button" class="tb" data-a="newApi">新预设</button>`,body:head+`<div class="sec">接口预设 · 点「切换」就能换</div>`+
-    S.api.profiles.map(p=>`<div class="row"><button type="button" class="meta" data-a="editApi" data-id="${p.id}"><b>${esc(p.name)}</b><small>${PROVIDERS[p.provider]?.name} · ${esc(p.model||'没填模型')} · 温度 ${p.temp??1} · ${p.maxTokens} tokens${p.key?'':' · 没填 Key'}</small></button><span class="side h">${p.id===S.api.side?'<span class="pill">副</span>':''}${p.id===S.api.active?'<span class="pill fill">使用中</span>':`<button type="button" class="tb" data-a="useApiId" data-id="${p.id}">切换</button>`}</span></div>`).join('')+
+      <button class="btn o" data-a="testTts" style="align-self:flex-start">试听</button></div>`}}
+  if(tab==='api')return{title:'设置',right:`<button class="tb" data-a="newApi">新预设</button>`,body:head+`<div class="sec">接口预设 · 点「切换」就能换</div>`+
+    S.api.profiles.map(p=>`<div class="row"><button class="meta" data-a="editApi" data-id="${p.id}"><b>${esc(p.name)}</b><small>${PROVIDERS[p.provider]?.name} · ${esc(p.model||'没填模型')} · 温度 ${p.temp??1} · ${p.maxTokens} tokens${p.key?'':' · 没填 Key'}</small></button><span class="side h">${p.id===S.api.side?'<span class="pill">副</span>':''}${p.id===S.api.active?'<span class="pill fill">使用中</span>':`<button class="tb" data-a="useApiId" data-id="${p.id}">切换</button>`}</span></div>`).join('')+
     `<div class="panel"><h2>省额度</h2><label class="f">副接口：总结、日记、雨巷、泡泡、查手机、TA的今天用它<select id="api-side" data-s="apiroot" data-k="side"><option value="">和使用中的一样</option>${S.api.profiles.map(p=>`<option value="${p.id}" ${S.api.side===p.id?'selected':''}>${esc(p.name)} · ${esc(p.model)}</option>`).join('')}</select></label></div>`};
   if(tab==='chat')return{title:'设置',body:head+`
     <div class="panel"><h2>活人感</h2>
@@ -2778,20 +2774,20 @@ settings(v){
       <label class="ck"><input type="checkbox" id="ch-real" data-s="chat" data-k="real" ${C.real?'checked':''}>TA有自己的生活和脾气，不会一直顺着你</label>
       <label class="ck"><input type="checkbox" id="ch-life" data-s="chat" data-k="life" ${C.life?'checked':''}>每天给TA安排一件生活里的小事</label>
       <label class="ck"><input type="checkbox" id="ch-busy" data-s="chat" data-k="busy" ${C.busy?'checked':''}>TA偶尔在忙，会过几分钟才回</label>
-      <div class="f">TA主动找你<div class="seg">${[['off','不会'],['low','偶尔'],['high','经常']].map(([k,l])=>`<button type="button" class="${C.proactive===k?'on':''}" data-a="proLv" data-l="${k}">${l}</button>`).join('')}</div></div>
+      <div class="f">TA主动找你<div class="seg">${[['off','不会'],['low','偶尔'],['high','经常']].map(([k,l])=>`<button class="${C.proactive===k?'on':''}" data-a="proLv" data-l="${k}">${l}</button>`).join('')}</div></div>
       <label class="ck"><input type="checkbox" id="ch-tts" data-s="chat" data-k="tts" ${C.tts?'checked':''}>语音和通话用手机念出来</label>
       <label class="ck"><input type="checkbox" id="ch-str" data-s="chat" data-k="strangers" ${C.strangers?'checked':''}>雨巷上陌生路人也会来评论</label>
       <label class="ck"><input type="checkbox" id="ch-mail" data-s="chat" data-k="mailAuto" ${C.mailAuto!==false?'checked':''}>信箱偶尔自动来信（一天一两封）</label>
       </div>
     <div class="panel"><h2>天气和日子</h2>
       <label class="ck"><input type="checkbox" id="ch-world" data-s="chat" data-k="world" ${C.world?'checked':''}>TA知道天气、节日、生日和纪念日</label>
-      <div class="btns"><button type="button" class="btn o" data-a="setCity">你的城市：${S.loc?esc(S.loc.name):'还没设'}</button><button type="button" class="btn o" data-a="open" data-v="cal" data-t="days">纪念日</button></div>
+      <div class="btns"><button class="btn o" data-a="setCity">你的城市：${S.loc?esc(S.loc.name):'还没设'}</button><button class="btn o" data-a="open" data-v="cal" data-t="days">纪念日</button></div>
       </div>
     <div class="panel"><h2>上下文</h2>
       <label class="f">每次读取最近几条消息<span class="inline"><input type="range" id="ch-ctx" min="6" max="200" step="2" data-s="chat" data-k="ctx" value="${C.ctx}"><output>${C.ctx}</output></span></label>
       <label class="ck"><input type="checkbox" id="ch-sum" data-s="chat" data-k="autoSum" ${C.autoSum?'checked':''}>自动总结更早的消息</label>
       <label class="f">超出后每多少条总结一次<span class="inline"><input type="range" id="ch-every" min="10" max="100" step="5" data-s="chat" data-k="sumEvery" value="${C.sumEvery}"><output>${C.sumEvery}</output></span></label>
-      <div class="f">总结和记忆用<div class="seg">${[['third','第三人称'],['first','TA 的第一人称']].map(([k,l])=>`<button type="button" class="${(C.memPov||'third')===k?'on':''}" data-a="setChat" data-k="memPov" data-v="${k}">${l}</button>`).join('')}</div></div>
+      <div class="f">总结和记忆用<div class="seg">${[['third','第三人称'],['first','TA 的第一人称']].map(([k,l])=>`<button class="${(C.memPov||'third')===k?'on':''}" data-a="setChat" data-k="memPov" data-v="${k}">${l}</button>`).join('')}</div></div>
       </div>
     <div class="panel"><h2>潮汐</h2>
       <label class="ck"><input type="checkbox" id="ch-tide" data-s="chat" data-k="tide" ${C.tide?'checked':''}>开启潮汐（角色有会涨落的心情水位）</label>
@@ -2800,16 +2796,16 @@ settings(v){
       <label class="ck"><input type="checkbox" id="ch-inner" data-s="chat" data-k="inner" ${C.inner?'checked':''}>显示角色的心声</label>
       <label class="ck"><input type="checkbox" id="ch-open" data-s="chat" data-k="innerOpen" ${C.innerOpen?'checked':''}>默认展开</label>
       <label class="f">叫什么<input type="text" id="ch-iname" data-s="chat" data-k="innerName" value="${esc(C.innerName)}" placeholder="心声 / 内心OS / 小剧场"></label>
-      <label class="f">心声要写什么<textarea id="ch-istyle" data-s="chat" data-k="innerStyle">${esc(C.innerStyle)}</textarea></label><button type="button" class="tb" data-a="setChat" data-k="innerStyle" data-v="${esc(CHAT_DEF().innerStyle)}" style="align-self:flex-start">恢复默认</button>
+      <label class="f">心声要写什么<textarea id="ch-istyle" data-s="chat" data-k="innerStyle">${esc(C.innerStyle)}</textarea></label><button class="tb" data-a="setChat" data-k="innerStyle" data-v="${esc(CHAT_DEF().innerStyle)}" style="align-self:flex-start">恢复默认</button>
       </div>
     <div class="panel"><h2>思维链</h2>
       <label class="ck"><input type="checkbox" id="ch-think" data-s="chat" data-k="think" ${C.think?'checked':''}>显示角色回复前的思考</label>
       <label class="f">叫什么<input type="text" id="ch-tname" data-s="chat" data-k="thinkName" value="${esc(C.thinkName)}"></label>
-      <div class="seg">${[['char','角色口吻'],['model','模型原生思考']].map(([k,l])=>`<button type="button" class="${(C.thinkSrc||'char')===k?'on':''}" data-a="setChat" data-k="thinkSrc" data-v="${k}">${l}</button>`).join('')}</div>
-      ${C.thinkSrc!=='model'?`<label class="f">思考要写什么（可以用 {{char}} {{user}}）<textarea id="ch-tstyle" data-s="chat" data-k="thinkStyle">${esc(C.thinkStyle||THINK_DEF)}</textarea></label><button type="button" class="tb" data-a="setChat" data-k="thinkStyle" data-v="" style="align-self:flex-start">恢复默认</button>`:''}
+      <div class="seg">${[['char','角色口吻'],['model','模型原生思考']].map(([k,l])=>`<button class="${(C.thinkSrc||'char')===k?'on':''}" data-a="setChat" data-k="thinkSrc" data-v="${k}">${l}</button>`).join('')}</div>
+      ${C.thinkSrc!=='model'?`<label class="f">思考要写什么（可以用 {{char}} {{user}}）<textarea id="ch-tstyle" data-s="chat" data-k="thinkStyle">${esc(C.thinkStyle||THINK_DEF)}</textarea></label><button class="tb" data-a="setChat" data-k="thinkStyle" data-v="" style="align-self:flex-start">恢复默认</button>`:''}
       </div>`};
   if(tab==='look')return{title:'设置',body:head+`
-    <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button type="button" class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
+    <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
     <div class="panel"><h2>顶栏和底栏</h2>
       <label class="f">顶栏高度<span class="inline"><input type="range" id="l-topx" min="-30" max="60" step="1" data-s="look" data-k="topX" value="${L.topX||0}"><output>${L.topX||0}</output></span></label>
       <label class="f">底栏高度<span class="inline"><input type="range" id="l-botx" min="-30" max="60" step="1" data-s="look" data-k="botX" value="${L.botX||0}"><output>${L.botX||0}</output></span></label></div>
@@ -2818,44 +2814,44 @@ settings(v){
       <label class="f">字号<span class="inline"><input type="range" id="l-fs" min="12" max="20" step="1" data-s="look" data-k="fs" value="${L.fs}"><output>${L.fs}</output></span></label>
       <label class="f">面板不透明度<span class="inline"><input type="range" id="l-alpha" min="0.6" max="1" step="0.02" data-s="look" data-k="alpha" value="${L.alpha}"><output>${L.alpha}</output></span></label></div>
     <div class="panel"><h2>自己的字体</h2>
-      <div class="btns">${fileBtn('选字体文件','accept=".ttf,.otf,.woff,.woff2,font/*,application/font-woff" data-font="1"')}<button type="button" class="btn o" data-a="fontLink">用链接</button>${L.customFont?'<button type="button" class="btn red" data-a="fontClear">去掉</button>':''}</div></div>
-    <div class="panel"><h2>壁纸</h2><div class="btns">${fileBtn('桌面壁纸','accept="image/*" data-img="wall"')}${L.wallpaper?'<button type="button" class="btn o" data-a="clearWall">恢复冰雨</button>':''}</div></div>
-    <div class="panel"><h2>首页拍立得</h2><div class="btns">${fileBtn('换照片','accept="image/*" data-img="photo"')}${L.photo?'<button type="button" class="btn o" data-a="clearPhoto">去掉照片</button>':''}</div>
+      <div class="btns">${fileBtn('选字体文件','accept=".ttf,.otf,.woff,.woff2,font/*,application/font-woff" data-font="1"')}<button class="btn o" data-a="fontLink">用链接</button>${L.customFont?'<button class="btn red" data-a="fontClear">去掉</button>':''}</div></div>
+    <div class="panel"><h2>壁纸</h2><div class="btns">${fileBtn('桌面壁纸','accept="image/*" data-img="wall"')}${L.wallpaper?'<button class="btn o" data-a="clearWall">恢复冰雨</button>':''}</div></div>
+    <div class="panel"><h2>首页拍立得</h2><div class="btns">${fileBtn('换照片','accept="image/*" data-img="photo"')}${L.photo?'<button class="btn o" data-a="clearPhoto">去掉照片</button>':''}</div>
       <label class="f">照片下的字<input type="text" id="l-cap" data-s="look" data-k="caption" value="${esc(L.caption)}"></label></div>
     <div class="panel"><h2>声音和动效</h2>
       <label class="f">点图标的声音<select id="l-sfx" data-s="look" data-k="sfx">${[['drop','雨滴'],['ice','冰块'],['bubble','泡泡'],['mix','随机'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.sfx||'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f">桌面动效<select id="l-fxs" data-s="look" data-k="fxs">${[['drop','雨滴'],['bubble','泡泡'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.fx===false?'off':L.fxs==='bubble'?'bubble':'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="panel"><h2>每个App的背景</h2>
-      ${[['messages','消息'],['plaza','雨巷'],['bubble','泡泡'],['music','一起听'],['mail','信箱'],['takeout','外卖'],['shop','网购'],['novel','雨书'],['drawer','抽屉'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button type="button" class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
+      ${[['messages','消息'],['plaza','雨巷'],['bubble','泡泡'],['music','一起听'],['mail','信箱'],['takeout','外卖'],['shop','网购'],['novel','雨书'],['drawer','抽屉'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
     <div class="panel"><h2>桌面图标</h2><p class="hint">换完要把手机桌面上的「冰雨机」删掉，再从 Safari 重新「添加到主屏幕」才会变。</p>
-      <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button type="button" class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
+      <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
     <div class="panel"><h2>应用图标</h2>
       <div class="icons" style="margin:0">${APPS.map(a=>`<label class="ic-app"><span class="ic-g">${L.icons[a.id]?`<img src="${esc(L.icons[a.id])}" alt="">`:ICONS[a.id]}</span><span class="ic-n">${a.name}</span><input type="file" accept="image/*" data-img="icon" data-id="${a.id}" class="vh" aria-label="更换${a.name}图标"></label>`).join('')}</div>
-      ${Object.keys(L.icons).length?'<button type="button" class="btn o" data-a="resetIcons" style="align-self:flex-start">恢复默认图标</button>':''}</div>`};
+      ${Object.keys(L.icons).length?'<button class="btn o" data-a="resetIcons" style="align-self:flex-start">恢复默认图标</button>':''}</div>`};
   return{title:'设置',body:head+`
 ${VIEWS.data(v).body}
     <div class="panel"><h2>恢复</h2><p class="hint">会覆盖现在的全部内容。如果备份里没带 Key，会保留你现在填的。</p>
       ${fileBtn('选择文件','accept=".json,application/json,text/plain" id="impFile"')}
       <textarea id="impTa" placeholder="或者粘贴备份文本" aria-label="备份文本"></textarea>
-      <div class="btns"><button type="button" class="btn" data-a="imp">恢复</button></div></div>
-    <div class="panel"><h2>清空</h2><button type="button" class="btn red" data-a="resetAll" style="align-self:flex-start">清空全部数据</button></div>`,after:VIEWS.data(v).after};
+      <div class="btns"><button class="btn" data-a="imp">恢复</button></div></div>
+    <div class="panel"><h2>清空</h2><button class="btn red" data-a="resetAll" style="align-self:flex-start">清空全部数据</button></div>`,after:VIEWS.data(v).after};
 },
 apiEdit(v){
-  const p=S.api.profiles.find(x=>x.id===v.id);if(!p)return{title:'不见了',body:''};
+  const p=apiById(v.id);if(!p)return{title:'不见了',body:''};
   return{title:p.name,sub:'接口',body:`<div class="panel">
     <label class="f">名字<input type="text" id="a-name" data-s="api" data-k="name" value="${esc(p.name)}"></label>
-    <div class="seg">${Object.entries(PROVIDERS).map(([k,x])=>`<button type="button" class="${p.provider===k?'on':''}" data-a="prov" data-p="${k}">${x.name}</button>`).join('')}</div>
+    <div class="seg">${Object.entries(PROVIDERS).map(([k,x])=>`<button class="${p.provider===k?'on':''}" data-a="prov" data-p="${k}">${x.name}</button>`).join('')}</div>
     <p class="hint">${{gemini:'Google AI Studio 的 Key。模型例：gemini-2.5-pro、gemini-2.5-flash',openai:'OpenAI、DeepSeek 和大部分中转站。地址一般以 /v1 结尾',claude:'Anthropic 的 Key。模型例：claude-sonnet-5-5、claude-opus-4-6'}[p.provider]}</p>
     <label class="f">API Key<input type="password" id="a-key" data-s="api" data-k="key" value="${esc(p.key)}" autocomplete="off"></label>
     <label class="f">接口地址<input type="url" id="a-base" data-s="api" data-k="base" value="${esc(p.base)}" autocomplete="off"></label>
     <label class="f">模型<input type="text" id="a-model" data-s="api" data-k="model" value="${esc(p.model)}" autocomplete="off"></label>
-    <button type="button" class="btn o" data-a="fetchModels" style="align-self:flex-start">拉取模型列表</button></div>
+    <button class="btn o" data-a="fetchModels" style="align-self:flex-start">拉取模型列表</button></div>
   <div class="panel"><h2>参数</h2>
     <label class="f">温度<span class="inline"><input type="range" id="a-temp" min="0" max="2" step="0.05" data-s="api" data-k="temp" value="${p.temp??1}"><output>${p.temp??1}</output></span></label>
     <div class="grid2"><label class="f">Top P<input type="number" id="a-topp" min="0" max="1" step="0.01" data-s="api" data-k="topP" data-null="1" value="${p.topP??''}" placeholder="默认"></label>
     <label class="f">Top K<input type="number" id="a-topk" min="0" max="500" step="1" data-s="api" data-k="topK" data-null="1" value="${p.topK??''}" placeholder="默认"></label></div>
     <label class="f">最大长度（token）<input type="number" id="a-max" min="64" max="128000" data-s="api" data-k="maxTokens" value="${p.maxTokens}"></label><p class="hint">思考也算在里面。Gemini 3 建议 8192–16384，Claude 8192 以上。</p></div>
-  <div class="btns">${p.id===S.api.active?'<span class="pill fill">使用中</span>':'<button type="button" class="btn" data-a="useApi">用这个</button>'}<button type="button" class="btn o" data-a="testApi">测试连接</button><button type="button" class="btn o" data-a="dupApi">存为新预设</button><button type="button" class="btn red" data-a="delApi">删除</button></div>`};
+  <div class="btns">${p.id===S.api.active?'<span class="pill fill">使用中</span>':'<button class="btn" data-a="useApi">用这个</button>'}<button class="btn o" data-a="testApi">测试连接</button><button class="btn o" data-a="dupApi">存为新预设</button><button class="btn red" data-a="delApi">删除</button></div>`};
 }
 };
 
@@ -2864,8 +2860,8 @@ function purgeChar(id){S.chars=S.chars.filter(c=>c.id!==id);S.threads.forEach(t=
   S.diary=S.diary.filter(d=>d.charId!==id);S.feed=S.feed.filter(p=>p.author!==id);S.mail=(S.mail||[]).filter(m=>m.to!==id&&m.from!==id);S.events=S.events.filter(e=>e.who!==id);S.theaters=S.theaters.filter(x=>x.charId!==id);if(S.music.with===id)S.music.with=null;
   save();closeSheet();stack=stack.filter(x=>x.id!==id&&!(x.v==='chat'&&!thread(x.id)));if(!stack.length){appEl.classList.remove('open');renderHome()}else render();toast('永久删除了')}
 function pickChar(title,act){if(!S.chars.length){toast('先去「消息 · 通讯录」添加一个角色');return}
-  sheet(`<h3>${title}</h3>`+S.chars.map(c=>`<button type="button" class="opt l" data-a="${act}" data-id="${c.id}">${av(c,32)}<span>${esc(dn(c))}</span></button>`).join('')+`<button type="button" class="opt" data-a="closeSheet">取消</button>`)}
-function fileSheet(title,accept,id,extra=''){sheet(`<h3>${title}</h3>${extra}<label class="opt" style="position:relative;overflow:hidden">选择文件<input type="file" accept="${accept}" id="${id}" style="position:absolute;inset:0;opacity:0"></label><textarea id="${id}Ta" placeholder="或者粘贴 JSON" aria-label="JSON"></textarea><button type="button" class="btn" data-a="${id}Go">导入</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)}
+  sheet(`<h3>${title}</h3>`+S.chars.map(c=>`<button class="opt l" data-a="${act}" data-id="${c.id}">${av(c,32)}<span>${esc(dn(c))}</span></button>`).join('')+`${CANCEL}`)}
+function fileSheet(title,accept,id,extra=''){sheet(`<h3>${title}</h3>${extra}<label class="opt filebtn">选择文件<input type="file" accept="${accept}" id="${id}"></label><textarea id="${id}Ta" placeholder="或者粘贴 JSON" aria-label="JSON"></textarea><button class="btn" data-a="${id}Go">导入</button>${CANCEL}`)}
 async function copy(t,ok){try{await navigator.clipboard.writeText(t);toast(ok)}catch(e){toast('复制不了，长按文字手动复制')}}
 const A={
   back,closeSheet,
@@ -2873,19 +2869,19 @@ const A={
   /* coax */
   coax(){const t=thread(cur().id),c=charById(t.chars[0]);
     sheet(`<h3>哄哄${esc(dn(c))}</h3>
-    <div class="coax">${COAX.map(([k,l,d])=>`<button type="button" class="opt" data-a="coaxPick" data-k="${k}"><b>${l}</b><small>${d}</small></button>`).join('')}</div><button type="button" class="opt" data-a="closeSheet">先等等</button>`)},
+    <div class="coax">${COAX.map(([k,l,d])=>`<button class="opt" data-a="coaxPick" data-k="${k}"><b>${l}</b><small>${d}</small></button>`).join('')}</div><button class="opt" data-a="closeSheet">先等等</button>`)},
   coaxPick(el){const k=el.dataset.k,[,l]=COAX.find(x=>x[0]===k);
     const chips=k==='gift'?COAX_GIFT:k==='song'?S.music.songs.slice(-8).map(s=>s.title):[];
-    sheet(`<h3>${l}</h3>${chips.length?`<div class="chips">${chips.map(x=>`<button type="button" data-a="chipFill" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
+    sheet(`<h3>${l}</h3>${chips.length?`<div class="chips">${chips.map(x=>`<button data-a="chipFill" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
     ${k==='letter'||k==='post'?`<textarea id="coaxTa" class="tall" placeholder="${k==='letter'?'亲爱的…':'写一条只有TA能看到的动态'}" aria-label="内容"></textarea>`:`<input type="text" id="coaxTa" placeholder="${k==='gift'?'送什么':'歌名 - 歌手'}" aria-label="内容">`}
-    <button type="button" class="btn" data-a="coaxGo" data-k="${k}">送出去</button><button type="button" class="opt" data-a="coax">换一种</button>`)},
+    <button class="btn" data-a="coaxGo" data-k="${k}">送出去</button><button class="opt" data-a="coax">换一种</button>`)},
   chipFill(el){const ta=$('#coaxTa')||$('#thIn');if(ta)ta.value=el.dataset.v;el.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el))},
   coaxGo(el){const v=$('#coaxTa').value.trim();if(!v){toast('写点什么');return}const t=thread(cur().id),c=charById(t.chars[0]);closeSheet();doCoax(t,c,el.dataset.k,v)},
   /* theater */
   thPick(){pickChar('谁来演？','thSheet')},
   thFromChat(){const t=thread(cur().id);closeSheet();A.thSheet({dataset:{id:t.chars[0],chat:'1'}})},
   thSheet(el){const c=charById(el.dataset.id);
-    sheet(`<h3>小剧场 · ${esc(dn(c))}</h3><div class="chips">${TH_TOPICS.map(x=>`<button type="button" data-a="chipFill" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div><input type="text" id="thIn" placeholder="选一个，或者自己写题目" aria-label="题目"><button type="button" class="btn" data-a="thGo" data-id="${c.id}" data-chat="${el.dataset.chat||''}">开演</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+    sheet(`<h3>小剧场 · ${esc(dn(c))}</h3><div class="chips">${TH_TOPICS.map(x=>`<button data-a="chipFill" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div><input type="text" id="thIn" placeholder="选一个，或者自己写题目" aria-label="题目"><button class="btn" data-a="thGo" data-id="${c.id}" data-chat="${el.dataset.chat||''}">开演</button>${CANCEL}`)},
   async thGo(el){const c=charById(el.dataset.id),topic=$('#thIn').value.trim()||'随便演一个',into=el.dataset.chat?thread(cur().id):null;closeSheet();
     toast(dn(c)+' 正在搭舞台…（会久一点）',60000);
     try{await makeTheater(c,topic,into);$('#toast').hidden=true;if(into)onThreadUpdate(into);if(cur()?.v==='drawer')render(true);if(!isOpen())renderHome()}catch(e){toast(e.message,5600)}},
@@ -2897,7 +2893,7 @@ const A={
   bbSet(){go({v:'bubbleSet'})},
   bbUnq(){cur().q=null;render(true)},
   bbMsg(el){const m=S.bubble.msgs.find(x=>x.id===el.dataset.id);if(!m)return;
-    sheet(`${m.from==='fan'?`<button type="button" class="opt" data-a="bbQuote" data-id="${m.id}">回复TA</button>${m.charId?`<button type="button" class="opt" data-a="messageChar" data-id="${m.charId}">去私聊${esc(dn(charById(m.charId)))}</button>`:''}`:`<button type="button" class="opt" data-a="bbMore" data-id="${m.id}">再收一波回复</button>`}<button type="button" class="opt" data-a="bbCopy" data-id="${m.id}">复制</button><button type="button" class="opt red" data-a="bbDel" data-id="${m.id}">删除</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+    sheet(`${m.from==='fan'?`<button class="opt" data-a="bbQuote" data-id="${m.id}">回复TA</button>${m.charId?`<button class="opt" data-a="messageChar" data-id="${m.charId}">去私聊${esc(dn(charById(m.charId)))}</button>`:''}`:`<button class="opt" data-a="bbMore" data-id="${m.id}">再收一波回复</button>`}<button class="opt" data-a="bbCopy" data-id="${m.id}">复制</button><button class="opt red" data-a="bbDel" data-id="${m.id}">删除</button>${CANCEL}`)},
   bbQuote(el){const m=S.bubble.msgs.find(x=>x.id===el.dataset.id);closeSheet();cur().q={nick:m.charId?dn(charById(m.charId)):m.nick,text:m.content};render(true);$('#bbIn')?.focus()},
   bbMore(el){const m=S.bubble.msgs.find(x=>x.id===el.dataset.id);closeSheet();bbFans({type:'post',m})},
   bbCopy(el){copy(S.bubble.msgs.find(x=>x.id===el.dataset.id)?.content||'','复制好了');closeSheet()},
@@ -2907,18 +2903,18 @@ const A={
   mToggle,mPrev,mNext:()=>mNext(),
   mPlay(el){mLoad(el.dataset.id)},
   mMode(){const o=['all','one','shuffle'];S.music.mode=o[(o.indexOf(S.music.mode)+1)%3];save();render(true);toast({all:'列表循环',one:'单曲循环',shuffle:'随机播放'}[S.music.mode],1400)},
-  mAdd(){sheet(`<h3>添歌</h3><label class="opt" style="position:relative;overflow:hidden">从手机选音频文件<input type="file" accept="audio/*" multiple data-audio="1" style="position:absolute;inset:0;opacity:0"></label>
+  mAdd(){sheet(`<h3>添歌</h3><label class="opt filebtn">从手机选音频文件<input type="file" accept="audio/*" multiple data-audio="1"></label>
     <div class="sec">或者一行一首：歌名 - 歌手，后面可以跟一个音频链接（不跟也行）</div><textarea id="songTa" class="tall" aria-label="歌曲"></textarea>
-    <button type="button" class="btn" data-a="mAddGo">加进歌单</button>`)},
+    <button class="btn" data-a="mAddGo">加进歌单</button>`)},
   mAddGo(){let n=0;$('#songTa').value.split('\n').map(s=>s.trim()).filter(Boolean).forEach(l=>{const u=(l.match(/https?:\/\/\S+/)||[])[0]||'';const [ti,ar]=splitSong(l.replace(u,'').trim());if(!ti&&!u)return;S.music.songs.push({id:uid(),title:ti||'未命名',artist:ar,src:u,by:'me',t:Date.now()});n++});
     save();closeSheet();render(true);toast('加了 '+n+' 首')},
   mSongMenu(el){const s=songById(el.dataset.id);
     sheet(`<h3>${esc(s.title)}</h3><input type="text" id="sgT" value="${esc(s.title)}" aria-label="歌名"><input type="text" id="sgA" value="${esc(s.artist||'')}" placeholder="歌手" aria-label="歌手"><input type="url" id="sgU" value="${s.local?'':esc(s.src||'')}" placeholder="音频链接（可不填）" aria-label="音频链接">
-    <button type="button" class="btn" data-a="mSongSave" data-id="${s.id}">保存</button><label class="opt" style="position:relative;overflow:hidden">${s.local?'换一个':'补上'}本地音频文件<input type="file" accept="audio/*" data-song="${s.id}" style="position:absolute;inset:0;opacity:0"></label><button type="button" class="opt red" data-a="mSongDel" data-id="${s.id}">从歌单删掉</button>`)},
+    <button class="btn" data-a="mSongSave" data-id="${s.id}">保存</button><label class="opt filebtn">${s.local?'换一个':'补上'}本地音频文件<input type="file" accept="audio/*" data-song="${s.id}"></label><button class="opt red" data-a="mSongDel" data-id="${s.id}">从歌单删掉</button>`)},
   mSongSave(el){const s=songById(el.dataset.id);s.title=$('#sgT').value.trim()||s.title;s.artist=$('#sgA').value.trim();const u=$('#sgU').value.trim();if(u){s.src=u;if(s.local){s.local=false;DB.del('song:'+s.id)}}else if(!s.local)s.src='';
     save();closeSheet();if(S.music.cur===s.id)mState.loaded=null;render(true)},
   mSongDel(el){const id=el.dataset.id;S.music.songs=S.music.songs.filter(s=>s.id!==id);DB.del('song:'+id);if(S.music.cur===id){S.music.cur=null;mState.loaded=null;stopFake();audio.pause();audio.removeAttribute('src');mState.playing=false}save();closeSheet();render(true)},
-  mInvite(){const fr=S.chars.filter(reachable);sheet(`<h3>和谁一起听？</h3>`+fr.map(c=>`<button type="button" class="opt l" data-a="mWith" data-id="${c.id}">${av(c,32)}<span>${esc(dn(c))}</span>${S.music.with===c.id?' ✓':''}</button>`).join('')+`<button type="button" class="opt" data-a="mWith" data-id="">一个人听</button>`)},
+  mInvite(){const fr=S.chars.filter(reachable);sheet(`<h3>和谁一起听？</h3>`+fr.map(c=>`<button class="opt l" data-a="mWith" data-id="${c.id}">${av(c,32)}<span>${esc(dn(c))}</span>${S.music.with===c.id?' ✓':''}</button>`).join('')+`<button class="opt" data-a="mWith" data-id="">一个人听</button>`)},
   mWith(el){const id=el.dataset.id||null;S.music.with=id;save();closeSheet();const c=charById(id);
     if(c){const t=dmFor(c.id),s=songById(S.music.cur);sysMsg(t,`你邀请 ${dn(c)} 一起听歌${s?'：《'+s.title+'》':''}`);t.t=Date.now();save();render(true);
       if(api()?.key)reply(t,`（${mask().name}邀请你一起听歌${s?`，现在放的是《${s.title}》${s.artist?'，'+s.artist+'的':''}`:'，还没选歌'}。用聊天的方式自然地回应。）`)}
@@ -2950,35 +2946,35 @@ const A={
     catch(e){toast(e.message,5600);if(el.isConnected){el.disabled=false;el.textContent='申请加回'}}},
   openThreadHome(el){stack=[{v:'threads'}];go({v:'chat',id:el.dataset.id})},
   /* threads */
-  newThread(){sheet(`<h3>新建</h3><button type="button" class="opt" data-a="newDm">单聊</button><button type="button" class="opt" data-a="newGroupChat">群聊</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+  newThread(){sheet(`<h3>新建</h3><button class="opt" data-a="newDm">单聊</button><button class="opt" data-a="newGroupChat">群聊</button>${CANCEL}`)},
   newDm(){pickChar('和谁聊？','dmGo')},
   dmGo(el){const t=dmFor(el.dataset.id);closeSheet();go({v:'chat',id:t.id})},
   newGroupChat(){if(S.chars.length<2){toast('群聊至少要 2 个角色');return}
-    sheet(`<h3>新群聊</h3><input type="text" id="gName" placeholder="群名" aria-label="群名">`+S.chars.map(c=>`<label class="opt l"><input type="checkbox" class="gm cbx" value="${c.id}">${av(c,30)}${esc(dn(c))}</label>`).join('')+`<button type="button" class="btn" data-a="groupGo">建群</button>`)},
+    sheet(`<h3>新群聊</h3><input type="text" id="gName" placeholder="群名" aria-label="群名">`+S.chars.map(c=>`<label class="opt l"><input type="checkbox" class="gm cbx" value="${c.id}">${av(c,30)}${esc(dn(c))}</label>`).join('')+`<button class="btn" data-a="groupGo">建群</button>`)},
   groupGo(){const ids=[...document.querySelectorAll('.gm:checked')].map(x=>x.value);if(ids.length<2){toast('至少选 2 个');return}
     const t={id:uid(),type:'group',chars:ids,title:$('#gName').value.trim(),mode:'online',msgs:[],unread:0,t:Date.now()};S.threads.push(t);save();closeSheet();go({v:'chat',id:t.id})},
   openThread(el){go({v:'chat',id:el.dataset.id})},
   send(){sendMsg(thread(cur().id),$('#msgIn'))},
   msg(el){const t=thread(cur().id),i=+el.dataset.i,m=t.msgs[i];if(!m)return;const lastTheirs=m.from!=='me'&&t.msgs.slice(i+1).every(x=>x.from!=='me');
-    sheet(`${m.type!=='sticker'&&m.type!=='theater'?`<button type="button" class="opt" data-a="mCopy" data-i="${i}">复制</button><button type="button" class="opt" data-a="mEdit" data-i="${i}">编辑</button>`:''}${lastTheirs?'<button type="button" class="opt" data-a="mRegen">重新生成</button>':''}<button type="button" class="opt red" data-a="mDel" data-i="${i}">删除这条</button><button type="button" class="opt red" data-a="mDelAfter" data-i="${i}">从这条往下全删</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+    sheet(`${m.type!=='sticker'&&m.type!=='theater'?`<button class="opt" data-a="mCopy" data-i="${i}">复制</button><button class="opt" data-a="mEdit" data-i="${i}">编辑</button>`:''}${lastTheirs?'<button class="opt" data-a="mRegen">重新生成</button>':''}<button class="opt red" data-a="mDel" data-i="${i}">删除这条</button><button class="opt red" data-a="mDelAfter" data-i="${i}">从这条往下全删</button>${CANCEL}`)},
   mCopy(el){copy(thread(cur().id).msgs[+el.dataset.i].content,'复制好了');closeSheet()},
-  mEdit(el){const m=thread(cur().id).msgs[+el.dataset.i];sheet(`<h3>编辑</h3><textarea id="editTa" class="tall" aria-label="编辑消息">${esc(m.content)}</textarea>${m.inner!==undefined?`<label class="f">${esc(S.chat.innerName)}<textarea id="editInner">${esc(m.inner||'')}</textarea></label>`:''}<button type="button" class="btn" data-a="mSave" data-i="${el.dataset.i}">保存</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+  mEdit(el){const m=thread(cur().id).msgs[+el.dataset.i];sheet(`<h3>编辑</h3><textarea id="editTa" class="tall" aria-label="编辑消息">${esc(m.content)}</textarea>${m.inner!==undefined?`<label class="f">${esc(S.chat.innerName)}<textarea id="editInner">${esc(m.inner||'')}</textarea></label>`:''}<button class="btn" data-a="mSave" data-i="${el.dataset.i}">保存</button>${CANCEL}`)},
   mSave(el){const m=thread(cur().id).msgs[+el.dataset.i];m.content=$('#editTa').value;if($('#editInner'))m.inner=$('#editInner').value;save();closeSheet();refreshChat()},
   mDel(el){thread(cur().id).msgs.splice(+el.dataset.i,1);save();closeSheet();refreshChat()},
   mDelAfter(el){confirmTap(el,()=>{const t=thread(cur().id);t.msgs.splice(+el.dataset.i);if((t.sumUpTo||0)>t.msgs.length)t.sumUpTo=t.msgs.length;save();closeSheet();refreshChat()})},
   mRegen(){const t=thread(cur().id);while(t.msgs.length&&t.msgs[t.msgs.length-1].from!=='me')t.msgs.pop();save();closeSheet();reply(t)},
   chatMenu(){const t=thread(cur().id);
     const mt=t.meet||'both';
-    const o=(a,l,x='')=>`<button type="button" class="opt l${x}" data-a="${a}"><span>${l}</span><i>›</i></button>`,dm=t.type==='dm',c=charById(t.chars[0]);
+    const o=(a,l,x='')=>`<button class="opt l${x}" data-a="${a}"><span>${l}</span><i>›</i></button>`,dm=t.type==='dm',c=charById(t.chars[0]);
     sheet(`<h3>${esc(threadTitle(t))}</h3>
-    <div class="grp"><p class="sec">见面</p><div class="seg">${[['both','都可以'],['online','只线上'],['offline','只线下']].map(([k,l])=>`<button type="button" class="${mt===k?'on':''}" data-a="setMeet" data-m="${k}">${l}</button>`).join('')}</div>
-    ${mt==='both'?`<div class="seg"><button type="button" class="${t.mode!=='offline'?'on':''}" data-a="setMode" data-m="online">线上 · 发消息</button><button type="button" class="${t.mode==='offline'?'on':''}" data-a="setMode" data-m="offline">线下 · 见面</button></div>`:''}
-    <p class="sec">分寸</p><div class="seg">${[['slow','慢热'],['normal','正常'],['open','放开']].map(([k,l])=>`<button type="button" class="${(t.heat||'normal')===k?'on':''}" data-a="setHeat" data-h="${k}">${l}</button>`).join('')}</div></div>
+    <div class="grp"><p class="sec">见面</p><div class="seg">${[['both','都可以'],['online','只线上'],['offline','只线下']].map(([k,l])=>`<button class="${mt===k?'on':''}" data-a="setMeet" data-m="${k}">${l}</button>`).join('')}</div>
+    ${mt==='both'?`<div class="seg"><button class="${t.mode!=='offline'?'on':''}" data-a="setMode" data-m="online">线上 · 发消息</button><button class="${t.mode==='offline'?'on':''}" data-a="setMode" data-m="offline">线下 · 见面</button></div>`:''}
+    <p class="sec">分寸</p><div class="seg">${[['slow','慢热'],['normal','正常'],['open','放开']].map(([k,l])=>`<button class="${(t.heat||'normal')===k?'on':''}" data-a="setHeat" data-h="${k}">${l}</button>`).join('')}</div></div>
     <div class="grp">${o('ctxPeek','TA 知道什么')}${o('openOffline','线下文风 · 字数 · 人称')}${o('openSummary','前情总结'+(t.summary?' · 已有':''))}${o('apiSwitch','接口：'+esc(api().name)+' · '+esc(api().model))}${o('presetSwitch','预设：'+esc(preset().name))}</div>
     ${dm?`<div class="grp">${o('thFromChat','小剧场')}${o('listenWith','一起听歌')}</div>`:''}
-    <div class="grp">${dm?o('openCharFromChat','查看角色')+(rel(c).youBlocked?o('unblock','解除拉黑'):o('block','拉黑TA',' red'))+o('delFriend','删除好友',' red')+`<button type="button" class="opt l red" data-a="delChar" data-id="${c.id}"><span>永久删除（聊天记录也删）</span></button>`:o('openGroupEdit','群名和成员')}
+    <div class="grp">${dm?o('openCharFromChat','查看角色')+(rel(c).youBlocked?o('unblock','解除拉黑'):o('block','拉黑TA',' red'))+o('delFriend','删除好友',' red')+`<button class="opt l red" data-a="delChar" data-id="${c.id}"><span>永久删除（聊天记录也删）</span></button>`:o('openGroupEdit','群名和成员')}
     ${o('clearThread','清空聊天记录',' red')}${o('delThread','删除这个聊天',' red')}</div>
-    <button type="button" class="opt" data-a="closeSheet">关闭</button>`)},
+    <button class="opt" data-a="closeSheet">关闭</button>`)},
   setLang(el){S.look.lang=el.dataset.l;save();applyLook();render()},
   setChat(el){S.chat[el.dataset.k]=el.dataset.v||(el.dataset.k==='thinkStyle'?THINK_DEF:'');save();render(true)},
   setMeet(el){const t=thread(cur().id),m=el.dataset.m;t.meet=m;const want=m==='online'?'online':m==='offline'?'offline':t.mode;
@@ -2996,12 +2992,12 @@ const A={
   sumClear(el){confirmTap(el,()=>{const t=thread(cur().id);t.summary='';t.sumUpTo=0;save();render()})},
   openGroupEdit(){closeSheet();go({v:'groupEdit',id:cur().id})},
   openCharFromChat(){const t=thread(cur().id);closeSheet();go({v:'charEdit',id:t.chars[0]})},
-  presetSwitch(){sheet(`<h3>预设</h3>`+S.presets.map(p=>`<button type="button" class="opt" data-a="presetSet" data-id="${p.id}">${esc(p.name)}${p.id===S.activePreset?' ✓':''}</button>`).join(''))},
+  presetSwitch(){sheet(`<h3>预设</h3>`+S.presets.map(p=>`<button class="opt" data-a="presetSet" data-id="${p.id}">${esc(p.name)}${p.id===S.activePreset?' ✓':''}</button>`).join(''))},
   presetSet(el){S.activePreset=el.dataset.id;save();closeSheet();toast('预设：'+preset().name)},
   clearThread(el){confirmTap(el,()=>{const t=thread(cur().id);t.msgs=[];t.summary='';t.sumUpTo=0;save();closeSheet();render()})},
   delThread(el){confirmTap(el,()=>{const id=cur().id;S.threads=S.threads.filter(t=>t.id!==id);save();closeSheet();back()})},
   stickerPicker(){const gs=S.stickers.groups.filter(g=>g.items.length);if(!gs.length){toast('还没有表情包，去「表情包」里添加');return}
-    sheet(`<h3>表情包</h3>`+gs.map(g=>`<div class="sec">${esc(g.name)}</div><div class="sgrid">${g.items.map(s=>`<button type="button" data-a="sendSticker" data-n="${esc(s.name)}"><img src="${esc(s.src)}" alt="${esc(s.name)}" loading="lazy"><span>${esc(s.name)}</span></button>`).join('')}</div>`).join(''))},
+    sheet(`<h3>表情包</h3>`+gs.map(g=>`<div class="sec">${esc(g.name)}</div><div class="sgrid">${g.items.map(s=>`<button data-a="sendSticker" data-n="${esc(s.name)}"><img src="${esc(s.src)}" alt="${esc(s.name)}" loading="lazy"><span>${esc(s.name)}</span></button>`).join('')}</div>`).join(''))},
   sendSticker(el){const t=thread(cur().id);t.msgs.push({id:uid(),from:'me',type:'sticker',content:el.dataset.n,t:Date.now()});t.t=Date.now();save();closeSheet();refreshChat()},
   /* plaza */
   async myPost(){const tx=$('#postIn').value.trim();if(!tx){toast('写点什么再发');return}
@@ -3026,23 +3022,23 @@ const A={
       if(tgt&&tgt.author==='x'&&S.chat.strangers){await strangerComments(p,1,{id:mine.id,text:tx,nick:tgt.nick});if(cur()?.id===p.id)render(true)}}catch(e){toast(e.message,5600)}},
   /* chat extras */
   moreMsgs(){const v=cur();v.more=(v.more||120)+120;const c=$('#content');const h=c.scrollHeight;c.innerHTML=msgsHTML(thread(v.id));c.scrollTop=c.scrollHeight-h},
-  plus(){const t=thread(cur().id),dm=t.type==='dm';const it=(a,ic,l,ex='')=>`<button type="button" class="pi" data-a="${a}" ${ex}><span class="ic">${ICONS[ic]}</span>${l}</button>`;
+  plus(){const t=thread(cur().id),dm=t.type==='dm';const it=(a,ic,l,ex='')=>`<button class="pi" data-a="${a}" ${ex}><span class="ic">${ICONS[ic]}</span>${l}</button>`;
     sheet(`<h3>更多</h3><p class="hint" style="text-align:center">钱包 ¥${(+S.wallet||0).toFixed(2)}</p><div class="pgrid">
       <label class="pi"><span class="ic">${ICONS.image}</span>照片<input type="file" accept="image/*" data-img="chatimg" class="vh" aria-label="发照片"></label>${it('pPic','camera','文字图片')}${it('pVoice','mic','语音')}
       ${dm?it('pMoney','gift','红包','data-k="hb"')+it('pMoney','yen','转账','data-k="tf"')+it('pOrder','bowl','点外卖')+it('pCall','phone','语音通话','data-k="voice"')+it('pCall','video','视频通话','data-k="video"')+it('pPhone','search','查TA手机')+it('pPeek','eye','让TA查我')+it('pGame','dice','小游戏')+it('thFromChat','theater','小剧场')+it('listenWith','music','一起听'):it('pGame','dice','小游戏')}
-    </div><button type="button" class="opt" data-a="closeSheet">关闭</button>`)},
-  pPic(){sheet(`<h3>文字图片</h3><p class="hint">用文字描述你拍到的画面，TA会当成一张照片来看。</p><textarea id="picTa" aria-label="照片内容"></textarea><button type="button" class="btn" data-a="pPicGo">发出去</button>`)},
+    </div><button class="opt" data-a="closeSheet">关闭</button>`)},
+  pPic(){sheet(`<h3>文字图片</h3><p class="hint">用文字描述你拍到的画面，TA会当成一张照片来看。</p><textarea id="picTa" aria-label="照片内容"></textarea><button class="btn" data-a="pPicGo">发出去</button>`)},
   pPicGo(){const v=$('#picTa').value.trim();if(!v){toast('描述一下画面');return}closeSheet();pushMine(thread(cur().id),{type:'pic',content:v})},
-  pVoice(){sheet(`<h3>语音</h3><textarea id="vcTa" placeholder="想说的话" aria-label="语音内容"></textarea><div class="btns">${SR?'<button type="button" class="btn o" data-a="pVoiceMic">用麦克风说</button>':''}<button type="button" class="btn" data-a="pVoiceGo">发语音</button></div>`)},
+  pVoice(){sheet(`<h3>语音</h3><textarea id="vcTa" placeholder="想说的话" aria-label="语音内容"></textarea><div class="btns">${SR?'<button class="btn o" data-a="pVoiceMic">用麦克风说</button>':''}<button class="btn" data-a="pVoiceGo">发语音</button></div>`)},
   pVoiceMic(){listen(x=>{const ta=$('#vcTa');if(ta)ta.value=(ta.value?ta.value+' ':'')+x})},
   pVoiceGo(){const v=$('#vcTa').value.trim();if(!v){toast('说点什么');return}closeSheet();pushMine(thread(cur().id),{type:'voice',content:v,dur:voiceDur(v)})},
-  pMoney(el){const hb=el.dataset.k==='hb';sheet(`<h3>${hb?'发红包':'转账'}</h3><p class="hint" style="text-align:center">钱包 ¥${(+S.wallet||0).toFixed(2)}</p><input type="number" id="mnAmt" min="0.01" step="0.01" placeholder="金额${hb?'（最多200）':''}" inputmode="decimal" aria-label="金额"><input type="text" id="mnNote" placeholder="${hb?'祝福（可不写）':'备注（可不写）'}" aria-label="备注"><button type="button" class="btn" data-a="pMoneyGo" data-k="${el.dataset.k}">${hb?'塞进红包':'转过去'}</button>`)},
+  pMoney(el){const hb=el.dataset.k==='hb';sheet(`<h3>${hb?'发红包':'转账'}</h3><p class="hint" style="text-align:center">钱包 ¥${(+S.wallet||0).toFixed(2)}</p><input type="number" id="mnAmt" min="0.01" step="0.01" placeholder="金额${hb?'（最多200）':''}" inputmode="decimal" aria-label="金额"><input type="text" id="mnNote" placeholder="${hb?'祝福（可不写）':'备注（可不写）'}" aria-label="备注"><button class="btn" data-a="pMoneyGo" data-k="${el.dataset.k}">${hb?'塞进红包':'转过去'}</button>`)},
   pMoneyGo(el){const k=el.dataset.k,hb=k==='hb';let a=Math.round((+$('#mnAmt').value||0)*100)/100;if(a<=0){toast('填个金额');return}if(hb&&a>200){toast('红包最多200');return}if(a>(+S.wallet||0)){toast('钱包余额不够啦');return}
     const t=thread(cur().id);closeSheet();S.wallet=Math.round(((+S.wallet||0)-a)*100)/100;if(!pushMine(t,{type:k,amt:a,content:$('#mnNote')?.value.trim()||(hb?'恭喜发财':''),state:'new'}))S.wallet=Math.round((S.wallet+a)*100)/100;save()},
   money(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m)return;const hb=m.type==='hb';
     if(m.from==='me'){toast(m.state==='got'?'TA已经收下了':m.state==='back'?'TA退回来了':'等TA收');return}
     if(m.state!=='new'){toast(m.state==='got'?'已经收过了':'已经退回了');return}
-    sheet(`<h3>${esc(dn(charById(m.from)))}${hb?'的红包':'给你转账'}</h3><div class="money-big">¥${(+m.amt).toFixed(2)}</div><p class="hint" style="text-align:center">${esc(m.content||'')}</p><button type="button" class="btn" data-a="moneyGet" data-i="${el.dataset.i}">${hb?'领取':'收款'}</button>${hb?'':`<button type="button" class="opt" data-a="moneyBack" data-i="${el.dataset.i}">退还</button>`}`)},
+    sheet(`<h3>${esc(dn(charById(m.from)))}${hb?'的红包':'给你转账'}</h3><div class="money-big">¥${(+m.amt).toFixed(2)}</div><p class="hint" style="text-align:center">${esc(m.content||'')}</p><button class="btn" data-a="moneyGet" data-i="${el.dataset.i}">${hb?'领取':'收款'}</button>${hb?'':`<button class="opt" data-a="moneyBack" data-i="${el.dataset.i}">退还</button>`}`)},
   moneyGet(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i],c=charById(m.from);m.state='got';S.wallet=Math.round(((+S.wallet||0)+m.amt)*100)/100;sysMsg(t,`你${m.type==='hb'?'领取':'收下'}了${dn(c)}的${m.type==='hb'?'红包':'转账'} ¥${(+m.amt).toFixed(2)}`);save();closeSheet();refreshChat();toast('钱包 +¥'+(+m.amt).toFixed(2))},
   moneyBack(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i],c=charById(m.from);m.state='back';sysMsg(t,`你退还了${dn(c)}的转账`);save();closeSheet();refreshChat()},
   voice(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m)return;m.open=!m.open;el.classList.toggle('open',m.open);save();if(m.open)speak(m.content,m.from==='me'?null:charById(m.from),m.id)},
@@ -3052,15 +3048,15 @@ const A={
   callSend(){const i=$('#callIn');if(!i)return;const v=i.value;i.value='';callSay(v)},
   callMic(){listen(x=>callSay(x))},
   callTts(){if(!call)return;call.tts=!call.tts;if(!call.tts)try{TTS.cancel()}catch(e){}const v=$('#callIn')?.value||'';renderCall();const i=$('#callIn');if(i)i.value=v},
-  pPhone(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>查${esc(dn(c))}的手机</h3><button type="button" class="opt" data-a="phoneGo" data-h="open">当面要过来看</button><button type="button" class="opt" data-a="phoneGo" data-h="sneak">趁TA不注意偷偷看</button>${c.phone?`<button type="button" class="opt" data-a="phoneGo" data-h="old">看上次翻到的（${ago(c.phone.t)}）</button>`:''}<p class="hint" style="text-align:center">偷偷看有可能被发现哦</p>`)},
+  pPhone(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>查${esc(dn(c))}的手机</h3><button class="opt" data-a="phoneGo" data-h="open">当面要过来看</button><button class="opt" data-a="phoneGo" data-h="sneak">趁TA不注意偷偷看</button>${c.phone?`<button class="opt" data-a="phoneGo" data-h="old">看上次翻到的（${ago(c.phone.t)}）</button>`:''}<p class="hint" style="text-align:center">偷偷看有可能被发现哦</p>`)},
   phoneGo(el){const t=thread(cur().id),c=charById(t.chars[0]);closeSheet();const h=el.dataset.h;go({v:'phone',id:c.id,how:h==='old'?c.phone.how:h,force:h!=='old'})},
   phoneAgain(){const v=cur();v.force=1;v.gen=0;charById(v.id).phone=null;render()},
   phoneReveal(){cur().reveal=1;render(true)},
-  pPeek(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>让${esc(dn(c))}查你的手机</h3><button type="button" class="opt" data-a="peekGo" data-h="open">把手机递给TA</button><button type="button" class="opt" data-a="peekGo" data-h="sneak">假装没注意，让TA偷偷看</button><p class="hint" style="text-align:center">TA会看到你真实的聊天、动态、泡泡和歌单</p>`)},
+  pPeek(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>让${esc(dn(c))}查你的手机</h3><button class="opt" data-a="peekGo" data-h="open">把手机递给TA</button><button class="opt" data-a="peekGo" data-h="sneak">假装没注意，让TA偷偷看</button><p class="hint" style="text-align:center">TA会看到你真实的聊天、动态、泡泡和歌单</p>`)},
   peekGo(el){const t=thread(cur().id);closeSheet();go({v:'peek',id:t.chars[0],how:el.dataset.h})},
-  pGame(){const t=thread(cur().id),dm=t.type==='dm';const g=(a,l,ex='')=>`<button type="button" class="opt" data-a="${a}" ${ex}>${l}</button>`;
-    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋'):''}${g('gChat','真心话大冒险','data-g="truth"')}${g('gChat','海龟汤','data-g="soup"')}${g('gChat','词语接龙','data-g="chain"')}</div><button type="button" class="opt" data-a="closeSheet">算了</button>`)},
-  gRps(){sheet(`<h3>出什么？</h3><div class="gvs" style="justify-content:center">${RPS.map(x=>`<button type="button" class="opt" data-a="gRpsGo" data-k="${x}" style="font-size:34px;padding:10px 16px" aria-label="${x}">${RPSI[x]}</button>`).join('')}</div>`)},
+  pGame(){const t=thread(cur().id),dm=t.type==='dm';const g=(a,l,ex='')=>`<button class="opt" data-a="${a}" ${ex}>${l}</button>`;
+    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋'):''}${g('gChat','真心话大冒险','data-g="truth"')}${g('gChat','海龟汤','data-g="soup"')}${g('gChat','词语接龙','data-g="chain"')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
+  gRps(){sheet(`<h3>出什么？</h3><div class="gvs" style="justify-content:center">${RPS.map(x=>`<button class="opt" data-a="gRpsGo" data-k="${x}" style="font-size:34px;padding:10px 16px" aria-label="${x}">${RPSI[x]}</button>`).join('')}</div>`)},
   gRpsGo(el){const a=el.dataset.k,b=RPS[Math.floor(Math.random()*3)],beat={石头:'剪刀',剪刀:'布',布:'石头'};closeSheet();pushMine(thread(cur().id),{type:'game',g:'rps',a,b,res:a===b?'draw':beat[a]===b?'win':'lose'})},
   gDice(){closeSheet();const r=()=>1+Math.floor(Math.random()*6);pushMine(thread(cur().id),{type:'game',g:'dice',a:r(),b:r()})},
   gTtt(){closeSheet();pushMine(thread(cur().id),{type:'game',g:'ttt',b:Array(9).fill(''),res:''},false)},
@@ -3082,44 +3078,44 @@ const A={
   async todayRe(el){const c=charById(cur().id);c.today=null;el.disabled=true;el.textContent='想一想…';try{await ensureToday(c);render(true)}catch(e){toast(e.message)}},
   exportChar(){const c=charById(cur().id);const book=S.books.find(b=>(c.books||[]).includes(b.id));
     dlJSON({spec:'chara_card_v2',spec_version:'2.0',data:{name:c.name,description:c.persona,first_mes:c.greeting,personality:'',scenario:'',mes_example:'',extensions:{bingyuji:{sign:c.sign,stage:c.stage,innerStyle:c.innerStyle}},...(book?{character_book:{name:book.name,entries:book.entries.map(e=>({keys:String(e.keys||'').split(/[,，]/).filter(Boolean),content:e.content,comment:e.title,constant:e.light==='green',enabled:e.light!=='red',insertion_order:e.order||0}))}}:{})}},c.name+'.json')},
-  dlPreset(){const p=S.presets.find(x=>x.id===cur().id);dlJSON(p,'预设-'+p.name+'.json')},
+  dlPreset(){const p=presetById(cur().id);dlJSON(p,'预设-'+p.name+'.json')},
   dlBook(){const b=S.books.find(x=>x.id===cur().id);dlJSON(b,'世界书-'+b.name+'.json')},
   proLv(el){S.chat.proactive=el.dataset.l;save();render(true)},
   /* font */
-  fontLink(){sheet(`<h3>用链接导入字体</h3><p class="hint">字体文件链接（.ttf .otf .woff2 结尾），或者 Google Fonts 那种 css 链接。css 链接要在下面填字体名。</p><input type="url" id="fUrl" placeholder="https://…" aria-label="字体链接"><input type="text" id="fFam" placeholder="字体名（css 链接才需要，比如 ZCOOL KuaiLe）" aria-label="字体名"><button type="button" class="btn" data-a="fontLinkGo">导入</button>`)},
+  fontLink(){sheet(`<h3>用链接导入字体</h3><p class="hint">字体文件链接（.ttf .otf .woff2 结尾），或者 Google Fonts 那种 css 链接。css 链接要在下面填字体名。</p><input type="url" id="fUrl" placeholder="https://…" aria-label="字体链接"><input type="text" id="fFam" placeholder="字体名（css 链接才需要，比如 ZCOOL KuaiLe）" aria-label="字体名"><button class="btn" data-a="fontLinkGo">导入</button>`)},
   fontLinkGo(){const u=$('#fUrl').value.trim();if(!/^https?:\/\//.test(u)){toast('链接不对');return}const fam=$('#fFam').value.trim();
     S.look.customFont={local:false,src:u,family:fam,name:fam||decodeURIComponent(u.split('/').pop().split('?')[0]),t:Date.now()};S.look.font='custom';fontLoaded='';save();closeSheet();loadFont();render(true)},
   fontClear(){S.look.customFont=null;if(S.look.font==='custom')S.look.font='system';DB.del('font:custom');fontLoaded='';save();applyLook();render(true)},
   /* world */
   setCity(el){const id=el.dataset.for||'';const L=id?charById(id)?.loc:S.loc;
-    sheet(`<h3>${id?esc(dn(charById(id)))+'在哪个城市':'你在哪个城市'}</h3><p class="hint" style="text-align:center">${L?'现在：'+esc(L.name):'TA会知道这里的天气'}</p><div class="inline" style="flex-wrap:nowrap"><input type="text" id="cityQ" aria-label="城市"><button type="button" class="btn" data-a="citySearch" data-for="${id}">搜索</button></div><div class="mlist" id="cityRes"></div>${L?`<button type="button" class="opt red" data-a="cityPick" data-for="${id}" data-i="-1">不设城市</button>`:''}`);setTimeout(()=>$('#cityQ')?.focus(),50)},
+    sheet(`<h3>${id?esc(dn(charById(id)))+'在哪个城市':'你在哪个城市'}</h3><p class="hint" style="text-align:center">${L?'现在：'+esc(L.name):'TA会知道这里的天气'}</p><div class="inline" style="flex-wrap:nowrap"><input type="text" id="cityQ" aria-label="城市"><button class="btn" data-a="citySearch" data-for="${id}">搜索</button></div><div class="mlist" id="cityRes"></div>${L?`<button class="opt red" data-a="cityPick" data-for="${id}" data-i="-1">不设城市</button>`:''}`);setTimeout(()=>$('#cityQ')?.focus(),50)},
   async citySearch(el){const q=$('#cityQ').value.trim();if(!q)return;const box=$('#cityRes');box.innerHTML='<p class="hint">找找…</p>';
-    try{cityTmp=await geoSearch(q);box.innerHTML=cityTmp.map((x,i)=>`<button type="button" class="opt" data-a="cityPick" data-for="${el.dataset.for}" data-i="${i}"><b>${esc(x.name)}</b><small class="sec">${esc(x.admin)}</small></button>`).join('')||'<p class="hint">没找到，换个写法试试</p>'}catch(e){box.innerHTML=`<p class="hint">${esc(e.message)}</p>`}},
+    try{cityTmp=await geoSearch(q);box.innerHTML=cityTmp.map((x,i)=>`<button class="opt" data-a="cityPick" data-for="${el.dataset.for}" data-i="${i}"><b>${esc(x.name)}</b><small class="sec">${esc(x.admin)}</small></button>`).join('')||'<p class="hint">没找到，换个写法试试</p>'}catch(e){box.innerHTML=`<p class="hint">${esc(e.message)}</p>`}},
   cityPick(el){const i=+el.dataset.i,x=i>=0?cityTmp[i]:null,loc=x?{name:x.name,lat:x.lat,lon:x.lon}:null,id=el.dataset.for;
     if(id){const c=charById(id);if(c)c.loc=loc}else S.loc=loc;save();closeSheet();
     if(loc)ensureWx(loc).then(()=>{if(isOpen())render(true);else renderHome()});if(isOpen())render(true);else renderHome()},
-  dayAdd(el){const pre=el?.dataset?.d||'';sheet(`<h3>添加一个日子</h3><input type="text" id="dyN" aria-label="名字"><input type="date" id="dyD" aria-label="日期"><select id="dyC" aria-label="和谁"><option value="">和所有人</option>${S.chars.map(c=>`<option value="${c.id}">和 ${esc(dn(c))}</option>`).join('')}</select><button type="button" class="btn" data-a="dayAddGo">记下来</button>`);if(pre)$('#dyD').value=pre},
+  dayAdd(el){const pre=el?.dataset?.d||'';sheet(`<h3>添加一个日子</h3><input type="text" id="dyN" aria-label="名字"><input type="date" id="dyD" aria-label="日期"><select id="dyC" aria-label="和谁"><option value="">和所有人</option>${S.chars.map(c=>`<option value="${c.id}">和 ${esc(dn(c))}</option>`).join('')}</select><button class="btn" data-a="dayAddGo">记下来</button>`);if(pre)$('#dyD').value=pre},
   dayAddGo(){const n=$('#dyN').value.trim(),d=$('#dyD').value;if(!n||!d){toast('名字和日期都要填');return}(S.days||=[]).push({id:uid(),name:n,date:d,charId:$('#dyC').value||null});save();closeSheet();render()},
   dayDel(el){confirmTap(el,()=>{S.days=(S.days||[]).filter(x=>x.id!==el.dataset.id);save();render(true)})},
   /* takeout */
-  pOrder(){sheet(`<h3>点外卖给TA</h3><p class="hint" style="text-align:center">钱包 ¥${(+S.wallet||0).toFixed(2)}</p><div class="chips">${['奶茶','炸鸡','麻辣烫','小蛋糕','热粥','寿司','烤串','水果'].map(x=>`<button type="button" data-a="chipFill2" data-v="${x}">${x}</button>`).join('')}</div><input type="text" id="odN" placeholder="点什么，可以写备注" aria-label="外卖"><input type="number" id="odA" min="1" step="0.1" placeholder="多少钱" inputmode="decimal" aria-label="金额"><button type="button" class="btn" data-a="pOrderGo">下单</button>`)},
+  pOrder(){sheet(`<h3>点外卖给TA</h3><p class="hint" style="text-align:center">钱包 ¥${(+S.wallet||0).toFixed(2)}</p><div class="chips">${['奶茶','炸鸡','麻辣烫','小蛋糕','热粥','寿司','烤串','水果'].map(x=>`<button data-a="chipFill2" data-v="${x}">${x}</button>`).join('')}</div><input type="text" id="odN" placeholder="点什么，可以写备注" aria-label="外卖"><input type="number" id="odA" min="1" step="0.1" placeholder="多少钱" inputmode="decimal" aria-label="金额"><button class="btn" data-a="pOrderGo">下单</button>`)},
   chipFill2(el){$('#odN').value=el.dataset.v;el.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el))},
   pOrderGo(){const n=$('#odN').value.trim(),a=Math.round((+$('#odA').value||0)*100)/100;if(!n){toast('点点什么');return}if(a<=0){toast('填个价钱');return}if(a>(+S.wallet||0)){toast('钱包余额不够啦');return}
     const t=thread(cur().id);closeSheet();S.wallet=Math.round(((+S.wallet||0)-a)*100)/100;if(!pushMine(t,{type:'order',content:n,amt:a,state:'go',eta:Date.now()+(120+Math.random()*200)*1000}))S.wallet=Math.round((S.wallet+a)*100)/100;save()},
   develop(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(m)developMsg(t,m)},
   /* api */
   useApiId(el){S.api.active=el.dataset.id;save();closeSheet();render(true);toast('正在用 '+api().name)},
-  apiSwitch(){sheet(`<h3>切换接口</h3>`+S.api.profiles.map(p=>`<button type="button" class="opt" data-a="useApiId" data-id="${p.id}">${esc(p.name)} · ${esc(p.model)}${p.id===S.api.active?' ✓':''}</button>`).join('')+`<button type="button" class="opt" data-a="closeSheet">取消</button>`)},
-  dupApi(){sheet(`<h3>存为新预设</h3><input type="text" id="apiNm" value="${esc(S.api.profiles.find(x=>x.id===cur().id).name)} 副本" aria-label="预设名"><button type="button" class="btn" data-a="dupApiGo">保存</button>`)},
-  dupApiGo(){const p=S.api.profiles.find(x=>x.id===cur().id);const n={...p,id:uid(),name:$('#apiNm').value.trim()||p.name+' 副本'};closeSheet();S.api.profiles.push(n);save();stack[stack.length-1]={v:'apiEdit',id:n.id};render();toast('存了一份新的，改改模型或参数吧')},
+  apiSwitch(){sheet(`<h3>切换接口</h3>`+S.api.profiles.map(p=>`<button class="opt" data-a="useApiId" data-id="${p.id}">${esc(p.name)} · ${esc(p.model)}${p.id===S.api.active?' ✓':''}</button>`).join('')+`${CANCEL}`)},
+  dupApi(){sheet(`<h3>存为新预设</h3><input type="text" id="apiNm" value="${esc(apiById(cur().id).name)} 副本" aria-label="预设名"><button class="btn" data-a="dupApiGo">保存</button>`)},
+  dupApiGo(){const p=apiById(cur().id);const n={...p,id:uid(),name:$('#apiNm').value.trim()||p.name+' 副本'};closeSheet();S.api.profiles.push(n);save();stack[stack.length-1]={v:'apiEdit',id:n.id};render();toast('存了一份新的，改改模型或参数吧')},
   async fetchModels(el){const tg=el.dataset.t||'api',T=S.media.tts,I=S.media.img;const lbl=el.textContent;
-    const p=tg==='img'?{provider:'openai',key:I.key,base:I.base}:tg==='tts'?{provider:'openai',key:T.key,base:T.base}:S.api.profiles.find(x=>x.id===cur().id);el.disabled=true;el.textContent='拉取中…';
+    const p=tg==='img'?{provider:'openai',key:I.key,base:I.base}:tg==='tts'?{provider:'openai',key:T.key,base:T.base}:apiById(cur().id);el.disabled=true;el.textContent='拉取中…';
     try{let L=tg==='tts'&&T.provider==='minimax'?MM_MODELS:await listModels(p);if(tg==='img'){const im=L.filter(x=>/image|dall|flux|sd|diffusion|midjourney|mj|banana|seedream|kolors|cogview|wanx|imagen/i.test(x));if(im.length)L=[...im,...L.filter(x=>!im.includes(x))]}
       if(tg==='tts'&&T.provider!=='minimax'){const tt=L.filter(x=>/tts|speech|audio|voice/i.test(x));if(tt.length)L=[...tt,...L.filter(x=>!tt.includes(x))]}
-      if(!L.length)throw new Error('列表是空的');sheet(`<h3>选一个模型</h3><input type="text" id="mdQ" placeholder="搜索" aria-label="搜索模型"><div class="mlist" id="mdL">${L.map(x=>`<button type="button" class="opt" data-a="pickModel" data-t="${tg}" data-m="${esc(x)}">${esc(x)}</button>`).join('')}</div>`);
+      if(!L.length)throw new Error('列表是空的');sheet(`<h3>选一个模型</h3><input type="text" id="mdQ" placeholder="搜索" aria-label="搜索模型"><div class="mlist" id="mdL">${L.map(x=>`<button class="opt" data-a="pickModel" data-t="${tg}" data-m="${esc(x)}">${esc(x)}</button>`).join('')}</div>`);
       $('#mdQ').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#mdL .opt').forEach(b=>b.hidden=!b.dataset.m.toLowerCase().includes(q))})}
     catch(e){toast(e.message,5600)}finally{if(el.isConnected){el.disabled=false;el.textContent=lbl}}},
-  pickModel(el){const tg=el.dataset.t||'api';if(tg==='img')S.media.img.model=el.dataset.m;else if(tg==='tts')S.media.tts.model=el.dataset.m;else S.api.profiles.find(x=>x.id===cur().id).model=el.dataset.m;save();closeSheet();render(true)},
+  pickModel(el){const tg=el.dataset.t||'api';if(tg==='img')S.media.img.model=el.dataset.m;else if(tg==='tts')S.media.tts.model=el.dataset.m;else apiById(cur().id).model=el.dataset.m;save();closeSheet();render(true)},
   ttsProv(el){S.media.tts.provider=el.dataset.p;if(el.dataset.p==='minimax'&&!S.media.tts.base)S.media.tts.base='https://api.minimaxi.com/v1/t2a_v2';if(el.dataset.p==='openai'&&(!S.media.tts.base||/minimax/.test(S.media.tts.base)))S.media.tts.base='https://api.openai.com/v1';save();render(true)},
   async testImg(el){el.disabled=true;el.textContent='画画中…';try{const u=await genImage((S.media.img.style||'')+'。一只在窗边晒太阳的白猫，淡蓝色的海在窗外');sheet(`<h3>测试成功</h3><img src="${esc(u)}" alt="测试图" style="width:100%;border-radius:16px">`)}catch(e){toast(e.message,6000)}finally{if(el.isConnected){el.disabled=false;el.textContent='测试生图'}}},
   async testTts(){const was=S.chat.tts;S.chat.tts=true;ttsWarned=false;await speak('你好呀，今天的海很安静，我在想你。',null);S.chat.tts=was},
@@ -3131,25 +3127,25 @@ const A={
   calDay(el){const s=el.dataset.d,dt=pdt(s),en=(S.cal||{}).lang==='en',f=festList(dt),pp=myDays().filter(x=>x.md[0]===dt.getMonth()+1&&x.md[1]===dt.getDate()),pt=cyDayType(s);
     sheet(`<h3>${en?dt.toDateString():`${dt.getMonth()+1}月${dt.getDate()}日 周${WK[dt.getDay()]}`}</h3><p class="hint" style="text-align:center">${lunarText(dt)}${pt==='log'?' · 经期':pt==='pred'?' · 预计经期':pt==='ovu'?' · 排卵日':pt==='fert'?' · 易孕期':''}</p>
       ${[...f.map(x=>`${en?x.en:x.zh}<small class="sec"> ${x.r==='us'?'美国':x.r==='cn'?'中国':''}</small>`),...pp.map(x=>'♡ '+esc(x.name))].map(x=>`<div class="opt">${x}</div>`).join('')}
-      <div class="grid2"><button type="button" class="opt" data-a="cyStart" data-d="${s}">这天来月经了</button><button type="button" class="opt" data-a="cyEnd" data-d="${s}">这天结束了</button></div>
-      <button type="button" class="opt" data-a="dayAdd" data-d="${s}">在这天记一个纪念日</button>`)},
+      <div class="grid2"><button class="opt" data-a="cyStart" data-d="${s}">这天来月经了</button><button class="opt" data-a="cyEnd" data-d="${s}">这天结束了</button></div>
+      <button class="opt" data-a="dayAdd" data-d="${s}">在这天记一个纪念日</button>`)},
   cyStart(el){cyStartOn(el.dataset.d);closeSheet();render(true);if(!isOpen())renderHome()},
   cyEnd(el){cyEndOn(el.dataset.d);closeSheet();render(true)},
   cyDel(el){confirmTap(el,()=>{const c=CY();c.logs=c.logs.filter(x=>x.id!==el.dataset.id);save();render(true)})},
   cyTag(el){const c=CY(),t=ds(new Date());c.notes=c.notes||{};const L=c.notes[t]||(c.notes[t]=[]),i=L.indexOf(el.dataset.t);i<0?L.push(el.dataset.t):L.splice(i,1);save();el.classList.toggle('on',i<0)},
   cyIcs(){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([cyICS()],{type:'text/calendar'}));a.download='冰雨机-经期提醒.ics';document.body.appendChild(a);a.click();a.remove();toast('下载好了 · 打开它就能加进日历',5000)}catch(e){toast(e.message)}},
   voicePick(el){const T=S.media.tts,mm=T.provider==='minimax',f=el.dataset.for||'';const L=mm?MM_VOICES:OA_VOICES.map(x=>[x,x]);
-    sheet(`<h3>选一个声音</h3><p class="hint" style="text-align:center">${mm?'这些是 MiniMax 自带的常用声音。你自己复刻的声音 ID 直接填在输入框里就行':'OpenAI 格式的常用声音'}</p><div class="mlist">${L.map(([id,n])=>`<button type="button" class="opt" data-a="voiceSet" data-v="${id}" data-for="${f}">${esc(n)}<small class="sec"> ${esc(id)}</small></button>`).join('')}</div>`)},
+    sheet(`<h3>选一个声音</h3><p class="hint" style="text-align:center">${mm?'这些是 MiniMax 自带的常用声音。你自己复刻的声音 ID 直接填在输入框里就行':'OpenAI 格式的常用声音'}</p><div class="mlist">${L.map(([id,n])=>`<button class="opt" data-a="voiceSet" data-v="${id}" data-for="${f}">${esc(n)}<small class="sec"> ${esc(id)}</small></button>`).join('')}</div>`)},
   voiceSet(el){const f=el.dataset.for;if(f){const c=charById(f);(c.voice||(c.voice={})).vid=el.dataset.v}else S.media.tts.voice=el.dataset.v;save();closeSheet();render(true)},
   /* masks & people */
-  switchMask(){sheet(`<h3>换面具</h3>`+S.masks.map(m=>`<button type="button" class="opt l" data-a="useMask" data-id="${m.id}">${av(m,32)}${esc(m.name)}${m.id===S.activeMask?' ✓':''}</button>`).join(''))},
+  switchMask(){sheet(`<h3>换面具</h3>`+S.masks.map(m=>`<button class="opt l" data-a="useMask" data-id="${m.id}">${av(m,32)}${esc(m.name)}${m.id===S.activeMask?' ✓':''}</button>`).join(''))},
   useMask(el){S.activeMask=el.dataset.id;save();closeSheet();render(true);toast('现在戴着：'+mask().name)},
   editMask(el){closeSheet();go({v:'maskEdit',id:el.dataset.id})},
   newMask(){const m={id:uid(),name:'新面具',handle:'mask'+S.masks.length,avatar:'',bio:'',persona:''};S.masks.push(m);save();go({v:'maskEdit',id:m.id})},
   delMask(el){confirmTap(el,()=>{const id=cur().id;S.masks=S.masks.filter(m=>m.id!==id);if(S.activeMask===id)S.activeMask=S.masks[0].id;save();back()})},
-  editWallet(){sheet(`<h3>钱包</h3><input type="number" id="walletIn" value="${S.wallet}" step="0.01" aria-label="余额"><button type="button" class="btn" data-a="saveWallet">保存</button>`)},
+  editWallet(){sheet(`<h3>钱包</h3><input type="number" id="walletIn" value="${S.wallet}" step="0.01" aria-label="余额"><button class="btn" data-a="saveWallet">保存</button>`)},
   saveWallet(){S.wallet=+$('#walletIn').value||0;save();closeSheet();render(true)},
-  charMenu(){sheet(`<h3>添加角色</h3><button type="button" class="opt" data-a="newChar">自己写</button><button type="button" class="opt" data-a="importCharSheet">导入角色卡（.json）</button><label class="opt" style="position:relative;overflow:hidden">从文档导入（txt / docx…）<input type="file" data-doc="new" style="position:absolute;inset:0;opacity:0"></label><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+  charMenu(){sheet(`<h3>添加角色</h3><button class="opt" data-a="newChar">自己写</button><button class="opt" data-a="importCharSheet">导入角色卡（.json）</button><label class="opt filebtn">从文档导入（txt / docx…）<input type="file" data-doc="new"></label>${CANCEL}`)},
   newChar(){const c={id:uid(),name:'新角色',remark:'',handle:'',avatar:'',innerStyle:'',persona:'',greeting:'',books:[]};S.chars.push(c);save();closeSheet();go({v:'charEdit',id:c.id})},
   importCharSheet(){fileSheet('导入角色卡','.json,application/json','impChar','<p class="hint">支持酒馆角色卡 JSON，卡里自带的世界书会变成局部世界书。</p>')},
   impCharGo(){try{const c=toChar(JSON.parse($('#impCharTa').value));S.chars.push(c);save();closeSheet();go({v:'charEdit',id:c.id});toast('导入了 '+c.name)}catch(e){toast(e.message||'不是有效的 JSON')}},
@@ -3158,7 +3154,7 @@ const A={
   messageChar(el){const t=dmFor(el.dataset.id);go({v:'chat',id:t.id})},
   delChar(el){confirmTap(el,()=>purgeChar(el.dataset.id||cur().id))},
   /* library */
-  bookMenu(){sheet(`<h3>世界书</h3><button type="button" class="opt" data-a="newBook">新建</button><button type="button" class="opt" data-a="importBookSheet">导入（.json）</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+  bookMenu(){sheet(`<h3>世界书</h3><button class="opt" data-a="newBook">新建</button><button class="opt" data-a="importBookSheet">导入（.json）</button>${CANCEL}`)},
   newBook(){const b={id:uid(),name:'新世界书',scope:'global',entries:[]};S.books.push(b);save();closeSheet();go({v:'bookEdit',id:b.id})},
   importBookSheet(){fileSheet('导入世界书','*/*','impBook','<p class="hint">什么格式都行：酒馆 JSON、txt、md、docx…</p>')},
   impBookGo(){const ta=$('#impBookTa'),t=ta.value.trim();let d=null;try{d=JSON.parse(t)}catch(e){}try{const b=d&&typeof d==='object'?toBook(d,ta.dataset.name):textBook(t,ta.dataset.name);S.books.push(b);save();closeSheet();go({v:'bookEdit',id:b.id});toast('导入了 '+b.entries.length+' 条')}catch(e){toast(e.message||'不是有效的 JSON')}},
@@ -3170,7 +3166,7 @@ const A={
   delEntry(el){confirmTap(el,()=>{const v=cur(),b=S.books.find(x=>x.id===v.id);b.entries=b.entries.filter(e=>e.id!==v.eid);save();back()})},
   delBook(el){confirmTap(el,()=>{const id=cur().id;S.books=S.books.filter(b=>b.id!==id);S.chars.forEach(c=>c.books=(c.books||[]).filter(x=>x!==id));save();back()})},
   exportBook(){copy(JSON.stringify(S.books.find(x=>x.id===cur().id)),'复制好了')},
-  presetMenu(){sheet(`<h3>预设</h3><button type="button" class="opt" data-a="newPreset">新建（复制当前预设）</button><button type="button" class="opt" data-a="defPreset">加一份默认预设</button><button type="button" class="opt" data-a="importPresetSheet">导入（.json）</button><button type="button" class="opt" data-a="closeSheet">取消</button>`)},
+  presetMenu(){sheet(`<h3>预设</h3><button class="opt" data-a="newPreset">新建（复制当前预设）</button><button class="opt" data-a="defPreset">加一份默认预设</button><button class="opt" data-a="importPresetSheet">导入（.json）</button>${CANCEL}`)},
   defPreset(){const p={id:uid(),name:'默认',items:DEFAULT_ITEMS()};S.presets.push(p);save();closeSheet();go({v:'presetEdit',id:p.id})},
   newPreset(){const src=preset();const p={id:uid(),name:src.name+' 副本',items:src.items.map(i=>({...i,id:uid()}))};S.presets.push(p);save();closeSheet();go({v:'presetEdit',id:p.id})},
   importPresetSheet(){fileSheet('导入预设','.json,application/json','impPreset','<p class="hint">支持酒馆的对话补全预设 JSON，或者从这里复制出来的。</p>')},
@@ -3178,22 +3174,22 @@ const A={
   editPreset(el){go({v:'presetEdit',id:el.dataset.id})},
   usePreset(){S.activePreset=cur().id;save();render(true);toast('当前预设：'+preset().name)},
   delPreset(el){confirmTap(el,()=>{const id=cur().id;S.presets=S.presets.filter(p=>p.id!==id);if(S.activePreset===id)S.activePreset=S.presets[0].id;save();back()})},
-  exportPreset(){copy(JSON.stringify(S.presets.find(x=>x.id===cur().id)),'复制好了')},
-  newItem(){const p=S.presets.find(x=>x.id===cur().id);const it={id:uid(),name:'新提示词',role:'system',mode:'both',on:true,content:''};p.items.push(it);save();go({v:'itemEdit',id:p.id,iid:it.id})},
+  exportPreset(){copy(JSON.stringify(presetById(cur().id)),'复制好了')},
+  newItem(){const p=presetById(cur().id);const it={id:uid(),name:'新提示词',role:'system',mode:'both',on:true,content:''};p.items.push(it);save();go({v:'itemEdit',id:p.id,iid:it.id})},
   editItem(el){go({v:'itemEdit',id:cur().id,iid:el.dataset.id})},
-  moveItem(el){const p=S.presets.find(x=>x.id===cur().id),i=p.items.findIndex(x=>x.id===el.dataset.id),j=i+(+el.dataset.d);if(j<0||j>=p.items.length)return;[p.items[i],p.items[j]]=[p.items[j],p.items[i]];save();render(true)},
-  delItem(el){confirmTap(el,()=>{const v=cur(),p=S.presets.find(x=>x.id===v.id);p.items=p.items.filter(i=>i.id!==v.iid);save();back()})},
+  moveItem(el){const p=presetById(cur().id),i=p.items.findIndex(x=>x.id===el.dataset.id),j=i+(+el.dataset.d);if(j<0||j>=p.items.length)return;[p.items[i],p.items[j]]=[p.items[j],p.items[i]];save();render(true)},
+  delItem(el){confirmTap(el,()=>{const v=cur(),p=presetById(v.id);p.items=p.items.filter(i=>i.id!==v.iid);save();back()})},
   /* stickers */
   pickGroup(el){cur().gid=el.dataset.t;render()},
   newGroup(){const g={id:uid(),name:'分组 '+(S.stickers.groups.length+1),items:[]};S.stickers.groups.push(g);cur().gid=g.id;save();render()},
-  renameGroup(){const g=S.stickers.groups.find(x=>x.id===cur().gid);sheet(`<h3>改名</h3><input type="text" id="gRen" value="${esc(g.name)}" aria-label="分组名"><button type="button" class="btn" data-a="renameGroupGo">保存</button>`)},
+  renameGroup(){const g=S.stickers.groups.find(x=>x.id===cur().gid);sheet(`<h3>改名</h3><input type="text" id="gRen" value="${esc(g.name)}" aria-label="分组名"><button class="btn" data-a="renameGroupGo">保存</button>`)},
   renameGroupGo(){const g=S.stickers.groups.find(x=>x.id===cur().gid);g.name=$('#gRen').value.trim()||g.name;save();closeSheet();render()},
   delGroup(el){confirmTap(el,()=>{S.stickers.groups=S.stickers.groups.filter(g=>g.id!==cur().gid);cur().gid=null;save();render()})},
-  stkLinks(){sheet(`<h3>用链接添加</h3><p class="hint">一行一个：名字：链接</p><textarea id="stkTa" class="tall" aria-label="表情链接"></textarea><button type="button" class="btn" data-a="stkLinksGo">添加</button>`)},
+  stkLinks(){sheet(`<h3>用链接添加</h3><p class="hint">一行一个：名字：链接</p><textarea id="stkTa" class="tall" aria-label="表情链接"></textarea><button class="btn" data-a="stkLinksGo">添加</button>`)},
   stkLinksGo(){const g=S.stickers.groups.find(x=>x.id===cur().gid);let n=0;
     for(const x of stkLines($('#stkTa').value)){g.items.push({id:uid(),name:x.name||'表情'+(allStickers().length+1),src:x.src});n++}
     save();closeSheet();render();toast('加了 '+n+' 个')},
-  editSticker(el){const s=allStickers().find(x=>x.id===el.dataset.id);sheet(`<h3>表情</h3><img src="${esc(s.src)}" alt="" style="width:120px;height:120px;object-fit:contain;align-self:center"><input type="text" id="sRen" value="${esc(s.name)}" aria-label="表情名"><button type="button" class="btn" data-a="stkSave" data-id="${s.id}">保存名字</button><button type="button" class="opt red" data-a="stkDel" data-id="${s.id}">删除</button>`)},
+  editSticker(el){const s=allStickers().find(x=>x.id===el.dataset.id);sheet(`<h3>表情</h3><img src="${esc(s.src)}" alt="" style="width:120px;height:120px;object-fit:contain;align-self:center"><input type="text" id="sRen" value="${esc(s.name)}" aria-label="表情名"><button class="btn" data-a="stkSave" data-id="${s.id}">保存名字</button><button class="opt red" data-a="stkDel" data-id="${s.id}">删除</button>`)},
   stkSave(el){allStickers().find(x=>x.id===el.dataset.id).name=$('#sRen').value.trim()||'表情';save();closeSheet();render(true)},
   stkDel(el){S.stickers.groups.forEach(g=>g.items=g.items.filter(s=>s.id!==el.dataset.id));save();closeSheet();render(true)},
   /* diary */
@@ -3203,7 +3199,7 @@ const A={
   /* api */
   newApi(){const p={id:uid(),name:'新接口',provider:'openai',key:'',base:PROVIDERS.openai.base,model:PROVIDERS.openai.model,temp:1,topP:null,topK:null,maxTokens:8192};S.api.profiles.push(p);save();go({v:'apiEdit',id:p.id})},
   editApi(el){go({v:'apiEdit',id:el.dataset.id})},
-  prov(el){const p=S.api.profiles.find(x=>x.id===cur().id),k=el.dataset.p;if(p.provider===k)return;
+  prov(el){const p=apiById(cur().id),k=el.dataset.p;if(p.provider===k)return;
     if(!p.base||Object.values(PROVIDERS).some(x=>x.base===p.base))p.base=PROVIDERS[k].base;if(!p.model||Object.values(PROVIDERS).some(x=>x.model===p.model))p.model=PROVIDERS[k].model;
     p.provider=k;save();render(true)},
   useApi(){S.api.active=cur().id;save();render(true);toast('正在用 '+api().name)},
@@ -3246,9 +3242,9 @@ ${talk?`你们刚才在聊这一章：\n${talk}\n\n接着${me}的话，用${c.na
   heartGen(el){const c=charById(el.dataset.id);if(!c||nvBusy)return;nvBusy=true;toast('悄悄翻开 TA 的心事…',30000);heartGen(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没看到',4000)).finally(()=>nvBusy=false)},
   routineGen(el){const c=charById(el.dataset.id||cur().id);if(!c||nvBusy)return;nvBusy=true;toast('排一排 TA 的作息…',20000);routineGen(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没生成出来',4000)).finally(()=>nvBusy=false)},
   nowDoing(el){const c=charById(el.dataset.id);if(!c||nvBusy)return;nvBusy=true;toast('偷偷看一眼…',20000);nowDoing(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没看到',4000)).finally(()=>nvBusy=false)},
-  shopAdd(el){sheet(`<h3>添加</h3><input type="text" id="shN" placeholder="名字" aria-label="名字"><input type="number" id="shP" placeholder="价格" inputmode="decimal" aria-label="价格"><button type="button" class="btn" data-a="shopAddGo" data-k="${el.dataset.k}">保存</button>`)},
+  shopAdd(el){sheet(`<h3>添加</h3><input type="text" id="shN" placeholder="名字" aria-label="名字"><input type="number" id="shP" placeholder="价格" inputmode="decimal" aria-label="价格"><button class="btn" data-a="shopAddGo" data-k="${el.dataset.k}">保存</button>`)},
   shopAddGo(el){const n=$('#shN').value.trim(),p=Math.round((+$('#shP').value||0)*100)/100;if(!n||p<=0){toast('名字和价格都要填');return}S.shop[el.dataset.k].push({n,p});save();closeSheet();render(true)},
-  shopMng(el){const k=el.dataset.k;sheet(`<h3>管理</h3>`+S.shop[k].map((x,i)=>`<div class="opt l"><span>${esc(x.n)} · ¥${x.p}</span><button type="button" class="tb red" data-a="shopDel" data-k="${k}" data-i="${i}">删除</button></div>`).join('')+`<button type="button" class="opt red" data-a="shopClr" data-k="${k}">全部清空</button><button type="button" class="opt" data-a="closeSheet">关闭</button>`)},
+  shopMng(el){const k=el.dataset.k;sheet(`<h3>管理</h3>`+S.shop[k].map((x,i)=>`<div class="opt l"><span>${esc(x.n)} · ¥${x.p}</span><button class="tb red" data-a="shopDel" data-k="${k}" data-i="${i}">删除</button></div>`).join('')+`<button class="opt red" data-a="shopClr" data-k="${k}">全部清空</button><button class="opt" data-a="closeSheet">关闭</button>`)},
   shopDel(el){S.shop[el.dataset.k].splice(+el.dataset.i,1);save();A.shopMng(el);render(true)},
   shopClr(el){confirmTap(el,()=>{S.shop[el.dataset.k]=[];save();closeSheet();render(true)})},
   ordDel(el){const id=el.dataset.id;S.orders=(S.orders||[]).filter(o=>o.id!==id);S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.id===id)m.hide=1}));save();render(true)},
@@ -3270,7 +3266,7 @@ ${talk?`你们刚才在聊这一章：\n${talk}\n\n接着${me}的话，用${c.na
     toast('寄出去了，过一会儿 TA 会回信');v.tab='mine';v.to=null;render()},
   async mailFetch(){if(!api()?.key){toast('先在设置里填好接口');return}if(mailBusy)return;mailBusy=true;toast('去信箱看看…',2000);
     try{const m=await genMail();if(m.to!=='me'){const v=cur();v.tab='theirs';v.who=m.to}render(true)}catch(e){toast(e.message||'没收到信',4000)}finally{mailBusy=false}},
-  mailReply(el){sheet(`<h3>写回信</h3><textarea id="mrTa" aria-label="回信"></textarea><button type="button" class="btn" data-a="mailReplyGo" data-id="${el.dataset.id}">寄出</button>`)},
+  mailReply(el){sheet(`<h3>写回信</h3><textarea id="mrTa" aria-label="回信"></textarea><button class="btn" data-a="mailReplyGo" data-id="${el.dataset.id}">寄出</button>`)},
   mailReplyGo(el){const m=(S.mail||[]).find(x=>x.id===el.dataset.id),tx=$('#mrTa').value.trim(),me=mask().name;if(!m||!tx)return;
     (m.replies||=[]).push({from:'me',text:tx,t:Date.now()});
     const other=m.to==='me'?m.from:m.to;if(other!=='me'&&(other!=='x'||Math.random()<.6))m.due=Date.now()+(1+Math.random()*4)*60e3;
@@ -3288,11 +3284,11 @@ document.addEventListener('keydown',e=>{const id=e.target.id;if(id==='callIn'&&e
 
 /* ================= live-bound fields ================= */
 function scopeObj(s){const v=cur()||{};
-  switch(s){case'look':return S.look;case'root':return S;case'chat':return S.chat;case'char':return charById(v.id);case'mask':return S.masks.find(x=>x.id===v.id);
+  switch(s){case'look':return S.look;case'root':return S;case'chat':return S.chat;case'char':return charById(v.id);case'mask':return maskById(v.id);
     case'book':return S.books.find(x=>x.id===v.id);case'entry':return S.books.find(x=>x.id===v.id)?.entries.find(x=>x.id===v.eid);
-    case'preset':return S.presets.find(x=>x.id===v.id);case'item':return S.presets.find(x=>x.id===v.id)?.items.find(x=>x.id===v.iid);
+    case'preset':return presetById(v.id);case'item':return presetById(v.id)?.items.find(x=>x.id===v.iid);
     case'bubble':return S.bubble;case'mimg':return S.media.img;case'cycle':return CY();case'mtts':return S.media.tts;case'apiroot':return S.api;case'cvoice':{const c=charById(v.id);return c&&(c.voice||(c.voice={}))}
-    case'api':return S.api.profiles.find(x=>x.id===v.id);case'thread':return thread(v.id);case'off':{const t=thread(v.id);return t&&(t.offline||(t.offline={...S.offline}))}}}
+    case'api':return apiById(v.id);case'thread':return thread(v.id);case'off':{const t=thread(v.id);return t&&(t.offline||(t.offline={...S.offline}))}}}
 function bind(e){const el=e.target;if(!el.dataset||!el.dataset.k)return;const o=scopeObj(el.dataset.s);if(!o)return;
   const val=el.type==='checkbox'?el.checked:(el.type==='range'||el.type==='number')?(el.value===''&&el.dataset.null?null:+el.value):el.value;
   o[el.dataset.k]=val;save();const out=el.parentElement.querySelector('output');if(out)out.textContent=val;
@@ -3301,13 +3297,13 @@ document.addEventListener('input',e=>{if(e.target.id==='mRange'){mSeek(+e.target
 document.addEventListener('change',async e=>{const el=e.target;bind(e);
   if(el.dataset.a2==='member'){const t=thread(cur().id);if(el.checked){if(!t.chars.includes(el.dataset.id))t.chars.push(el.dataset.id)}else{if(t.chars.length<=2){el.checked=true;toast('群聊至少要 2 个角色');return}t.chars=t.chars.filter(x=>x!==el.dataset.id)}save()}
   if(el.dataset.a2==='charBook'){const c=charById(cur().id);c.books=c.books||[];if(el.checked)c.books.push(el.dataset.id);else c.books=c.books.filter(x=>x!==el.dataset.id);save()}
-  if(el.dataset.a2==='itemOn'){S.presets.find(x=>x.id===cur().id).items.find(x=>x.id===el.dataset.id).on=el.checked;save()}
+  if(el.dataset.a2==='itemOn'){presetById(cur().id).items.find(x=>x.id===el.dataset.id).on=el.checked;save()}
   if(el.dataset.img){const f=el.files?.[0];if(!f)return;const k=el.dataset.img;
     if(k==='homeicon'){readImg(f,1200,url=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),n=Math.min(im.width,im.height);c.width=c.height=180;
       c.getContext('2d').drawImage(im,(im.width-n)/2,(im.height-n)/2,n,n,0,0,180,180);S.look.homeIcon=c.toDataURL('image/png');save();setTouchIcon();render(true);toast('换好了，记得重新添加到主屏幕')};im.src=url});return}
     const max={appwall:1400,wall:1600,photo:600,icon:200,char:320,mask:320,cwall:1400,cvbg:1200,twall:1400,banner:1200,chatimg:960}[k]||400;
     readImg(f,max,url=>{if(k==='chatimg'){closeSheet();pushMine(thread(cur().id),{type:'img',img:url,content:''},false);return}
-      if(k==='appwall')S.look.appWalls[el.dataset.id]=url;else if(k==='cwall')charById(cur().id).wall=url;else if(k==='cvbg')charById(cur().id).vbg=url;else if(k==='twall')thread(cur().id).wall=url;else if(k==='banner')mask().banner=url;else if(k==='char')charById(cur().id).avatar=url;else if(k==='mask')S.masks.find(x=>x.id===cur().id).avatar=url;else if(k==='icon')S.look.icons[el.dataset.id]=url;else if(k==='wall')S.look.wallpaper=url;else if(k==='photo')S.look.photo=url;
+      if(k==='appwall')S.look.appWalls[el.dataset.id]=url;else if(k==='cwall')charById(cur().id).wall=url;else if(k==='cvbg')charById(cur().id).vbg=url;else if(k==='twall')thread(cur().id).wall=url;else if(k==='banner')mask().banner=url;else if(k==='char')charById(cur().id).avatar=url;else if(k==='mask')maskById(cur().id).avatar=url;else if(k==='icon')S.look.icons[el.dataset.id]=url;else if(k==='wall')S.look.wallpaper=url;else if(k==='photo')S.look.photo=url;
       save();applyLook();if(appEl.classList.contains('open'))render(true);else renderHome()})}
   if(el.dataset.stk){const g=S.stickers.groups.find(x=>x.id===cur().gid);let n=0;
     const img=f=>new Promise(ok=>readImg(f,240,url=>{g.items.push({id:uid(),name:base_(f.name).slice(0,24)||'表情',src:url});n++;ok()},'image/png',ok)),isImg=/\.(png|jpe?g|gif|webp|bmp|avif|heic)$/i;
@@ -3326,7 +3322,7 @@ document.addEventListener('change',async e=>{const el=e.target;bind(e);
     save();closeSheet();if(isOpen()&&cur()?.v==='music')render(true);toast(el.dataset.song?'换好了':'加了 '+n+' 首');
     if(!S.music.cur&&first)mLoad(first,false);return}
   if(el.dataset.doc){const f=el.files?.[0];if(!f)return;let t;try{t=(await readDoc(f)).trim()}catch(e){toast('这个文件读不出来');return}if(!t){toast('文件是空的');return}const k=el.dataset.doc;
-    if(k==='new'){A.newChar();const c=charById(cur().id);c.name=base_(f.name);c.persona=t}else{const o=k==='char'?charById(cur().id):S.masks.find(x=>x.id===cur().id);o.persona=(o.persona?o.persona+'\n\n':'')+t}
+    if(k==='new'){A.newChar();const c=charById(cur().id);c.name=base_(f.name);c.persona=t}else{const o=k==='char'?charById(cur().id):maskById(cur().id);o.persona=(o.persona?o.persona+'\n\n':'')+t}
     save();render(true);toast('导入好了');return}
   if(['impFile','impChar','impBook','impPreset'].includes(el.id)){const f=el.files?.[0];if(!f)return;const txt=await(el.id==='impBook'?readDoc(f):readText(f));const ta=$('#'+(el.id==='impFile'?'impTa':el.id+'Ta'));ta.value=txt;ta.dataset.name=base_(f.name);toast('读好了，点「'+(el.id==='impFile'?'恢复':'导入')+'」')}
 });
