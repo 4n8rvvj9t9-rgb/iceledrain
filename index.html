@@ -1520,12 +1520,12 @@ function setAppH(){
   const sa=navigator.standalone||matchMedia('(display-mode: standalone)').matches,r=document.documentElement.style,L=S.look||{};
   if(!safeP){safeP=document.createElement('i');safeP.style.cssText='position:fixed;top:0;bottom:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)';document.body.appendChild(safeP)}
   const cs=getComputedStyle(safeP),ios=sa&&/iP(hone|od)/.test(navigator.userAgent);let t=parseFloat(cs.paddingTop)||0,b=parseFloat(cs.paddingBottom)||0;
-  const land=innerWidth>innerHeight,sh=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height),vh=safeP.offsetHeight||innerHeight,short=sa&&sh-vh>10;
-  if(ios&&!t)t=59;if(ios&&!b&&!short)b=34;
+  const land=innerWidth>innerHeight,sh=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height),vh=safeP.offsetHeight||innerHeight;
+  if(ios&&!t)t=59;if(ios&&!b)b=34;
   r.setProperty('--sat',Math.max(0,t+(+L.topX||0))+'px');r.setProperty('--sab',Math.max(0,b+(+L.botX||0))+'px');
   if(!sa){document.documentElement.style.setProperty('--app-h',Math.max(screen.height,innerHeight,document.documentElement.clientHeight)+'px');return}
-  /* some iOS versions give home-screen apps a viewport shorter than the screen and paint nothing below it: fit inside it, the canvas colour fills the rest */
-  r.setProperty('--app-h',(short?vh:Math.max(sh,innerHeight))+'px')}
+  /* some iOS versions give home-screen apps a viewport shorter than the screen, but the window still covers the whole screen: stretch past the short viewport down to the screen's bottom edge so nothing is left blank */
+  r.setProperty('--app-h',Math.max(sh,vh,innerHeight)+'px')}
 setAppH();
 {let ft;const refit=()=>{setAppH();clearTimeout(ft);ft=setTimeout(()=>{setAppH();if(!isOpen())fitHome()},120)};addEventListener('resize',refit);addEventListener('orientationchange',refit);try{visualViewport.addEventListener('resize',refit)}catch(e){}}
 function renderHome(){
