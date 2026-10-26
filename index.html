@@ -3330,10 +3330,14 @@ document.addEventListener('change',async e=>{const el=e.target;bind(e);
 /* home-screen icon: the user's own picture, or a frosty snowflake. iOS reads it when the page is added to the home screen */
 let snowIcon='';
 function touchIconUrl(){if(S.look.homeIcon)return S.look.homeIcon;if(snowIcon)return snowIcon;
-  const c=document.createElement('canvas');c.width=c.height=180;const g=c.getContext('2d'),gr=g.createRadialGradient(90,80,10,90,90,130);gr.addColorStop(0,'#f7fbfd');gr.addColorStop(1,'#bcd8e8');g.fillStyle=gr;g.fillRect(0,0,180,180);
-  g.translate(90,90);g.strokeStyle='#5f9cc2';g.lineWidth=7;g.lineCap='round';
-  for(let i=0;i<6;i++){g.rotate(Math.PI/3);g.beginPath();g.moveTo(0,0);g.lineTo(0,-54);g.moveTo(0,-30);g.lineTo(-14,-42);g.moveTo(0,-30);g.lineTo(14,-42);g.stroke()}
-  g.fillStyle='#fff';g.beginPath();g.arc(0,0,9,0,7);g.fill();return snowIcon=c.toDataURL('image/png')}
+  const c=document.createElement('canvas');c.width=c.height=180;const g=c.getContext('2d');
+  const bg=g.createLinearGradient(0,0,180,180);bg.addColorStop(0,'#ffffff');bg.addColorStop(.5,'#eaf5fb');bg.addColorStop(1,'#c3dcec');g.fillStyle=bg;g.fillRect(0,0,180,180);
+  const ink=g.createLinearGradient(0,22,0,158);ink.addColorStop(0,'#7cb8dd');ink.addColorStop(1,'#36749f');
+  g.translate(90,90);g.strokeStyle=ink;g.lineWidth=7.5;g.lineCap='round';
+  /* six arms, each with a long pair of branches low down and a shorter pair near the tip */
+  for(let i=0;i<6;i++){g.rotate(Math.PI/3);g.beginPath();g.moveTo(0,0);g.lineTo(0,-60);
+    for(const [at,dx,dy] of [[35,14.7,49.7],[52,15.6,67.6]]){g.moveTo(0,-at);g.lineTo(-dx,-dy);g.moveTo(0,-at);g.lineTo(dx,-dy)}g.stroke()}
+  g.fillStyle=ink;g.beginPath();g.arc(0,0,7.5,0,7);g.fill();return snowIcon=c.toDataURL('image/png')}
 function setTouchIcon(){try{let l=document.getElementById('touchIcon');if(!l){l=document.createElement('link');l.id='touchIcon';l.rel='apple-touch-icon';document.head.appendChild(l)}l.href=touchIconUrl()}catch(e){}}
 
 /* ================= boot ================= */
