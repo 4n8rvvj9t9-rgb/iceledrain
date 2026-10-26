@@ -138,6 +138,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 
 /* chat */
 .chat{gap:10px}
+.msg,.narr,.stamp{-webkit-touch-callout:none}
 .msg{display:flex;gap:8px;align-items:flex-start}
 .msg.me{justify-content:flex-end}
 .msg .who{font-size:11.5px;color:var(--muted);margin:0 0 2px 4px}
@@ -366,6 +367,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .gvs{display:flex;align-items:center;gap:16px;font-size:34px}
 .gvs b{font-size:12px;color:var(--muted)}
 .die{width:44px;height:44px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 22px var(--body);color:var(--deep)}
+.gcard.bj{gap:8px}
+.bjr{display:flex;align-items:center;gap:8px;width:100%}
+.bjr b{font:400 12px var(--body);color:var(--muted);width:20px}
+.bjr i{margin-left:auto;font-style:normal;font:600 15px var(--body);color:var(--deep)}
+.bjh{display:flex;gap:4px}
+.card{min-width:26px;height:36px;padding:0 4px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 14px var(--body);color:var(--deep)}
 .ttt{display:grid;grid-template-columns:repeat(3,48px);gap:5px}
 .ttt button{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);font-size:24px;color:var(--deep);padding:0}
 .ttt button:disabled{cursor:default;opacity:1}
@@ -1260,6 +1267,10 @@ TA在翻…=They're looking…
 用麦克风说=Use the mic
 看TA说了什么=See what they said
 石头剪刀布=Rock paper scissors
+21点=Blackjack
+要牌=Hit
+停牌=Stand
+摸牌凑点数，谁更接近 21 谁赢，超过就爆=Draw cards; closest to 21 without going over wins
 真心话大冒险=Truth or dare
 海龟汤=Lateral thinking puzzle
 词语接龙=Word chain
@@ -1758,8 +1769,9 @@ function bodyText(m){switch(m.type){
   case'call':return`[${m.kind==='video'?'视频':'语音'}通话 ${fmt(m.dur||0)}]\n${m.content}`;
   case'game':return'[游戏] '+gameText(m);case'narr':return'[线下] '+m.content;
   default:return m.content}}
-const pv=m=>({order:'[外卖] '+m.content,parcel:'[快递] '+m.content,sticker:'[表情]',img:'[照片]',pic:'[图片] '+m.content,voice:'[语音] '+m.content,hb:'[红包]',tf:'[转账] ¥'+m.amt,call:'['+(m.kind==='video'?'视频':'语音')+'通话]',game:'[游戏]',theater:'[小剧场] '+m.content,narr:'[线下] '+m.content}[m.type]??m.content);
+const pv=m=>m.recalled?'撤回了一条消息':({order:'[外卖] '+m.content,parcel:'[快递] '+m.content,sticker:'[表情]',img:'[照片]',pic:'[图片] '+m.content,voice:'[语音] '+m.content,hb:'[红包]',tf:'[转账] ¥'+m.amt,call:'['+(m.kind==='video'?'视频':'语音')+'通话]',game:'[游戏]',theater:'[小剧场] '+m.content,narr:'[线下] '+m.content}[m.type]??m.content);
 function msgText(m,group){
+  if(m.recalled)return`（${m.from==='me'?mask().name:charById(m.from)?.name||'TA'}撤回了一条消息，你没看清写的是什么）`;
   if(m.type==='sys')return`（系统：${m.content}${m.letter?`：「${m.letter}」`:''}）`;
   const body=bodyText(m);
   if(m.from==='me')return m.rejected?`[被拒收] ${body}`:body;
@@ -1938,13 +1950,14 @@ function folds(m){const C=S.chat;let h='';
   if(m.inner)h+=`<details class="fold inner" ${C.innerOpen?'open':''}><summary>${ICONS.bubble}${esc(C.innerName||'心声')}</summary><div>${esc(m.inner)}</div></details>`;
   return h}
 function bubble(t,m,i){
-  if(m.type==='sys')return`<div class="stamp">${esc(m.content)}</div>${m.letter?`<div class="letter">${esc(m.letter)}</div>`:''}${m.inner&&S.chat.inner?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
+  if(m.recalled)return`<div class="stamp" data-mi="${i}" data-a="msg" data-i="${i}">${m.from==='me'?'你':esc(dn(charById(m.from))||'TA')}撤回了一条消息</div>`;
+  if(m.type==='sys')return`<div class="stamp" data-mi="${i}">${esc(m.content)}</div>${m.letter?`<div class="letter">${esc(m.letter)}</div>`:''}${m.inner&&S.chat.inner?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
   if(m.type==='theater'){const x=S.theaters.find(x=>x.id===m.thId);return x?thCard(x,i):`<div class="stamp">这出小剧场已经撕掉了</div>`}
   const mine=m.from==='me',c=mine?null:charById(m.from),grp=t.type==='group';
-  if(m.type==='narr')return`<button class="narr${mine?' me':''}" data-a="msg" data-i="${i}">${esc(m.content)}</button>${folds(m)?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
+  if(m.type==='narr')return`<button class="narr${mine?' me':''}" data-mi="${i}" data-a="msg" data-i="${i}">${esc(m.content)}</button>${folds(m)?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
   const inner=m.type==='sticker'?(()=>{const s=findSticker(m.content);return`<button class="stk" data-a="msg" data-i="${i}">${s?`<img src="${esc(s.src)}" alt="${esc(m.content)}">`:`<span class="bub">[${esc(m.content)}]</span>`}</button>`})()
     :richBody(t,m,i,mine,c);
-  return`<div class="msg ${mine?'me':'ai'}">${mine?'':av(c||{name:'?'},36)}<div class="col">${grp&&!mine?`<span class="who">${esc(dn(c))}</span>`:''}${inner}${mine?(m.rejected?'<span class="rej"><i>!</i>被拒收</span>':''):folds(m)}</div>${mine?av(mask(),36):''}</div>`;
+  return`<div class="msg ${mine?'me':'ai'}" data-mi="${i}">${mine?'':av(c||{name:'?'},36)}<div class="col">${grp&&!mine?`<span class="who">${esc(dn(c))}</span>`:''}${inner}${mine?(m.rejected?'<span class="rej"><i>!</i>被拒收</span>':''):folds(m)}</div>${mine?av(mask(),36):''}</div>`;
 }
 function richBody(t,m,i,mine,c){const tap=`data-a="msg" data-i="${i}"`;
   switch(m.type){
@@ -1968,6 +1981,18 @@ function msgsHTML(t){
   if(busy.has(t.id))h+=`<div class="msg ai">${av(charById(t.chars[0])||{name:'?'},36)}<div class="col"><span class="bub"><span class="dots"><i></i><i></i><i></i></span></span></div></div>`;
     return h;
 }
+/* Tapping a 红包 opens the 红包 and tapping a 语音 plays it, so the way to reach 删除 / 撤回 / 编辑 on those
+   is to hold the message down, the way every chat app on the phone works. */
+{let timer,fired=false,sx=0,sy=0;
+ const open=i=>{fired=true;closeSheet();A.msg({dataset:{i}})};
+ const down=e=>{if(cur()?.v!=='chat')return;const el=e.target.closest?.('[data-mi]');if(!el)return;
+   fired=false;sx=e.clientX||0;sy=e.clientY||0;clearTimeout(timer);timer=setTimeout(()=>open(el.dataset.mi),480)};
+ const move=e=>{if(Math.abs((e.clientX||0)-sx)>8||Math.abs((e.clientY||0)-sy)>8)clearTimeout(timer)};
+ const up=()=>clearTimeout(timer);
+ addEventListener('pointerdown',down,true);addEventListener('pointermove',move,true);
+ addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);
+ /* swallow the tap that ends a long press, so holding a 红包 does not also open it */
+ addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault()}},true);}
 function refreshChat(){const v=cur();if(!v||v.v!=='chat')return;const t=thread(v.id);const c=$('#content');if(!c||!t)return;c.innerHTML=msgsHTML(t);tr(c);c.scrollTop=c.scrollHeight}
 const isOpen=()=>appEl.classList.contains('open');
 function viewing(t){const v=cur();if(!v||!isOpen())return false;if(v.v==='chat'&&v.id===t.id)return true;return v.v==='music'&&t.type==='dm'&&t.chars[0]===S.music.with}
@@ -2301,7 +2326,13 @@ const RPS=['石头','剪刀','布'],RPSI={石头:'✊',剪刀:'✌️',布:'🖐
 function tttWin(b){for(const [a,c,d] of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]])if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.every(Boolean)?'draw':''}
 function tttMove(b){const free=b.map((v,i)=>v?-1:i).filter(i=>i>=0);const tw=p=>free.find(i=>{const x=[...b];x[i]=p;return tttWin(x)===p});
   let m=tw('O');if(m===undefined&&Math.random()<.85)m=tw('X');if(m===undefined&&!b[4]&&Math.random()<.7)m=4;if(m===undefined)m=free[Math.floor(Math.random()*free.length)];return m}
+/* 21点: m.a is your hand, m.b is theirs, each card 1-13. An ace counts 11 until that would bust. */
+const BJN=['','A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const bjDraw=()=>1+Math.floor(Math.random()*13);
+function bjVal(cs){let n=0,a=0;for(const c of cs||[]){n+=c===1?11:c>10?10:c;if(c===1)a++}while(n>21&&a){n-=10;a--}return n}
+function bjEnd(m){const x=bjVal(m.a),y=bjVal(m.b);m.res=x>21?'lose':y>21?'win':x>y?'win':x<y?'lose':'draw';m.done=1}
 function gameText(m){const me=mask().name;
+  if(m.g==='bj')return`21点：${me} ${bjVal(m.a)}点，TA ${bjVal(m.b)}点，${m.res==='win'?me+'赢了':m.res==='lose'?'TA赢了':'平局'}`;
   if(m.g==='rps')return`石头剪刀布：${me}出了${m.a}，TA出了${m.b}，${m.res==='win'?me+'赢了':m.res==='lose'?'TA赢了':'平局'}`;
   if(m.g==='dice')return`掷骰子比大小：${me}${m.a}点，TA${m.b}点，${m.a>m.b?me+'赢了':m.a<m.b?'TA赢了':'平局'}`;
   if(m.g==='ttt')return`井字棋（${me}是X，TA是O）${m.res?'：'+(m.res==='X'?me+'赢了':m.res==='O'?'TA赢了':'平局'):'：进行中'}`;
@@ -2309,6 +2340,13 @@ function gameText(m){const me=mask().name;
 function gameCard(t,m,i){
   if(m.g==='rps')return`<div class="gcard"><small>石头剪刀布</small><div class="gvs"><span>${RPSI[m.a]}</span><b>VS</b><span>${RPSI[m.b]}</span></div><small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small></div>`;
   if(m.g==='dice')return`<div class="gcard"><small>掷骰子</small><div class="gvs"><span class="die">${m.a}</span><b>VS</b><span class="die">${m.b}</span></div><small>${m.a>m.b?'你赢啦':m.a<m.b?'TA赢了':'平局'}</small></div>`;
+  if(m.g==='bj'){const hand=(cs,hide)=>cs.map((c,k)=>`<span class="card">${hide&&k?'?':BJN[c]}</span>`).join('');
+    return`<div class="gcard bj"><small>21点 · 谁更接近 21 点谁赢，超过就爆</small>
+      <div class="bjr"><b>TA</b><span class="bjh">${hand(m.b,!m.done)}</span><i>${m.done?bjVal(m.b):'?'}</i></div>
+      <div class="bjr"><b>你</b><span class="bjh">${hand(m.a)}</span><i>${bjVal(m.a)}</i></div>
+      ${m.done?`<small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small>`
+        :`<div class="btns">${m.lock?'<small>TA在要牌…</small>':`<button class="btn" data-a="bjHit" data-i="${i}">要牌</button><button class="btn o" data-a="bjStand" data-i="${i}">停牌</button>`}</div>
+          <small>A 算 11，爆了就自动变 1</small>`}</div>`}
   if(m.g==='ttt'){const live=!m.res;return`<div class="gcard"><small>井字棋 · 你是 ✕</small><div class="ttt">${m.b.map((v,k)=>`<button ${live&&!v?`data-a="ttt" data-i="${i}" data-k="${k}"`:'disabled'} aria-label="格子${k+1}">${v==='X'?'✕':v==='O'?'○':''}</button>`).join('')}</div><small>${m.res?(m.res==='X'?'你赢啦':m.res==='O'?'TA赢了':'平局'):'轮到你'}</small></div>`}
   return''}
 
@@ -2878,6 +2916,7 @@ games(v){const chars=S.chars.filter(visible),who=charById(v.who)||chars[0];
     ${row('soup','海龟汤','TA 出题，你来问')}
     ${row('chain','词语接龙','接不上的人受罚')}
     <div class="sec">几十秒一局</div>
+    ${row('bj','21点','摸牌凑点数，谁更接近 21 谁赢，超过就爆')}
     ${row('ttt','井字棋','你是 ✕')}
     ${row('rps','石头剪刀布','一把定胜负')}
     ${row('dice','掷骰子比大小','纯看运气')}`}},
@@ -3118,8 +3157,21 @@ const A={
     const t={id:uid(),type:'group',chars:ids,title:$('#gName').value.trim(),mode:'online',msgs:[],unread:0,t:Date.now()};S.threads.push(t);save();closeSheet();go({v:'chat',id:t.id})},
   openThread(el){go({v:'chat',id:el.dataset.id})},
   send(){sendMsg(thread(cur().id),$('#msgIn'))},
-  msg(el){const t=thread(cur().id),i=+el.dataset.i,m=t.msgs[i];if(!m)return;const lastTheirs=m.from!=='me'&&t.msgs.slice(i+1).every(x=>x.from!=='me');
-    sheet(`${m.type!=='sticker'&&m.type!=='theater'?`<button class="opt" data-a="mCopy" data-i="${i}">复制</button><button class="opt" data-a="mEdit" data-i="${i}">编辑</button>`:''}${lastTheirs?'<button class="opt" data-a="mRegen">重新生成</button>':''}<button class="opt red" data-a="mDel" data-i="${i}">删除这条</button><button class="opt red" data-a="mDelAfter" data-i="${i}">从这条往下全删</button>${CANCEL}`)},
+  msg(el){const t=thread(cur().id),i=+el.dataset.i,m=t.msgs[i];if(!m)return;
+    const lastTheirs=m.from!=='me'&&t.msgs.slice(i+1).every(x=>x.from!=='me');
+    const plain=m.type!=='sticker'&&m.type!=='theater'&&m.type!=='sys'&&!m.recalled;
+    const o=(a,l,cls='')=>`<button class="opt ${cls}" data-a="${a}" data-i="${i}">${l}</button>`;
+    sheet(`${plain?o('mCopy','复制')+o('mEdit','编辑'):''}
+      ${!m.recalled&&m.type!=='sys'?o('mRecall','撤回'):''}
+      ${m.recalled&&m.was?o('mReEdit','重新编辑'):''}
+      ${lastTheirs?'<button class="opt" data-a="mRegen">重新生成</button>':''}
+      ${o('mDel','删除这条','red')}${o('mDelAfter','从这条往下全删','red')}${CANCEL}`)},
+  /* 撤回 keeps the row: TA can tell something was taken back, but not what it said — the fun is in not knowing */
+  mRecall(el){const m=thread(cur().id).msgs[+el.dataset.i];if(!m)return;
+    m.was=m.type==='text'?m.content:'';m.recalled=1;save();closeSheet();refreshChat()},
+  mReEdit(el){const t=thread(cur().id),i=+el.dataset.i,m=t.msgs[i];if(!m?.was)return;
+    const box=$('#msgIn');if(box){box.value=m.was;box.focus()}
+    t.msgs.splice(i,1);save();closeSheet();refreshChat()},
   mCopy(el){copy(thread(cur().id).msgs[+el.dataset.i].content,'复制好了');closeSheet()},
   mEdit(el){const m=thread(cur().id).msgs[+el.dataset.i];sheet(`<h3>编辑</h3><textarea id="editTa" class="tall" aria-label="编辑消息">${esc(m.content)}</textarea>${m.inner!==undefined?`<label class="f">${esc(S.chat.innerName)}<textarea id="editInner">${esc(m.inner||'')}</textarea></label>`:''}<button class="btn" data-a="mSave" data-i="${el.dataset.i}">保存</button>${CANCEL}`)},
   mSave(el){const m=thread(cur().id).msgs[+el.dataset.i];m.content=$('#editTa').value;if($('#editInner'))m.inner=$('#editInner').value;save();closeSheet();refreshChat()},
@@ -3217,7 +3269,7 @@ const A={
   pPeek(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>让${esc(dn(c))}查你的手机</h3><button class="opt" data-a="peekGo" data-h="open">把手机递给TA</button><button class="opt" data-a="peekGo" data-h="sneak">假装没注意，让TA偷偷看</button><p class="hint" style="text-align:center">TA会看到你真实的聊天、动态、泡泡和歌单</p>`)},
   peekGo(el){const t=thread(cur().id);closeSheet();go({v:'peek',id:t.chars[0],how:el.dataset.h})},
   pGame(){const t=thread(cur().id),dm=t.type==='dm';const g=(a,l,ex='')=>`<button class="opt" data-a="${a}" ${ex}>${l}</button>`;
-    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋'):''}${Object.keys(GAME_RULES).map(k=>g('gChat',GAME_NAMES[k],`data-g="${k}"`)).join('')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
+    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋')+g('gBj','21点'):''}${Object.keys(GAME_RULES).map(k=>g('gChat',GAME_NAMES[k],`data-g="${k}"`)).join('')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
   gRps(){sheet(`<h3>出什么？</h3><div class="gvs" style="justify-content:center">${RPS.map(x=>`<button class="opt" data-a="gRpsGo" data-k="${x}" style="font-size:34px;padding:10px 16px" aria-label="${x}">${RPSI[x]}</button>`).join('')}</div>`)},
   gRpsGo(el){const a=el.dataset.k,b=RPS[Math.floor(Math.random()*3)],beat={石头:'剪刀',剪刀:'布',布:'石头'};closeSheet();pushMine(thread(cur().id),{type:'game',g:'rps',a,b,res:a===b?'draw':beat[a]===b?'win':'lose'})},
   gDice(){closeSheet();const r=()=>1+Math.floor(Math.random()*6);pushMine(thread(cur().id),{type:'game',g:'dice',a:r(),b:r()})},
@@ -3226,12 +3278,19 @@ const A={
     m.b[k]='X';let w=tttWin(m.b);m.lock=1;refreshChat();
     if(!w){await sleep(500);m.b[tttMove(m.b)]='O';w=tttWin(m.b)}
     m.lock=0;if(w)m.res=w;save();refreshChat();if(w&&!busy.has(t.id))reply(t)},
+  gBj(){closeSheet();pushMine(thread(cur().id),{type:'game',g:'bj',a:[bjDraw(),bjDraw()],b:[bjDraw(),bjDraw()],res:'',done:0},false)},
+  bjHit(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m||m.done||m.lock)return;
+    m.a.push(bjDraw());if(bjVal(m.a)>21)bjEnd(m);save();refreshChat();if(m.done&&!busy.has(t.id))reply(t)},
+  async bjStand(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m||m.done||m.lock)return;
+    m.lock=1;refreshChat();
+    while(bjVal(m.b)<17){await sleep(450);m.b.push(bjDraw());refreshChat()}
+    m.lock=0;bjEnd(m);save();refreshChat();if(!busy.has(t.id))reply(t)},
   /* the 游戏 app opens the chat and starts the game there, so there is only one place a game can live */
   gWho(el){cur().who=el.dataset.id;render(true)},
   gFrom(el){const c=charById(el.dataset.id);if(!c)return;const t=dmFor(c.id),g=el.dataset.g;
     stack=[{v:'threads'}];go({v:'chat',id:t.id});
     if(GAME_RULES[g]){t.game=g;sysMsg(t,'开始玩「'+GAME_NAMES[g]+'」');save();render(true);reply(t,'（游戏开始了，你先来。）');return}
-    ({rps:A.gRps,dice:A.gDice,ttt:A.gTtt})[g]?.()},
+    ({rps:A.gRps,dice:A.gDice,ttt:A.gTtt,bj:A.gBj})[g]?.()},
   gChat(el){const t=thread(cur().id),g=el.dataset.g;t.game=g;sysMsg(t,'开始玩「'+GAME_NAMES[g]+'」');save();closeSheet();render(true);reply(t,'（游戏开始了，你先来。）')},
   gEnd(){const t=thread(cur().id);sysMsg(t,'「'+GAME_NAMES[t.game]+'」结束了');t.game=null;save();closeSheet();render(true)},
   /* plaza comments */
