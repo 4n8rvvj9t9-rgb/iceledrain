@@ -1137,6 +1137,10 @@ TA寄给你的=From them
 语言=Language
 系统=System
 心声 / 内心OS / 小剧场=Inner voice / OS / Theater
+回复之外还写什么=Besides the reply
+心声（TA没说出口的那句）=Inner voice (what they did not say)
+思维链（TA回复前的思考）=Thinking (before they answer)
+TA的心情会涨落（水位）=Their mood rises and falls
 Google AI Studio 的 Key。模型例：gemini-2.5-pro、gemini-2.5-flash=Google AI Studio key. Models: gemini-2.5-pro, gemini-2.5-flash
 OpenAI、DeepSeek 和大部分中转站。地址一般以 /v1 结尾=OpenAI, DeepSeek and most relays. URL usually ends with /v1
 没填 Key=no key
@@ -1335,7 +1339,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.26';
+const VER='2026.10.27';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1828,7 +1832,9 @@ function buildCtx(t,o={}){
   const el=[...new Set(chars.flatMap(c=>elsewhere(c,t.id)))];if(el.length)sys.push('【最近在别处发生的事（你们都记得）】\n'+el.join('\n'));
   chars.forEach(c=>{if(C.life&&c.today?.day===dayKey()&&c.today.text)sys.push(`【${c.name}的今天】${c.today.text}（这是${c.name}自己生活里的事，可以自然地流露，不用刻意提）`)});
   if(!group&&chars[0]?.stage)sys.push(`【关系阶段】${me.name}和${chars[0].name}现在是「${chars[0].stage}」。按这个阶段的分寸相处，关系要靠相处一点点变化，不会突然跳过去。`);
-  if(C.real)sys.push(`【真实感】${cname}是活生生的人：有自己的生活、工作、朋友和情绪，会忙、会累、会走神、会闹别扭，会主动分享自己的事，也有自己的主见，不会对${me.name}说的每句话都附和或顺从。回复的长短和热情随心情和场景变化。你记得你们之间发生过的所有事，包括线上聊天、线下见面、通话、游戏和别处的事，前后不能矛盾。`);
+  if(C.real){sys.push(`【真实感】${cname}是活生生的人：有自己的生活、工作、朋友和情绪，会忙、会累、会走神、会闹别扭，会主动分享自己的事，也有自己的主见，不会对${me.name}说的每句话都附和或顺从。回复的长短和热情随心情和场景变化。你记得你们之间发生过的所有事，包括线上聊天、线下见面、通话、游戏和别处的事，前后不能矛盾。`);
+    const others=S.chars.filter(c=>visible(c)&&!chars.some(x=>x.id===c.id)).map(c=>c.name).slice(0,8);
+    if(others.length)sys.push(`【别的人】${me.name}还认识：${others.join('、')}。你可以认识他们，可以提到和他们之间的事、拌嘴、约饭、看不顺眼。但你们彼此之间只会是朋友、同事、对头这一类关系——绝不允许在你和他们之间写出任何暧昧、心动或感情线，一点都不行。你的感情只对着${me.name}。`)}
   if(t.game&&GAME_RULES[t.game])sys.push(mac(GAME_RULES[t.game]));
   const off=t.offline||S.offline;
   if(mode==='call'){const video=o.kind==='video';
@@ -2992,6 +2998,7 @@ settings(v){
       <label class="ck"><input type="checkbox" id="ch-busy" data-s="chat" data-k="busy" ${C.busy?'checked':''}>TA偶尔在忙，会过几分钟才回</label>
       <div class="f">TA主动找你<div class="seg">${[['off','不会'],['low','偶尔'],['high','经常']].map(([k,l])=>`<button class="${C.proactive===k?'on':''}" data-a="proLv" data-l="${k}">${l}</button>`).join('')}</div></div>
       <label class="ck"><input type="checkbox" id="ch-tts" data-s="chat" data-k="tts" ${C.tts?'checked':''}>语音和通话用手机念出来</label>
+      <label class="ck"><input type="checkbox" id="ch-tide" data-s="chat" data-k="tide" ${C.tide?'checked':''}>TA的心情会涨落（水位）</label>
       <label class="ck"><input type="checkbox" id="ch-str" data-s="chat" data-k="strangers" ${C.strangers?'checked':''}>雨巷上陌生路人也会来评论</label>
       <label class="ck"><input type="checkbox" id="ch-mail" data-s="chat" data-k="mailAuto" ${C.mailAuto!==false?'checked':''}>信箱偶尔自动来信（一天一两封）</label>
       </div>
@@ -3002,23 +3009,18 @@ settings(v){
     <div class="panel"><h2>上下文</h2>
       <label class="f">每次读取最近几条消息<span class="inline"><input type="range" id="ch-ctx" min="6" max="200" step="2" data-s="chat" data-k="ctx" value="${C.ctx}"><output>${C.ctx}</output></span></label>
       <label class="ck"><input type="checkbox" id="ch-sum" data-s="chat" data-k="autoSum" ${C.autoSum?'checked':''}>自动总结更早的消息</label>
-      <label class="f">超出后每多少条总结一次<span class="inline"><input type="range" id="ch-every" min="10" max="100" step="5" data-s="chat" data-k="sumEvery" value="${C.sumEvery}"><output>${C.sumEvery}</output></span></label>
+      ${C.autoSum?`<label class="f">超出后每多少条总结一次<span class="inline"><input type="range" id="ch-every" min="10" max="100" step="5" data-s="chat" data-k="sumEvery" value="${C.sumEvery}"><output>${C.sumEvery}</output></span></label>`:''}
       <div class="f">总结和记忆用<div class="seg">${[['third','第三人称'],['first','TA 的第一人称']].map(([k,l])=>`<button class="${(C.memPov||'third')===k?'on':''}" data-a="setChat" data-k="memPov" data-v="${k}">${l}</button>`).join('')}</div></div>
       </div>
-    <div class="panel"><h2>水位</h2>
-      <label class="ck"><input type="checkbox" id="ch-tide" data-s="chat" data-k="tide" ${C.tide?'checked':''}>开启水位（角色的心情会涨落）</label>
-      </div>
-    <div class="panel"><h2>心声</h2>
-      <label class="ck"><input type="checkbox" id="ch-inner" data-s="chat" data-k="inner" ${C.inner?'checked':''}>显示角色的心声</label>
-      <label class="ck"><input type="checkbox" id="ch-open" data-s="chat" data-k="innerOpen" ${C.innerOpen?'checked':''}>默认展开</label>
+    <div class="panel"><h2>回复之外还写什么</h2>
+      <label class="ck"><input type="checkbox" id="ch-inner" data-s="chat" data-k="inner" ${C.inner?'checked':''}>心声（TA没说出口的那句）</label>
+      ${C.inner?`<label class="ck" style="padding-left:29px"><input type="checkbox" id="ch-open" data-s="chat" data-k="innerOpen" ${C.innerOpen?'checked':''}>默认展开</label>
       <label class="f">叫什么<input type="text" id="ch-iname" data-s="chat" data-k="innerName" value="${esc(C.innerName)}" placeholder="心声 / 内心OS / 小剧场"></label>
-      <label class="f">心声要写什么<textarea id="ch-istyle" data-s="chat" data-k="innerStyle">${esc(C.innerStyle)}</textarea></label><button class="tb" data-a="setChat" data-k="innerStyle" data-v="${esc(CHAT_DEF().innerStyle)}" style="align-self:flex-start">恢复默认</button>
-      </div>
-    <div class="panel"><h2>思维链</h2>
-      <label class="ck"><input type="checkbox" id="ch-think" data-s="chat" data-k="think" ${C.think?'checked':''}>显示角色回复前的思考</label>
-      <label class="f">叫什么<input type="text" id="ch-tname" data-s="chat" data-k="thinkName" value="${esc(C.thinkName)}"></label>
+      <label class="f">心声要写什么<textarea id="ch-istyle" data-s="chat" data-k="innerStyle">${esc(C.innerStyle)}</textarea></label><button class="tb" data-a="setChat" data-k="innerStyle" data-v="${esc(CHAT_DEF().innerStyle)}" style="align-self:flex-start">恢复默认</button>`:''}
+      <label class="ck"><input type="checkbox" id="ch-think" data-s="chat" data-k="think" ${C.think?'checked':''}>思维链（TA回复前的思考）</label>
+      ${C.think?`<label class="f">叫什么<input type="text" id="ch-tname" data-s="chat" data-k="thinkName" value="${esc(C.thinkName)}"></label>
       <div class="seg">${[['char','角色口吻'],['model','模型原生思考']].map(([k,l])=>`<button class="${(C.thinkSrc||'char')===k?'on':''}" data-a="setChat" data-k="thinkSrc" data-v="${k}">${l}</button>`).join('')}</div>
-      ${C.thinkSrc!=='model'?`<label class="f">思考要写什么（可以用 {{char}} {{user}}）<textarea id="ch-tstyle" data-s="chat" data-k="thinkStyle">${esc(C.thinkStyle||THINK_DEF)}</textarea></label><button class="tb" data-a="setChat" data-k="thinkStyle" data-v="" style="align-self:flex-start">恢复默认</button>`:''}
+      ${C.thinkSrc!=='model'?`<label class="f">思考要写什么（可以用 {{char}} {{user}}）<textarea id="ch-tstyle" data-s="chat" data-k="thinkStyle">${esc(C.thinkStyle||THINK_DEF)}</textarea></label><button class="tb" data-a="setChat" data-k="thinkStyle" data-v="" style="align-self:flex-start">恢复默认</button>`:''}`:''}
       </div>`};
   if(tab==='look')return{title:'设置',body:head+`
     <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
