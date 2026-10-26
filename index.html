@@ -1339,7 +1339,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27';
+const VER='2026.10.28';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1908,7 +1908,16 @@ function extractExtras(out){
   out=out.replace(/\[(拉黑|解除拉黑|删除好友|沉默|收下|退回|语音通话|视频通话|拒接|挂断)\]/g,(_,x)=>{acts.push(x);return''});
   return{text:out.trim(),think:think.trim(),inner,tide,acts,prof};
 }
+/* Bubbles print text exactly as it arrives, so a model that slips into Markdown leaves literal asterisks on screen.
+   Only the heavy marks go: **bold**, __bold__ and ### headings. A single *笑了笑* is left alone — that is how people
+   write little actions, and eating it would be worse than the stray asterisk. */
+const demd=x=>String(x)
+  .replace(/\*\*\*([^*\n]+)\*\*\*/g,'$1')
+  .replace(/\*\*([^*\n]+)\*\*/g,'$1')
+  .replace(/__([^_\n]+)__/g,'$1')
+  .replace(/^\s{0,3}#{1,6}\s+/gm,'');
 function parseReply(out,ctx){
+  out=demd(out);
   if(ctx.mode==='offline'){out=out.replace(/^\s*\[线下\]\s*/,'');return out?[{from:ctx.chars[0]?.id,type:'narr',content:out}]:[]}
   const lines=out.split(/\n+/).map(s=>s.trim()).filter(Boolean),res=[];
   let last=ctx.chars[0]?.id;
