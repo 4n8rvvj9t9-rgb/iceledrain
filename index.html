@@ -1339,7 +1339,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.28';
+const VER='2026.10.29';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1664,9 +1664,15 @@ function metrics(){
   const c=getComputedStyle(document.documentElement),sa=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
   let vv=0;try{vv=Math.round(visualViewport.height)}catch(e){}
   const page=appEl.classList.contains('open')?appEl:homeEl;
-  const w=[screen.width+'×'+screen.height,innerWidth+'×'+(page?page.offsetHeight:innerHeight),String(vv||innerHeight),c.getPropertyValue('--sat').trim(),c.getPropertyValue('--sab').trim()];
-  return isEn()?`Measured: screen ${w[0]} · page ${w[1]} · visible ${w[2]} · safe area top ${w[3]}, bottom ${w[4]} · ${sa?'home screen':'browser'}`
-              :`量到的：屏幕 ${w[0]} · 页面 ${w[1]} · 看得见 ${w[2]} · 安全区 上 ${w[3]} 下 ${w[4]} · ${sa?'主屏幕':'浏览器'}`;
+  let off=0;try{off=Math.round(visualViewport.offsetTop||0)}catch(e){}
+  const probe=document.createElement('i');
+  probe.style.cssText='position:absolute;top:0;left:0;width:1px;height:100dvh;visibility:hidden;pointer-events:none';
+  document.body.appendChild(probe);const dvh=probe.offsetHeight;probe.remove();
+  const w=[screen.width+'×'+screen.height,String(page?page.offsetHeight:innerHeight),String(document.documentElement.clientHeight),
+           String(dvh),String(innerHeight),String(vv||innerHeight),String(off),
+           c.getPropertyValue('--sat').trim(),c.getPropertyValue('--sab').trim()];
+  return isEn()?`Measured: screen ${w[0]} · page ${w[1]} · doc ${w[2]} · dvh ${w[3]} · inner ${w[4]} · visible ${w[5]} · offset ${w[6]} · safe top ${w[7]} bottom ${w[8]} · ${sa?'home screen':'browser'}`
+              :`量到的：屏幕 ${w[0]} · 页面 ${w[1]} · 文档 ${w[2]} · dvh ${w[3]} · inner ${w[4]} · 看得见 ${w[5]} · 偏移 ${w[6]} · 安全区上 ${w[7]} 下 ${w[8]} · ${sa?'主屏幕':'浏览器'}`;
 }
 setAppH();
 /* iOS gives a home-screen app a stale viewport and stale safe-area insets on its first paint and sends no resize afterwards,
@@ -1685,7 +1691,7 @@ function renderHome(){
     ${avaHTML()}
   </div>
   <nav class="icons" aria-label="应用">${APPS.map(appIcon).join('')}</nav></div>`;
-  tr(homeEl);$('#hm').scrollTop=sc;fxStart();fitHome();
+  tr(homeEl);$('#hm').scrollTop=sc;fxStart();fitHome();paintCanvas();
   if(S.loc&&S.chat.world&&!wxNow(S.loc))ensureWx(S.loc).then(()=>{if(wxNow(S.loc)&&!isOpen())renderHome()});
 }
 
@@ -1708,9 +1714,19 @@ function render(keep){
   appEl.innerHTML=`<div class="wall2 wall" style="${wp?`background:url(${wp}) center/cover no-repeat`:''}"></div><header class="bar"><button class="bk" data-a="back" aria-label="返回">${ICONS.back}<span>返回</span></button><h1>${esc(r.title)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</h1><div class="br">${r.right||''}</div></header>
   <main class="content ${r.cls||''}" id="content">${r.body}</main>${r.foot?`<footer class="foot ${r.footCls||''}">${r.foot}</footer>`:''}`;
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
-  tr(appEl);if(keep)$('#content').scrollTop=sc;r.after&&r.after();
+  tr(appEl);if(keep)$('#content').scrollTop=sc;r.after&&r.after();paintCanvas();
 }
 const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',bubble:'bubble',bubbleSet:'bubble',music:'music',drawer:'drawer',theaterFull:'drawer',days:'days',cal:'days',library:'library',bookEdit:'library',entryEdit:'library',presetEdit:'library',itemEdit:'library',settings:'settings',apiEdit:'settings',data:'settings',shop:'shop',wallet:'wallet',mail:'mail',novel:'novel',novelRead:'novel',games:'games'};
+/* A home-screen app can hand the page a viewport shorter than the window it actually draws in. Nothing positioned
+   fixed reaches past that viewport — but the root element's background does, which is why a flat #e3edf3 band shows
+   up under the UI. Paint that background with whatever wallpaper is on screen so the band stops looking like a hole. */
+function paintCanvas(){
+  const wp=isOpen()?viewWall(cur()):S.look.wallpaper;
+  document.documentElement.style.backgroundImage=wp?`url("${String(wp).replace(/"/g,'%22')}")`:'';
+  document.documentElement.style.backgroundSize=wp?'cover':'';
+  document.documentElement.style.backgroundPosition=wp?'center':'';
+  document.documentElement.style.backgroundAttachment=wp?'fixed':'';
+}
 function viewWall(v){const aw=S.look.appWalls||{};if(v.v==='chat'||v.v==='music'){const t=v.v==='chat'?thread(v.id):null;const c=t?(t.type==='dm'?charById(t.chars[0]):null):charById(S.music.with);if(t?.wall)return t.wall;if(c?.wall)return c.wall;if(v.v==='music'&&aw.music)return aw.music}else if(APPWALL[v.v]&&aw[APPWALL[v.v]])return aw[APPWALL[v.v]];return S.look.wallpaper}
 const tabs=(list,on,act='tab')=>`<div class="tabs" role="tablist">${list.map(([k,l])=>`<button class="${k===on?'on':''}" data-a="${act}" data-t="${k}">${l}</button>`).join('')}</div>`;
 
