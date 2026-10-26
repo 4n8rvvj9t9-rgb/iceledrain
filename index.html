@@ -168,8 +168,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .post .ft button{background:none;border:0;padding:2px 0;color:inherit}
 .post .ft .lk{color:var(--red)}
 .prof{display:flex;flex-direction:column;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;padding:0 15px 15px}
-.banner{height:110px;margin:0 -15px;background:linear-gradient(135deg,var(--accent),var(--accent-soft)) center/cover}
-.prof .av{margin-top:-44px;box-shadow:0 0 0 4px var(--panel)}
+.banner{aspect-ratio:5/2;margin:0 -15px;background:linear-gradient(135deg,var(--accent),var(--accent-soft)) center/cover}
+.prof .av{position:relative;margin-top:-44px;box-shadow:0 0 0 4px var(--panel)}
 .prof h3{margin:0;font:400 22px var(--display)}
 .prof .h{color:var(--muted);font-size:13px}
 .stats{display:flex;gap:18px;font-size:13px;color:var(--muted)}
@@ -1726,28 +1726,28 @@ function buildCtx(t,o={}){
   const scan=hist.slice(-8).map(m=>m.content).join('\n')+'\n'+chars.map(c=>c.name).join(' ');
   const items=P.items.filter(i=>i.on&&(i.mode==='both'||i.mode===im));
   const sys=items.filter(i=>i.role==='system').map(i=>mac(i.content));
-  chars.forEach(c=>sys.push(`【角色：${c.name}】${c.remark?`（${me.name}给TA的备注是「${c.remark}」）`:''}\n${mac(c.persona)}`));
-  sys.push(`【${me.name}（用户）】\n${me.persona?mac(me.persona):'（没有详细设定）'}`);
+  chars.forEach(c=>sys.push(`【角色：${c.name}】${c.remark?`（${me.name}给${c.name}的备注是「${c.remark}」）`:''}\n${mac(c.persona)}`));
+  sys.push(`【${me.name}（用户）】\n${me.name==='我'?'用户还没设名字，这里说到的「我」都是指用户本人，不是你。\n':''}${me.persona?mac(me.persona):'（没有详细设定）'}`);
   const lore=loreFor(chars,scan);if(lore.length)sys.push('【世界书】\n'+lore.map(mac).join('\n---\n'));
   if(t.summary)sys.push('【之前发生的事（总结）】\n'+t.summary);
   sys.push('【现在】'+nowText()+(()=>{const ms=t.msgs.filter(m=>m.type!=='sys');if(ms.length<2)return'';const g=ms[ms.length-1].t-ms[ms.length-2].t;return g>2*3600e3?`。距离你们上一次说话已经过了${gapText(g)}`:''})());
   const wd=worldFor(chars);if(wd)sys.push(wd);
   const el=[...new Set(chars.flatMap(c=>elsewhere(c,t.id)))];if(el.length)sys.push('【最近在别处发生的事（你们都记得）】\n'+el.join('\n'));
-  chars.forEach(c=>{if(C.life&&c.today?.day===dayKey()&&c.today.text)sys.push(`【${c.name}的今天】${c.today.text}（这是TA自己生活里的事，可以自然地流露，不用刻意提）`)});
+  chars.forEach(c=>{if(C.life&&c.today?.day===dayKey()&&c.today.text)sys.push(`【${c.name}的今天】${c.today.text}（这是${c.name}自己生活里的事，可以自然地流露，不用刻意提）`)});
   if(!group&&chars[0]?.stage)sys.push(`【关系阶段】${me.name}和${chars[0].name}现在是「${chars[0].stage}」。按这个阶段的分寸相处，关系要靠相处一点点变化，不会突然跳过去。`);
   if(C.real)sys.push(`【真实感】${cname}是活生生的人：有自己的生活、工作、朋友和情绪，会忙、会累、会走神、会闹别扭，会主动分享自己的事，也有自己的主见，不会对${me.name}说的每句话都附和或顺从。回复的长短和热情随心情和场景变化。你记得你们之间发生过的所有事，包括线上聊天、线下见面、通话、游戏和别处的事，前后不能矛盾。`);
   if(t.game&&GAME_RULES[t.game])sys.push(mac(GAME_RULES[t.game]));
   const off=t.offline||S.offline;
   if(mode==='call'){const video=o.kind==='video';
-    sys.push(`【通话格式】现在是${video?'视频':'语音'}通话，你说的话会被直接念出来。口语、短句、可以有语气词和停顿，一次说1到3句，每句一行。${video?'可以用（）写一点对方在画面里看到的你的动作、表情和周围环境，一行最多一处。':'不要写动作描写。'}不要写名字。想挂电话时，最后单独一行写 [挂断]。`);
+    sys.push(`【通话格式】现在是${video?'视频':'语音'}通话，你说的话会被直接念出来。口语、短句、可以有语气词和停顿，一次说1到3句，每句一行。${video?'可以用（）写一点对方在画面里看到的你的动作、表情和周围环境，一行最多一处。':'不要写动作描写。'}不要写名字。想挂电话时，最后单独一行写 [挂断]。通话时以这条为准。`);
   }else if(mode==='offline'){
     const pov={first:`第一人称，以${cname}的视角写「我」`,second:`第二人称，用「你」称呼${me.name}`,third:'第三人称'}[off.pov]||'第三人称';
     sys.push(`【线下格式】\n写一段连贯的场景，${pov}。文风：${off.style||'自然'}。长度约 ${off.words||300} 字。不替${me.name}决定行动、台词或感受。`);
   }else{
     sys.push(group?`【群聊格式】\n这是一个群聊，成员有${me.name}和：${cname}。写接下来的几条群消息，可以一个人或几个人说话，像真实群聊一样自然。每一行必须以说话人的名字加冒号开头，例如「${chars[0]?.name||'名字'}：在吗」。一行一条。绝对不要替${me.name}发言。`
-      :`【聊天格式】\n你写的每一行会变成一个单独的聊天气泡。不要在行首写名字。`);
+      :`【聊天格式】\n你写的每一行会变成一个单独的聊天气泡。不要在行首写名字。像真人打字：可以只回几个字，不用每条都以问句结尾，不复述${me.name}的话，不说教、不总结，少用书面语和排比。`);
     const sp=['[图片:画面描述] 发一张照片（用文字描述照片里的内容）','[语音:要说的话] 发一条语音'];
-    if(!group)sp.push(`[红包:金额:祝福] 发红包，[转账:金额:备注] 给${me.name}转账（金额写数字）`,...(boughtRecently(t)?[]:[`[外卖:吃的:金额] 给${me.name}点外卖，[网购:东西:金额] 在网上买东西寄给${me.name}（按你们的关系和时机来：到饭点、TA饿了、不舒服、想给TA惊喜时都可以点，疼TA的话一天几顿也行，但别每次聊天都点）`]),`[语音通话] 或 [视频通话] 主动给${me.name}打电话（很少用，特别想听TA声音或者有事的时候）`);
+    if(!group)sp.push(`[红包:金额:祝福] 发红包，[转账:金额:备注] 给${me.name}转账（金额写数字）`,...(boughtRecently(t)?[]:[`[外卖:吃的:金额] 给${me.name}点外卖，[网购:东西:金额] 在网上买东西寄给${me.name}（按你们的关系和时机来：到饭点、${me.name}饿了、不舒服、想给${me.name}惊喜时都可以点，疼${me.name}的话一天几顿也行，但别每次聊天都点）`]),`[语音通话] 或 [视频通话] 主动给${me.name}打电话（很少用，特别想听${me.name}声音或者有事的时候）`);
     sys.push(`【特殊消息】需要的时候可以单独一行写：\n${sp.join('\n')}\n自然地用，不要每次都用。`);
     const pend=!group&&[...t.msgs].reverse().find(m=>m.from==='me'&&(m.type==='hb'||m.type==='tf')&&m.state==='new');
     if(pend)sys.push(`【待处理】${me.name}给你发了${pend.type==='hb'?'红包':'转账'} ¥${pend.amt}${pend.content?'（'+pend.content+'）':''}，你还没收。单独一行写 [收下] 或 [退回]。`);
@@ -1755,7 +1755,7 @@ function buildCtx(t,o={}){
     if(st.length)sys.push(`【表情包】\n可以单独一行写 [表情:名字] 来发表情包${group?'（写在名字和冒号后面）':''}，合适的时候偶尔用。可用：${st.join('、')}`);
   }
   if(C.inner){const styles=chars.map(c=>c.innerStyle?`${c.name}：${mac(c.innerStyle)}`:'').filter(Boolean).join('；');
-    sys.push(`【${C.innerName||'心声'}】\n正文写完后另起一行，用 <inner>…</inner> 写出${group?'每个说话角色的':''}心声：${mac(C.innerStyle)}${styles?'（个别角色：'+styles+'）':''}${group?'。群聊时每人一个 <inner>，里面以「名字：」开头':''}。心声不算在消息里。`)}
+    sys.push(`【${C.innerName||'心声'}】\n正文写完后另起一行，用 <inner>…</inner> 写出${group?'每个说话角色的':''}心声：${mac(C.innerStyle).replace(/[。.]\s*$/,'')}${styles?'（个别角色：'+styles+'）':''}${group?'。群聊时每人一个 <inner>，里面以「名字：」开头':''}。心声不算在消息里。`)}
   if(C.tide){chars.forEach(c=>sys.push(`【潮汐·${c.name}】${c.name}现在的心情水位：${tideOf(c)}/100（${c.mood||'平静'}）。0是最低落或最生气，100是最开心或最心动。`));
     sys.push(`【潮汐输出】最后一行（${C.inner?'写在 <inner> 后面':'写在正文后面'}），${group?'为每个说话的角色各':''}写一个 <tide>${group?'名字：':''}数字|两三个字的心情</tide>，表示这轮之后的心情水位，例如 <tide>${group?(chars[0]?.name||'名字')+'：':''}68|有点开心</tide>。变化要自然，通常在±10以内。`)}
   if(!group&&mode!=='offline'&&chars[0]){const r=rel(chars[0]);
@@ -1773,7 +1773,7 @@ function buildCtx(t,o={}){
     if(c.heart?.view)sys.push(`【${c.name}心里的事】（不会轻易说出口，气氛到了才会流露）你眼里的${me.name}：${c.heart.view.slice(0,160)}${c.heart.wishes?.length?'；愿望：'+c.heart.wishes.map(w=>w.text).join('、').slice(0,120):''}`);
     if(c.reading?.title)sys.push(`【${c.name}最近在看】《${c.reading.title}》`)});
   /* this one holds everywhere: being told to go to bed is the thing that spoils a scene fastest */
-  sys.push(`【陪伴】你有自己的作息，但${me.name}来找你的时候你愿意陪TA聊，不扫兴。可以提一句自己在忙或者本来要睡了，但不要敷衍、不要说困得要死、不要催${me.name}去睡觉、不要劝TA早点休息。`);
+  sys.push(`【陪伴】你有自己的作息，但${me.name}来找你的时候你愿意陪${me.name}聊，不扫兴。可以提一句自己在忙或者本来要睡了，但不要敷衍、不要说困得要死、不要催${me.name}去睡觉、不要劝${me.name}早点休息。`);
   /* 慢热 used to deny any closeness, which fought with a relationship stage like 恋人; say what it means for the stage they are actually in */
   const intimate=!group&&['恋人','家人'].includes(chars[0]?.stage||'');
   const heat={slow:`【分寸 · 慢热】${intimate?`你们已经是${chars[0].stage}，亲密本来就在你们之间，但现在以日常相处为主：聊生活、斗嘴、关心、分享小事。`:'你们大部分时候是日常相处：聊生活、斗嘴、关心、分享小事。不要主动往亲密或性的方向带，'}不要每句都调情，也不要霸总式命令和强势占有。${me.name}撩你时，可以害羞、嘴硬、转移话题、留点余地；只有${me.name}明确、反复表示想要时才点到为止，不写露骨描写。预设里关于亲密描写的要求，在这里都不用。`,
@@ -1996,8 +1996,8 @@ async function writeDiary(c,silent){
   const t=S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id),me=mask();
   const recent=t?t.msgs.slice(-24).map(m=>(m.from==='me'?me.name:c.name)+'：'+pv(m)).join('\n'):'';
   const lore=loreFor([c],recent+' '+c.name);
-  const sys=`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n关于${me.name}：${me.persona||''}`+(lore.length?'\n\n【世界书】\n'+lore.join('\n'):'')+(t?.summary?'\n\n【之前的事】\n'+t.summary:'')+extraFor(c)+`\n\n你一个人在写私人日记，没有人会看到。`;
-  const txt=await callAI(sys,[{role:'user',content:(recent?`今天和${me.name}的聊天：\n${recent}\n\n`:'')+`以${c.name}的口吻写今天的日记，诚实写出心情，250字以内，用聊天的语言。不用写日期和天气。只输出日记正文。`}],{side:true});
+  const sys=`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n${aboutMe(me)}`+(lore.length?'\n\n【世界书】\n'+lore.join('\n'):'')+(t?.summary?'\n\n【之前的事】\n'+t.summary:'')+extraFor(c)+`\n\n你一个人在写私人日记，没有人会看到。`;
+  const txt=await callAI(sys,[{role:'user',content:(recent?`今天和${me.name}的聊天：\n${recent}\n\n`:'')+`以${c.name}的口吻写今天的日记，诚实写出心情，250字以内，像平时说话一样口语，不要写成作文。不用写日期和天气。只输出日记正文。`}],{side:true});
   S.diary.push({id:uid(),charId:c.id,text:txt,t:Date.now(),w:w?w.desc+' '+w.temp+'°':'',mood:S.chat.tide?c.mood||'':''});logEvent(c.id,`${c.name}写了一篇私人日记，大意：${txt}`);S.diaryMark[c.id]=Date.now();save();
   if(silent)toast(`${dn(c)} 偷偷写了一篇日记`);
 }
@@ -2010,13 +2010,15 @@ function maybeAutoDiary(c,t){
 /* ================= plaza ================= */
 function authorOf(a,r){if(a==='x')return{name:r?.nick||'路人',handle:'路人',avatar:''};if(a==='me'){const m=mask();return{name:m.name,handle:m.handle,avatar:m.avatar}}const c=charById(a);return c?{name:dn(c),handle:c.handle||c.name,avatar:c.avatar}:{name:'（已删除）',handle:'deleted',avatar:''}}
 function postHTML(p,showDel=true){const a=authorOf(p.author),liked=(p.likes||[]).includes('me');
-  return`<article class="post">${av(a,42)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b><span>@${esc(a.handle)} · ${ago(p.t)}</span>${p.only?`<span class="pill">仅${esc(dn(charById(p.only)))}可见</span>`:''}</div><div class="tx">${esc(p.text)}</div>
+  return`<article class="post">${av(a,42)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b><span>${a.handle?`@${esc(a.handle)} · `:''}${ago(p.t)}</span>${p.only?`<span class="pill">仅${esc(dn(charById(p.only)))}可见</span>`:''}</div><div class="tx">${esc(p.text)}</div>
   <div class="ft"><button data-a="openPost" data-id="${p.id}">评论 ${(p.replies||[]).length}</button><button class="${liked?'lk':''}" data-a="like" data-id="${p.id}">${liked?'♥':'♡'} ${(p.likes||[]).length+(p.sl||0)}</button>${showDel?`<button data-a="delPost" data-id="${p.id}">删除</button>`:''}</div></div></article>`}
-const sysFor=(c,extra)=>{const me=mask();return`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n关于${me.name}：${me.persona||''}\n\n${extra}`};
+/* the default name is 我, which reads as the character talking about itself unless we say who it is */
+const aboutMe=me=>(me.name==='我'?'和你聊天的人还没设名字，下面说到的「我」都是指TA，不是你自己。':'')+(me.persona?`关于${me.name}：${me.persona}`:me.name==='我'?'':`和你聊天的人叫${me.name}。`);
+const sysFor=(c,extra)=>{const me=mask();return`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n${aboutMe(me)}\n\n${extra}`};
 async function charReply(p,c,toWhat,toId){
   const me=mask(),a=authorOf(p.author,p);
   const thr=(p.replies||[]).slice(-10).map(r=>authorOf(r.author,r).name+'：'+r.text).join('\n');
-  const txt=await callAI(sysFor(c,'你在一个类似微博/小红书的社交软件上。'+extraFor(c)),[{role:'user',content:`${a.name}发了：「${p.text}」\n${thr?'已有评论：\n'+thr+'\n':''}${toWhat?`${me.name}刚刚${toId?'回复你':'评论'}：「${toWhat}」\n`:''}写${c.name}的一条${toId?'回复':'评论'}，一句话，40字以内，用帖子的语言。只输出内容。`}],{max:1024,side:true});
+  const txt=await callAI(sysFor(c,'你在一个类似微博/小红书的社交软件上。'+extraFor(c)),[{role:'user',content:`${a.name}发了：「${p.text}」\n${thr?'已有评论：\n'+thr+'\n':''}${toWhat?`${me.name}刚刚${toId?'回复你':'评论'}：「${toWhat}」\n`:''}写${c.name}的一条${toId?'回复':'评论'}，一句话，40字以内，像真人随手评论那样口语。只输出内容。`}],{max:1024,side:true});
   const line=txt.split('\n').filter(Boolean)[0]||txt;
   (p.replies||=[]).push({id:uid(),author:c.id,text:line,t:Date.now(),likes:[],...(toId?{to:toId}:{})});
   if(toId&&Math.random()<.6){const r=p.replies.find(x=>x.id===toId);if(r)(r.likes||=[]).push(c.id)}
@@ -2188,7 +2190,7 @@ function incomingCall(t,kind){if(call)return;const c=charById(t.chars[0]);if(!re
 function callOn(){call.status='on';call.start=Date.now();clearInterval(callTimer);callTimer=setInterval(()=>{const st=$('#callSt');if(st&&call)st.textContent=callStatus()},1000);renderCall()}
 async function callTurn(){if(!call)return;const t=thread(call.tid),c=charById(t.chars[0]),k=call.kind==='video'?'视频':'语音';call.wait=true;updCall();
   try{const ctx=buildCtx(t,{mode:'call',kind:call.kind});const msgs=[...ctx.msgs,...call.lines.map(l=>({role:l.me?'user':'assistant',content:l.text}))];
-    if(call.status==='out')msgs.push({role:'user',content:`（${mask().name}给你打来${k}通话。愿意接就直接说你接起来的第一句话；如果真的不方便或者不想接，只写 [拒接]，下一行写一句原因，会作为消息发给TA。）`});
+    if(call.status==='out')msgs.push({role:'user',content:`（${mask().name}给你打来${k}通话。愿意接就直接说你接起来的第一句话；如果真的不方便或者不想接，只写 [拒接]，下一行写一句原因，会作为消息发给${mask().name}。）`});
     else if(!call.lines.length)msgs.push({role:'user',content:`（你给${mask().name}打的${k}通话，TA接起来了。说第一句话。）`});
     const out=await callAI(ctx.system,msgs,{max:1024});if(!call||call.tid!==t.id)return;
     const ex=extractExtras(out);applyTide(ctx,ex);
@@ -2506,7 +2508,7 @@ threads(v){
     body:tabs([['dm','单聊'],['group','群聊'],['people','通讯录']],tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
     (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">永久删除</button></span></div>`).join(''):'')+
     `<div class="sec" style="display:flex;justify-content:space-between;align-items:center">我的面具 · 角色看到的是你戴着的那个<button class="tb" data-a="newMask">新面具</button></div>`+
-    S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>@${esc(m.handle)} · ${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
+    S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>${m.handle?`@${esc(m.handle)} · `:''}${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
   const list=S.threads.filter(t=>t.type===tab&&!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
   const rows=list.map(t=>{const cs=t.chars.map(charById).filter(Boolean);const lm=t.msgs[t.msgs.length-1];
     return`<button class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'}):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><b>${esc(threadTitle(t))}</b><small>${esc(lastPreview(t))}</small></span><span class="side">${lm?ago(lm.t):''}${t.unread?`<span class="pill n">${t.unread}</span>`:t.mode==='offline'?'<span class="pill">线下</span>':''}</span></button>`}).join('');
@@ -2555,7 +2557,7 @@ plaza(v){
     const m=mask(),mine=S.feed.filter(p=>p.author==='me').sort((a,b)=>b.t-a.t),likes=S.feed.reduce((s,p)=>s+(p.likes||[]).filter(x=>x!=='me').length,0);
     return{title:'雨巷',right:`<button class="tb" data-a="switchMask">换面具</button>`,body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="prof">
       <label class="banner" style="${(m.banner||S.look.photo)?`background-image:url(${m.banner||S.look.photo})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label>${av(m,84)}
-      <div><h3>${esc(m.name)}</h3><div class="h">@${esc(m.handle)} · ID ${String(m.id).slice(-6).toUpperCase()}</div></div>
+      <div><h3>${esc(m.name)}</h3><div class="h">${m.handle?`@${esc(m.handle)} · `:''}ID ${String(m.id).slice(-6).toUpperCase()}</div></div>
       ${m.bio?`<div>${esc(m.bio)}</div>`:''}
       <div class="stats"><span><b>${S.chars.length}</b> 关注</span><span><b>${S.chars.length}</b> 粉丝</span><span><b>${likes}</b> 获赞</span></div>
       <div class="wallet"><div><small>钱包余额</small><br><b>¥${(+S.wallet||0).toFixed(2)}</b></div><button class="btn" data-a="open" data-v="wallet">打开钱包</button></div>
@@ -2579,7 +2581,7 @@ post(v){
 people(v){
   const tab=v.tab||'chars';
   if(tab==='masks')return{title:'联系人',right:`<button class="tb" data-a="newMask">新面具</button>`,body:tabs([['chars','角色'],['masks','我的面具']],tab)+
-    ``+S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>@${esc(m.handle)} · ${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
+    ``+S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>${m.handle?`@${esc(m.handle)} · `:''}${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
   return{title:'联系人',right:`<button class="tb" data-a="charMenu">添加</button>`,
     body:tabs([['chars','角色'],['masks','我的面具']],tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':''}</button>`).join('')||``)+
     (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">永久删除</button></span></div>`).join(''):'')};
