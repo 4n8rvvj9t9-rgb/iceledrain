@@ -1339,7 +1339,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.30';
+const VER='2026.10.31';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1645,8 +1645,11 @@ function setAppH(){
   /* Measured on a real phone: a home-screen app can get a viewport 68px shorter than the screen, sitting flush with the
      screen's top — so the band the phone keeps is along the BOTTOM, and the home indicator is down there in the band,
      outside our page. Padding the page for an indicator it does not contain only wastes a row of pixels above a band we
-     cannot draw in. Subtract the band from the bottom inset; when there is no band this changes nothing. */
-  const band=sa&&sh>vh?Math.round(sh-vh):0;
+     cannot draw in. Subtract the band from the bottom inset; when there is no band this changes nothing.
+     Only when the page overlaps the status bar (a top inset above zero) is the band known to be at the bottom. With an
+     opaque status bar the top inset is zero, the band is up top instead, and the home indicator really is inside the
+     page — so leave the bottom inset alone in that case. */
+  const band=sa&&t>0&&sh>vh?Math.round(sh-vh):0;
   if(band>=8&&band<=200)b=Math.max(0,b-band);
   r.setProperty('--sat',Math.max(0,t+(+L.topX||0))+'px');r.setProperty('--sab',Math.max(0,b+(+L.botX||0))+'px');
   /* The wall runs on to the screen's full height, filling the strip iOS leaves over when a home-screen app's viewport is short.
