@@ -363,6 +363,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .gvs{display:flex;align-items:center;gap:16px;font-size:34px}
 .gvs b{font-size:12px;color:var(--muted)}
 .die{width:44px;height:44px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 22px var(--body);color:var(--deep)}
+.gcard.bj{gap:8px}
+.bjr{display:flex;align-items:center;gap:8px;width:100%}
+.bjr b{font:400 12px var(--body);color:var(--muted);width:20px}
+.bjr i{margin-left:auto;font-style:normal;font:600 15px var(--body);color:var(--deep)}
+.bjh{display:flex;gap:4px}
+.card{min-width:26px;height:36px;padding:0 4px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 14px var(--body);color:var(--deep)}
 .ttt{display:grid;grid-template-columns:repeat(3,48px);gap:5px}
 .ttt button{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);font-size:24px;color:var(--deep);padding:0}
 .ttt button:disabled{cursor:default;opacity:1}
@@ -656,7 +662,7 @@ TA的今天=Their day
 声线=Voice
 试听=Preview
 选声音=Pick voice
-潮汐=Tide
+水位=Tide
 角色卡=Character card
 导入文档=Import document
 开场白（可以不写，每行一个气泡）=Greeting (optional, one bubble per line)
@@ -718,7 +724,6 @@ TA的个性签名=Their bio
 用这个预设=Use this preset
 日记=Diary
 让TA写=Let them write
-心事=Secrets
 聊得久了自动写日记=Write a diary after long chats
 撕掉这页=Tear out
 偷看一下=Peek
@@ -773,6 +778,9 @@ TA的个性签名=Their bio
 我自己=Me
 今天吃点什么=What to eat today
 下单=Order
+记录=History
+游戏=Games
+TA 在干嘛=What are they up to
 多少钱=Price
 价格=Price
 逛逛=Browse
@@ -885,7 +893,7 @@ TA知道天气、节日、生日和纪念日=They know weather, holidays, birthd
 超出后每多少条总结一次=Summarize every N extra messages
 总结和记忆用=Summary & memory in
 TA 的第一人称=Their first person
-开启潮汐（角色有会涨落的心情水位）=Enable tide (mood that rises and falls)
+开启水位（角色的心情会涨落）=Enable mood level (rises and falls)
 心声=Inner voice
 显示角色的心声=Show inner voice
 默认展开=Expanded by default
@@ -1131,7 +1139,6 @@ TA偷偷写给你的信=A secret letter to you
 TA和朋友吐槽你的聊天记录=Their chat venting about you
 TA的外卖订单=Their food orders
 TA的歌单=Their playlist
-TA的日程表=Their schedule
 奶茶=Milk tea
 炸鸡=Fried chicken
 麻辣烫=Malatang
@@ -1256,6 +1263,29 @@ TA在翻…=They're looking…
 用麦克风说=Use the mic
 看TA说了什么=See what they said
 石头剪刀布=Rock paper scissors
+真心话大冒险=Truth or dare
+海龟汤=Lateral thinking puzzle
+词语接龙=Word chain
+掷骰子比大小=Dice roll
+井字棋=Tic-tac-toe
+21点=Blackjack
+要牌=Hit
+停牌=Stand
+我从没有过=Never have I ever
+二选一=This or that
+二十问=20 questions
+一来一回，TA 陪你聊着玩=Back and forth with them
+几十秒一局=A round in under a minute
+轮流要牌，爆了就输=Take turns; bust and you lose
+你是 ✕=You are ✕
+一把定胜负=One throw decides it
+纯看运气=Pure luck
+轮流选一个，问题可以暧昧一点=Take turns; questions can get flirty
+说一句你没做过的，看TA做没做过=Say what you have never done
+给对方两个选项，必须选一个=Two options, they must pick one
+你想一个东西，TA 用是非题来猜=Think of something; they guess with yes/no
+TA 出题，你来问=They set the riddle, you ask
+接不上的人受罚=Whoever can not answer pays
 算了=Never mind
 粉丝们正在疯狂打字=Fans are typing like mad
 置顶=Pin
@@ -1393,11 +1423,9 @@ function applyLook(){
 const SV=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const ICONS={
   novel:SV('<path d="M4 5.5c2.5-1 5-1 8 1 3-2 5.5-2 8-1v13c-2.5-1-5-1-8 1-3-2-5.5-2-8-1z"/><path d="M12 6.5v13"/>'),
-  sched:SV('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
   shop:SV('<path d="M5 8h14l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'),
   mail:SV('<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/>'),
   wallet:SV('<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M16 13.5h1.5"/>'),
-  takeout:SV('<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20h8M9 8c0-1.5 1-1.5 1-3M13 8c0-1.5 1-1.5 1-3"/>'),
   data:SV('<ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6"/>'),
   messages:SV('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><circle cx="9" cy="9.5" r=".6" fill="currentColor"/><circle cx="12" cy="9.5" r=".6" fill="currentColor"/><circle cx="15" cy="9.5" r=".6" fill="currentColor"/>'),
   plaza:SV('<circle cx="12" cy="12" r="9"/><path d="M3.5 9.5c3 1.5 6 1.5 8.5 0s5.5-1.5 8.5 0M3.5 14.5c3 1.5 6 1.5 8.5 0s5.5-1.5 8.5 0"/>'),
@@ -1440,13 +1468,15 @@ const ICONS={
   days:SV('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M12 17.5s-3-1.8-3-3.6a1.5 1.5 0 0 1 3-.6 1.5 1.5 0 0 1 3 .6c0 1.8-3 3.6-3 3.6z"/>'),
   bowl:SV('<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20h8M9 8c0-1.5 1-1.5 1-3M13 8c0-1.5 1-1.5 1-3"/>'),
   wave:SV('<path d="M5 10v4M8.5 7.5v9M12 5v14M15.5 8v8M19 10.5v3"/>'),
-  theater:SV('<path d="M4 6h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4z"/><path d="M14 6.5v11" stroke-dasharray="1.5 2"/>')
+  theater:SV('<path d="M4 6h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4z"/><path d="M14 6.5v11" stroke-dasharray="1.5 2"/>'),
+  games:SV('<rect x="3" y="7" width="12" height="14" rx="2.5"/><path d="M8 13.5h2M9 12.5v2"/><path d="M9.5 7V5.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H15"/><circle cx="17" cy="8.5" r="1" fill="currentColor"/>')
 };
+/* One icon per place you can actually go. 通讯录, 小剧场 and 经期 were icons for a tab of an app already on this screen,
+   so they live in 消息, 抽屉 and 日历; 外卖 and 网购 were one screen behind a flag and are now 下单. */
 const APPS=[
-  {id:'messages',name:'消息',v:'threads'},{id:'contacts',name:'通讯录',v:'threads',t:'people'},{id:'plaza',name:'雨巷',v:'plaza'},{id:'bubbleApp',name:'泡泡',v:'bubble'},
-  {id:'mail',name:'信箱',v:'mail'},{id:'music',name:'一起听',v:'music'},{id:'drawer',name:'抽屉',v:'drawer'},{id:'theater',name:'小剧场',v:'drawer',t:'theater'},
-  {id:'takeout',name:'外卖',v:'takeout'},{id:'shop',name:'网购',v:'mall'},{id:'novel',name:'雨书',v:'novel'},{id:'sched',name:'日程',v:'sched'},
-  {id:'days',name:'日历',v:'cal'},{id:'drop',name:'经期',v:'cal',t:'cycle'},{id:'library',name:'设定库',v:'library'},{id:'settings',name:'设置',v:'settings'}];
+  {id:'messages',name:'消息',v:'threads'},{id:'plaza',name:'雨巷',v:'plaza'},{id:'bubbleApp',name:'泡泡',v:'bubble'},{id:'mail',name:'信箱',v:'mail'},
+  {id:'music',name:'一起听',v:'music'},{id:'games',name:'游戏',v:'games'},{id:'novel',name:'雨书',v:'novel'},{id:'drawer',name:'抽屉',v:'drawer'},
+  {id:'shop',name:'下单',v:'shop'},{id:'days',name:'日历',v:'cal'},{id:'library',name:'设定库',v:'library'},{id:'settings',name:'设置',v:'settings'}];
 function appIcon(a){const img=S.look.icons[a.id];const n=a.id==='messages'?S.threads.reduce((s,t)=>s+(t.unread||0),0):a.id==='bubbleApp'?(S.bubble.unread||0):a.id==='mail'?mailUnread():0;
   return`<button class="ic-app" data-a="open" data-v="${a.v}"${a.t?` data-t="${a.t}"`:''} aria-label="${a.name}"><span class="ic-g">${img?`<img src="${esc(img)}" alt="">`:ICONS[a.id]}${n?`<span class="badge">${n>99?'99+':n}</span>`:''}</span><span class="ic-n">${a.name}</span></button>`}
 
@@ -1662,7 +1692,7 @@ function render(keep){
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
   tr(appEl);if(keep)$('#content').scrollTop=sc;r.after&&r.after();
 }
-const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',bubble:'bubble',bubbleSet:'bubble',music:'music',drawer:'drawer',theaterFull:'drawer',days:'days',cal:'days',library:'library',bookEdit:'library',entryEdit:'library',presetEdit:'library',itemEdit:'library',settings:'settings',apiEdit:'settings',data:'settings',takeout:'takeout',mall:'shop',wallet:'wallet',mail:'mail',novel:'novel',novelRead:'novel',sched:'sched'};
+const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',bubble:'bubble',bubbleSet:'bubble',music:'music',drawer:'drawer',theaterFull:'drawer',days:'days',cal:'days',library:'library',bookEdit:'library',entryEdit:'library',presetEdit:'library',itemEdit:'library',settings:'settings',apiEdit:'settings',data:'settings',shop:'shop',wallet:'wallet',mail:'mail',novel:'novel',novelRead:'novel',games:'games'};
 function viewWall(v){const aw=S.look.appWalls||{};if(v.v==='chat'||v.v==='music'){const t=v.v==='chat'?thread(v.id):null;const c=t?(t.type==='dm'?charById(t.chars[0]):null):charById(S.music.with);if(t?.wall)return t.wall;if(c?.wall)return c.wall;if(v.v==='music'&&aw.music)return aw.music}else if(APPWALL[v.v]&&aw[APPWALL[v.v]])return aw[APPWALL[v.v]];return S.look.wallpaper}
 const tabs=(list,on,act='tab')=>`<div class="tabs" role="tablist">${list.map(([k,l])=>`<button class="${k===on?'on':''}" data-a="${act}" data-t="${k}">${l}</button>`).join('')}</div>`;
 
@@ -1760,7 +1790,10 @@ async function ensureToday(c){if(!S.chat.life||!c||c.today?.day===dayKey()||!api
   try{const txt=await callAI(sysFor(c,'你在安排这个角色今天的生活。'),[{role:'user',content:`今天是${nowText()}。写${c.name}今天的大致安排，以及今天生活里发生的一件小事（好事、坏事或者有点奇怪的事都行，符合人设，每天不一样，不一定和${mask().name}有关）。第三人称，70字以内。只输出内容。`}],{max:1024,side:true});c.today={day,text:txt.trim().slice(0,220)};save()}catch(e){c.today=null}}
 const GAME_RULES={truth:'【游戏：真心话大冒险】你们正在玩真心话大冒险。轮流来：让对方选真心话还是大冒险，问题要有趣、可以暧昧一点；轮到你时要诚实回答，或者真的去做（线上就描述你做了什么，或者发 [图片:…]、[语音:…]）。',
   soup:'【游戏：海龟汤】你是出题人。先讲一个离奇的汤面（几句话的小故事），{{user}}来提问，你只能回答「是」「不是」「无关」或「很接近了」，可以带一点语气。{{user}}猜出汤底或者说放弃时，揭晓完整的汤底。',
-  chain:'【游戏：词语接龙】你们轮流说一个词语，新词的第一个字要和上一个词的最后一个字相同（同音也算）。接不上就输，输的人接受一个小惩罚。'};
+  chain:'【游戏：词语接龙】你们轮流说一个词语，新词的第一个字要和上一个词的最后一个字相同（同音也算）。接不上就输，输的人接受一个小惩罚。',
+  nvr:'【游戏：我从没有过】轮流说一句「我从没有过……」。对方要是做过，就得承认，还要讲一句当时的事。可以越说越敢，但别编离谱的。',
+  pick:'【游戏：二选一】轮流给对方两个选项，对方必须选一个并说为什么，不许都选也不许都不选。可以甜，可以为难人，也可以很日常。',
+  q20:'【游戏：二十问】{{user}}心里想好了一个东西，你来猜。一次只问一个是非题，最多20个；{{user}}只会回答「是」「不是」或者「不好说」。有把握了就直接说出答案。'};
 const boughtRecently=t=>{const L=t.msgs.filter(m=>m.from!=='me'&&(m.type==='order'||m.type==='parcel')&&Date.now()-m.t<24*3600e3);return L.length>=5||L.some(m=>Date.now()-m.t<2*3600e3)};
 function buildCtx(t,o={}){
   const chars=t.chars.map(charById).filter(Boolean),me=mask(),P=preset(),mode=o.mode||t.mode||'online',group=t.type==='group',C=S.chat,im=mode==='call'?'online':mode;
@@ -1800,8 +1833,9 @@ function buildCtx(t,o={}){
   }
   if(C.inner){const styles=chars.map(c=>c.innerStyle?`${c.name}：${mac(c.innerStyle)}`:'').filter(Boolean).join('；');
     sys.push(`【${C.innerName||'心声'}】\n正文写完后另起一行，用 <inner>…</inner> 写出${group?'每个说话角色的':''}心声：${mac(C.innerStyle).replace(/[。.]\s*$/,'')}${styles?'（个别角色：'+styles+'）':''}${group?'。群聊时每人一个 <inner>，里面以「名字：」开头':''}。心声不算在消息里。`)}
-  if(C.tide){chars.forEach(c=>sys.push(`【潮汐·${c.name}】${c.name}现在的心情水位：${tideOf(c)}/100（${c.mood||'平静'}）。0是最低落或最生气，100是最开心或最心动。`));
-    sys.push(`【潮汐输出】最后一行（${C.inner?'写在 <inner> 后面':'写在正文后面'}），${group?'为每个说话的角色各':''}写一个 <tide>${group?'名字：':''}数字|两三个字的心情</tide>，表示这轮之后的心情水位，例如 <tide>${group?(chars[0]?.name||'名字')+'：':''}68|有点开心</tide>。变化要自然，通常在±10以内。`)}
+  if(C.tide){chars.forEach(c=>sys.push(`【水位·${c.name}】${c.name}现在的心情水位：${tideOf(c)}/100（${c.mood||'平静'}）。0是最低落或最生气，100是最开心或最心动。`));
+    sys.push(`【水位输出】最后一行（${C.inner?'写在 <inner> 后面':'写在正文后面'}），${group?'为每个说话的角色各':''}写一个 <tide>${group?'名字：':''}数字|两三个字的心情</tide>，表示这轮之后的心情水位，例如 <tide>${group?(chars[0]?.name||'名字')+'：':''}68|有点开心</tide>。变化要自然，通常在±10以内。`)}
+  if(mode!=='offline')sys.push(`【账号资料】你的账号名和个性签名是你自己的，可以像真人那样改：心情变了、发生了什么事、想让${me.name}看见点什么的时候。要改就在最后另起一行写 <profile>${group?'名字：':''}账号名|签名</profile>，只改一个就把另一个留空，例如 <profile>${group?(chars[0]?.name||'名字')+'：':''}|今天不想说话</profile>。不想改就一个字都别写——大多数时候都不用改，改得太勤反而假。`);
   if(!group&&mode!=='offline'&&chars[0]){const r=rel(chars[0]);
     sys.push(`【关系】只有当${cname}真的伤心或生气到不想理${me.name}时，可以单独一行写 [拉黑]，更极端时写 [删除好友]。气消了写 [解除拉黑]。非常少用。`);
     if(r.theyBlocked)sys.push(`【当前状态】你拉黑了${me.name}。TA发来的消息被拒收了，但你看得到。你可以不回（只写 [沉默]），也可以回复，或者写 [解除拉黑]。你现在的心软程度：${Math.round(r.soft||0)}/100。`);}
@@ -1846,10 +1880,11 @@ function extractExtras(out){
   out=out.replace(/^[\s\S]*?<\/think(?:ing)?>/i,x=>{think+=x.replace(/<\/?think(?:ing)?>/gi,'').trim();return''});
   out=out.replace(/<(inner|心声)>([\s\S]*?)<\/\1>/gi,(_,t,x)=>{inner.push(x.trim());return''});
   out=out.replace(/<(inner|心声)>([\s\S]*)$/i,(_,t,x)=>{inner.push(x.trim());return''});
-  const tide=[],acts=[];
+  const tide=[],acts=[],prof=[];
   out=out.replace(/<tide>([\s\S]*?)<\/tide>/gi,(_,x)=>{tide.push(x.trim());return''});
+  out=out.replace(/<profile>([\s\S]*?)<\/profile>/gi,(_,x)=>{prof.push(x.trim());return''});
   out=out.replace(/\[(拉黑|解除拉黑|删除好友|沉默|收下|退回|语音通话|视频通话|拒接|挂断)\]/g,(_,x)=>{acts.push(x);return''});
-  return{text:out.trim(),think:think.trim(),inner,tide,acts};
+  return{text:out.trim(),think:think.trim(),inner,tide,acts,prof};
 }
 function parseReply(out,ctx){
   if(ctx.mode==='offline'){out=out.replace(/^\s*\[线下\]\s*/,'');return out?[{from:ctx.chars[0]?.id,type:'narr',content:out}]:[]}
@@ -1877,6 +1912,16 @@ function applyTide(ctx,ex){
   for(const x of ex.tide||[]){const m=x.match(/^(?:([^:：|｜]{1,30})[:：])?\s*(\d{1,3})\s*(?:[|｜/]\s*(.+))?$/);if(!m)continue;
     const c=m[1]?ctx.chars.find(c=>c.name===m[1].trim()||c.remark===m[1].trim()):ctx.chars[0];if(!c)continue;
     c.tide=Math.max(0,Math.min(100,+m[2]));if(m[3])c.mood=m[3].trim().slice(0,8);(c.tideLog||=[]).push({t:Date.now(),v:c.tide});if(c.tideLog.length>40)c.tideLog.splice(0,c.tideLog.length-40)}
+}
+/* Characters keep their own account name and signature, the way people quietly reword a bio. The change is announced in the
+   chat so it never looks like the app edited the card behind your back. */
+function applyProfile(t,ctx,ex){
+  for(const x of ex.prof||[]){const m=x.match(/^(?:([^:：|｜]{1,30})[:：])?\s*([^|｜]*)(?:[|｜]([\s\S]*))?$/);if(!m)continue;
+    const c=m[1]?ctx.chars.find(c=>c.name===m[1].trim()||c.remark===m[1].trim()):ctx.chars[0];if(!c)continue;
+    const h=(m[2]||'').trim().slice(0,24),g=(m[3]||'').trim().slice(0,60),said=[];
+    if(h&&h!==c.handle){c.handle=h;said.push(`账号名改成了 @${h}`)}
+    if(g&&g!==c.sign){c.sign=g;said.push(`签名改成了「${g}」`)}
+    if(said.length)sysMsg(t,`${dn(c)} ${said.join('，')}`)}
 }
 function applyActs(ctx,ex){if(ctx.group||!ctx.chars[0])return;const r=rel(ctx.chars[0]);
   for(const a of ex.acts||[]){if(a==='拉黑'&&!r.theyBlocked){r.theyBlocked=true;r.soft=0;r.at=Date.now()}if(a==='解除拉黑'){r.theyBlocked=false;r.soft=0}if(a==='删除好友'){r.theyDeleted=true;r.theyBlocked=false;r.soft=0;r.at=Date.now()}}}
@@ -1964,7 +2009,7 @@ async function reply(t,extra){
     if(S.chat.world)await Promise.all([ensureWx(S.loc),...t.chars.map(id=>ensureWx(charById(id)?.loc))]);
     const ctx=buildCtx(t);if(extra)ctx.msgs.push({role:'user',content:extra});const r=await callAI(ctx.system,ctx.msgs,{thoughts:true});
     const ex=extractExtras(r.text);if(S.chat.thinkSrc==='model'&&S.chat.think)ex.think=r.thoughts||ex.think;
-    applyTide(ctx,ex);applyActs(ctx,ex);if(!ctx.group&&ctx.chars[0])applyMoney(t,ex,ctx.chars[0]);save();
+    applyTide(ctx,ex);applyActs(ctx,ex);applyProfile(t,ctx,ex);if(!ctx.group&&ctx.chars[0])applyMoney(t,ex,ctx.chars[0]);save();
     const callAct=ex.acts.find(a=>a==='语音通话'||a==='视频通话');
     if(!ex.text&&!ex.acts.length)throw new Error('回复是空的，再试一次');
     const bought=boughtRecently(t),parts=ex.text?parseReply(ex.text,ctx).filter(p=>!(bought&&(p.type==='order'||p.type==='parcel'))):[];attachExtras(parts,ex,ctx);
@@ -2259,7 +2304,13 @@ const RPS=['石头','剪刀','布'],RPSI={石头:'✊',剪刀:'✌️',布:'🖐
 function tttWin(b){for(const [a,c,d] of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]])if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.every(Boolean)?'draw':''}
 function tttMove(b){const free=b.map((v,i)=>v?-1:i).filter(i=>i>=0);const tw=p=>free.find(i=>{const x=[...b];x[i]=p;return tttWin(x)===p});
   let m=tw('O');if(m===undefined&&Math.random()<.85)m=tw('X');if(m===undefined&&!b[4]&&Math.random()<.7)m=4;if(m===undefined)m=free[Math.floor(Math.random()*free.length)];return m}
+/* 21点: m.a is your hand, m.b is theirs, each card 1-13. An ace counts 11 until that would bust. */
+const BJN=['','A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const bjDraw=()=>1+Math.floor(Math.random()*13);
+function bjVal(cs){let n=0,a=0;for(const c of cs||[]){n+=c===1?11:c>10?10:c;if(c===1)a++}while(n>21&&a){n-=10;a--}return n}
+function bjEnd(m){const x=bjVal(m.a),y=bjVal(m.b);m.res=x>21?'lose':y>21?'win':x>y?'win':x<y?'lose':'draw';m.done=1}
 function gameText(m){const me=mask().name;
+  if(m.g==='bj')return`21点：${me} ${bjVal(m.a)}点，TA ${bjVal(m.b)}点，${m.res==='win'?me+'赢了':m.res==='lose'?'TA赢了':'平局'}`;
   if(m.g==='rps')return`石头剪刀布：${me}出了${m.a}，TA出了${m.b}，${m.res==='win'?me+'赢了':m.res==='lose'?'TA赢了':'平局'}`;
   if(m.g==='dice')return`掷骰子比大小：${me}${m.a}点，TA${m.b}点，${m.a>m.b?me+'赢了':m.a<m.b?'TA赢了':'平局'}`;
   if(m.g==='ttt')return`井字棋（${me}是X，TA是O）${m.res?'：'+(m.res==='X'?me+'赢了':m.res==='O'?'TA赢了':'平局'):'：进行中'}`;
@@ -2267,6 +2318,12 @@ function gameText(m){const me=mask().name;
 function gameCard(t,m,i){
   if(m.g==='rps')return`<div class="gcard"><small>石头剪刀布</small><div class="gvs"><span>${RPSI[m.a]}</span><b>VS</b><span>${RPSI[m.b]}</span></div><small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small></div>`;
   if(m.g==='dice')return`<div class="gcard"><small>掷骰子</small><div class="gvs"><span class="die">${m.a}</span><b>VS</b><span class="die">${m.b}</span></div><small>${m.a>m.b?'你赢啦':m.a<m.b?'TA赢了':'平局'}</small></div>`;
+  if(m.g==='bj'){const hand=(cs,hide)=>cs.map((c,k)=>`<span class="card">${hide&&k?'?':BJN[c]}</span>`).join('');
+    return`<div class="gcard bj"><small>21点</small>
+      <div class="bjr"><b>TA</b><span class="bjh">${hand(m.b,!m.done)}</span><i>${m.done?bjVal(m.b):'?'}</i></div>
+      <div class="bjr"><b>你</b><span class="bjh">${hand(m.a)}</span><i>${bjVal(m.a)}</i></div>
+      ${m.done?`<small>${m.res==='win'?'你赢啦':m.res==='lose'?'TA赢了':'平局'}</small>`
+        :`<div class="btns">${m.lock?'<small>TA在要牌…</small>':`<button class="btn" data-a="bjHit" data-i="${i}">要牌</button><button class="btn o" data-a="bjStand" data-i="${i}">停牌</button>`}</div>`}</div>`}
   if(m.g==='ttt'){const live=!m.res;return`<div class="gcard"><small>井字棋 · 你是 ✕</small><div class="ttt">${m.b.map((v,k)=>`<button ${live&&!v?`data-a="ttt" data-i="${i}" data-k="${k}"`:'disabled'} aria-label="格子${k+1}">${v==='X'?'✕':v==='O'?'○':''}</button>`).join('')}</div><small>${m.res?(m.res==='X'?'你赢啦':m.res==='O'?'TA赢了':'平局'):'轮到你'}</small></div>`}
   return''}
 
@@ -2314,19 +2371,22 @@ function shopTick(now){const me=mask().name;
     sysMsg(t,m.from==='me'?`${dn(c)}签收了你寄的快递`:`${dn(c)}寄给你的快递到了`);t.t=now;save();onThreadUpdate(t);
     logEvent(c?.id||null,m.from==='me'?`${c?.name}签收了${me}寄来的快递：${m.content}`:`${me}收到了${c?.name}寄的快递：${m.content}`);
     if(m.from==='me'){if(!busy.has(t.id)&&!call)reply(t,'（你刚刚签收了'+me+'寄给你的快递：'+m.content+'。）')}else if(!viewing(t)){t.unread=(t.unread||0)+1;nbar(t,t.msgs[t.msgs.length-1])}}}
-function shopView(v,kind){const my=(S.shop||={food:[],goods:[]})[kind]||(S.shop[kind]=[]),food=kind==='food',to=v.to||'me',chars=S.chars.filter(visible),tab=v.tab||'buy';
-  const head=tabs([['buy',food?'点外卖':'逛逛'],['list',food?'订单':'包裹']],tab);
-  if(tab==='list'){const L=[...(S.orders||[]).filter(o=>o.kind===kind).map(o=>({t:o.t,who:'我自己',from:'me',m:o})),
-      ...S.threads.filter(t=>t.type==='dm').flatMap(t=>t.msgs.filter(m=>m.type===(food?'order':'parcel')&&!m.hide).map(m=>({t:m.t,who:dn(charById(t.chars[0])),from:m.from,m})))].sort((a,b)=>b.t-a.t).slice(0,60);
-    return{title:food?'外卖':'网购',body:head+(L.map(x=>`<div class="row"><span class="meta"><b>${esc(x.m.content)}</b><small>${x.from==='me'?'我 → '+esc(x.who):esc(x.who)+' → 我'} · ${ago(x.t)}</small></span><span class="side"><span>${money(x.m.amt)}</span><span class="pill">${food?(x.m.state==='done'?'已送达':'配送中'):parcelStage(x.m)}</span><button class="tb red" data-a="ordDel" data-id="${x.m.id}">删除</button></span></div>`).join('')+(L.length?`<button class="btn red" data-a="ordClr" data-k="${kind}" style="align-self:flex-start">清空记录</button>`:'')||`<div class="empty"><big>还没有${food?'订单':'包裹'}</big></div>`)}}
+/* 外卖 and 网购 were the same screen behind a flag, so they are one app with a tab each, and one shared record of both */
+function shopView(v){const tab=v.tab||'food',kind=tab==='goods'?'goods':'food',food=kind==='food';
+  const my=(S.shop||={food:[],goods:[]})[kind]||(S.shop[kind]=[]),to=v.to||'me',chars=S.chars.filter(visible);
+  const head=tabs([['food','外卖'],['goods','网购'],['list','记录']],tab);
+  if(tab==='list'){const L=[...(S.orders||[]).map(o=>({t:o.t,who:'我自己',from:'me',m:o})),
+      ...S.threads.filter(t=>t.type==='dm').flatMap(t=>t.msgs.filter(m=>(m.type==='order'||m.type==='parcel')&&!m.hide).map(m=>({t:m.t,who:dn(charById(t.chars[0])),from:m.from,m})))].sort((a,b)=>b.t-a.t).slice(0,60);
+    const fd=x=>(x.m.kind||(x.m.type==='order'?'food':'goods'))==='food';
+    return{title:'下单',body:head+(L.map(x=>`<div class="row"><span class="meta"><b>${esc(x.m.content)}</b><small>${fd(x)?'外卖':'网购'} · ${x.from==='me'?'我 → '+esc(x.who):esc(x.who)+' → 我'} · ${ago(x.t)}</small></span><span class="side"><span>${money(x.m.amt)}</span><span class="pill">${fd(x)?(x.m.state==='done'?'已送达':'配送中'):parcelStage(x.m)}</span><button class="tb red" data-a="ordDel" data-id="${x.m.id}">删除</button></span></div>`).join('')+(L.length?`<button class="btn red" data-a="ordClr" style="align-self:flex-start">清空记录</button>`:'')||`<div class="empty"><big>还没有订单</big></div>`)}}
   const card=([e,n,p])=>`<button data-a="shopPick" data-n="${n}" data-p="${p}">${n}<small>¥${p}</small></button>`;
-  return{title:food?'外卖':'网购',body:head+`
+  return{title:'下单',body:head+`
     <div class="panel"><h2>${food?'送到哪':'寄给谁'}<button class="pill" data-a="open" data-v="wallet" style="border:0">钱包 ${money(S.wallet)}</button></h2><div class="chips">${[['me','我自己'],...chars.map(c=>[c.id,dn(c)])].map(([k,l])=>`<button class="${to===k?'on':''}" data-a="shopTo" data-id="${k}">${esc(l)}</button>`).join('')}</div></div>
     <div class="panel"><h2>${food?'我的菜单':'我的货架'}<span class="btns"><button class="tb" data-a="shopAdd" data-k="${kind}">添加</button>${my.length?`<button class="tb" data-a="shopMng" data-k="${kind}">管理</button>`:''}</span></h2>${my.length?`<div class="goods">${my.map(x=>card(['',esc(x.n),x.p])).join('')}</div>`:`<p class="hint">还没有，点「添加」自己写</p>`}</div>
     <div class="panel"><h2>${food?'下单':'买它'}</h2><input type="text" id="spN" placeholder="${food?'点什么，可以写备注':'买什么'}" aria-label="名字"><input type="number" id="spA" min="1" step="0.1" placeholder="多少钱" inputmode="decimal" aria-label="价格">
       <button class="btn" data-a="shopGo" data-k="${kind}" style="align-self:flex-start">${food?'下单':'付款'}</button><p class="hint">${food?'几分钟就送到。':'快递要等一阵子，半小时到几个小时。'}TA 们都会知道你${food?'点了什么':'买了什么'}。</p></div>`}}
 
-/* ================= 雨书 · 作息 · 心事 ================= */
+/* ================= 雨书 · 作息 · TA 心里的事 ================= */
 const pj=(txt,arr)=>{const m=String(txt||'').match(arr?/\[[\s\S]*\]/:/\{[\s\S]*\}/);try{return m?JSON.parse(m[0]):null}catch(e){return null}};
 const GENRES=['古早虐恋','霸总','追妻火葬场','先婚后爱','破镜重圆','校园','甜宠','仙侠','宫斗','悬疑','末世','娱乐圈'];
 const NV=()=>S.novel||(S.novel={rank:[],books:[]});
@@ -2353,14 +2413,6 @@ async function heartGen(c){const me=mask().name;
   const h=pj(txt);if(!h||!h.view)throw new Error('TA 把心事藏起来了，再试一次');c.heart={view:String(h.view),wishes:(h.wishes||[]).slice(0,6),unsaid:(h.unsaid||[]).slice(0,5),t:Date.now()};save()}
 async function routineGen(c){const txt=await callAI(sysFor(c,''),[{role:'user',content:`按你的人设，写你平时的作息：工作日和周末分别几点起床、上班或上课的时间和地点、下班后常做什么、几点睡。4到6行，简洁。只输出作息。`}],{max:512,side:true});c.routine=String(txt).trim().slice(0,400);save()}
 async function nowDoing(c){const txt=await callAI(sysFor(c,(c.routine?'你的作息：'+c.routine+'\n':'')+extraFor(c)),[{role:'user',content:`现在是${nowText()}。用一句话说你此刻在做什么（第三人称，20字以内，比如「在公司开会，偷偷看手机」）。只输出这句话。`}],{max:256,side:true});c.nowDoing={text:String(txt).trim().slice(0,40),t:Date.now()};save()}
-function heartView(v,head){const chars=S.chars.filter(visible),who=charById(v.who)||moodChar()||chars[0];
-  const pick=`<div class="chips">${chars.map(c=>`<button class="${who?.id===c.id?'on':''}" data-a="heartWho" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`;
-  if(!who)return{title:'抽屉',sub:'心事',body:head+``};const h=who.heart;
-  return{title:'抽屉',sub:'心事',right:`<button class="tb" data-a="heartGen" data-id="${who.id}">偷看一下</button>`,body:head+pick+(h?`
-    <div class="panel"><h2>${esc(dn(who))}眼里的你<small class="hint">${ago(h.t)}</small></h2><p style="margin:0;line-height:1.8">${esc(h.view)}</p></div>
-    <div class="panel"><h2>愿望清单</h2>${(h.wishes||[]).map(w=>`<div class="ck">${w.done?'☑':'☐'} <span style="${w.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(w.text)}</span></div>`).join('')||''}</div>
-    <div class="panel"><h2>说不出口的话</h2>${(h.unsaid||[]).map(u=>`<div class="letter"><div class="lh"><span class="pill">${esc(u.mood||'')}</span></div><p>${esc(u.text)}</p></div>`).join('')||''}</div>`
-    :``)}}
 function novelView(v){const N=NV(),tab=v.tab||'rank',chars=S.chars.filter(visible),head=tabs([['rank','排行榜'],['shelf','书架'],['write','写一本'],['theirs','TA们在看']],tab);
   if(tab==='shelf'){const L=[...N.books].sort((a,b)=>b.t-a.t);return{title:'雨书',body:head+(L.map(b=>`<button class="row" data-a="novelOpen" data-id="${b.id}"><span class="meta"><b>《${esc(b.title)}》</b><small>${esc(b.genre)}${leadNames(b)?' · 主角 '+esc(leadNames(b)):''} · ${b.chapters.length} 章</small></span><span class="side">${ago(b.t)}</span></button>`).join('')||``)}}
   if(tab==='write'){const G=v.genres||[],L=v.lead||'both';
@@ -2445,7 +2497,7 @@ function lifeTick(mins){const now=Date.now();
     if(Math.random()<.18){incomingCall(t,Math.random()<.3?'video':'voice');return}
     reply(t,`（现在是${nowText()}。${mask().name}已经${gapText(gap)}没有找你了。你主动给TA发消息：可以分享你此刻在做的事、你今天白天的工作和生活、刚刚想到TA的瞬间，或者问问TA。自然一点，符合你们的关系和你现在的心情。）`);return}}
 
-const GAME_NAMES={truth:'真心话大冒险',soup:'海龟汤',chain:'词语接龙'};
+const GAME_NAMES={truth:'真心话大冒险',soup:'海龟汤',chain:'词语接龙',nvr:'我从没有过',pick:'二选一',q20:'二十问'};
 const STAGES=['','刚认识','朋友','暧昧','恋人','冤家','前任','家人'];
 const bkJSON=()=>JSON.stringify(S,(k,v)=>k==='key'&&!S.bkKey?'':v);
 function dlJSON(o,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
@@ -2570,7 +2622,7 @@ chat(v){
   const listening=c0&&S.music.with===c0.id&&mState.playing;
   return{title:threadTitle(t),sub:t.type==='group'?(t.chars.length+1)+' 人'+(t.mode==='offline'?' · 线下':''):(t.mode==='offline'?'线下 · 见面中':(listening?'一起听歌中':(c0?.sign?c0.sign:'在线'))+(S.chat.tide&&c0?' · '+(c0.mood||'平静'):'')),cls:'chat',footCls,
     right:`<button class="tb" data-a="chatMenu" aria-label="聊天设置">···</button>`,
-    body:(!mask().persona&&!S.hintMask?`<div class="panel" style="gap:8px"><p class="hint">你的面具「${esc(mask().name)}」还没写人设，TA 不知道你是谁。</p><div class="btns"><button class="btn o" data-a="editMask" data-id="${mask().id}">去写</button><button class="tb" data-a="hideMaskHint">不再提示</button></div></div>`:'')+msgsHTML(t),foot,
+    body:msgsHTML(t),foot,
     after(){const c=$('#content');c.scrollTop=c.scrollHeight;const ta=$('#msgIn');if(ta)ta.addEventListener('input',()=>{ta.style.height='40px';ta.style.height=Math.min(140,ta.scrollHeight)+'px'})}};
 },
 offline(v){
@@ -2639,9 +2691,10 @@ charEdit(v){
     <div class="grid2"><label class="f">生日<input type="text" id="c-bday" data-s="char" data-k="bday" value="${esc(c.bday||'')}"></label><div class="f">在哪个城市<button class="btn o" data-a="setCity" data-for="${c.id}">${c.loc?esc(c.loc.name):'和你一样'}</button></div></div>
     <label class="f">外貌（生图时用，比如：黑色短发，下垂眼，常穿白衬衫）<input type="text" id="c-look" data-s="char" data-k="look" value="${esc(c.look||'')}"></label>
     <label class="f">关系阶段（TA会按这个分寸和你相处）<select id="c-stage" data-s="char" data-k="stage">${STAGES.map(s=>`<option value="${s}" ${(c.stage||'')===s?'selected':''}>${s||'不设定'}</option>`).join('')}</select></label></div>
-  ${S.chat.life?`<div class="panel"><h2>TA的今天<button class="tb" data-a="todayRe">换一个</button></h2><p class="hint">${c.today?.day===dayKey()&&c.today.text?esc(c.today.text):'今天第一次聊天时会自动安排'}</p></div>`:''}
+  ${S.chat.life&&c.today?.day===dayKey()&&c.today.text?`<div class="panel"><h2>TA的今天<button class="tb" data-a="todayRe">换一个</button></h2><p class="hint">${esc(c.today.text)}</p></div>`:''}
   <div class="panel"><h2>作息<button class="tb" data-a="routineGen">按人设生成</button></h2>
-    <textarea id="c-routine" data-s="char" data-k="routine" style="min-height:80px">${esc(c.routine||'')}</textarea></div>
+    <textarea id="c-routine" data-s="char" data-k="routine" style="min-height:80px">${esc(c.routine||'')}</textarea>
+    <div class="inline"><button class="btn o" data-a="nowDoing" data-id="${c.id}">TA 在干嘛</button>${c.nowDoing&&Date.now()-c.nowDoing.t<3600e3?`<span class="pill">${esc(c.nowDoing.text)}</span>`:''}</div></div>
   <div class="panel"><h2>壁纸和声音</h2>
     <div class="btns">${fileBtn('聊天壁纸','accept="image/*" data-img="cwall"')}${c.wall?'<button class="btn o" data-a="clrCW">去掉</button>':''}${fileBtn('视频通话画面','accept="image/*" data-img="cvbg"')}${c.vbg?'<button class="btn o" data-a="clrCV">去掉</button>':''}</div>
     
@@ -2649,7 +2702,7 @@ charEdit(v){
     ${TTS||S.media.tts.provider!=='browser'?`<div class="grid2"><label class="f">音调<span class="inline"><input type="range" min="0.5" max="1.8" step="0.05" id="cv-p" data-s="cvoice" data-k="pitch" value="${c.voice?.pitch??1}"><output>${c.voice?.pitch??1}</output></span></label><label class="f">语速<span class="inline"><input type="range" min="0.6" max="1.6" step="0.05" id="cv-r" data-s="cvoice" data-k="rate" value="${c.voice?.rate??1}"><output>${c.voice?.rate??1}</output></span></label></div>
     ${zhVoices().length>1?`<label class="f">声线<select id="cv-i" data-s="cvoice" data-k="idx">${zhVoices().map((x,k)=>`<option value="${k}" ${(+c.voice?.idx||0)===k?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>`:''}
     <button class="btn o" data-a="tryVoice" style="align-self:flex-start">试听</button>`:''}</div>
-  ${S.chat.tide?`<div class="panel"><h2>潮汐<span class="pill">${esc(c.mood||'平静')} · ${tideOf(c)}</span></h2>${spark(c.tideLog)}</div>`:''}
+  ${S.chat.tide?`<div class="panel"><h2>水位<span class="pill">${esc(c.mood||'平静')} · ${tideOf(c)}</span></h2>${spark(c.tideLog)}</div>`:''}
   <div class="panel"><h2>角色卡</h2>
     ${fileBtn('导入文档','data-doc="char"')}<textarea class="tall" id="c-persona" data-s="char" data-k="persona" aria-label="角色卡">${esc(c.persona)}</textarea>
     <label class="f">开场白（可以不写，每行一个气泡）<textarea id="c-greet" data-s="char" data-k="greeting">${esc(c.greeting)}</textarea></label>
@@ -2732,8 +2785,7 @@ diary(){
   (list.map(d=>{const c=charById(d.charId);const dt=new Date(d.t);return`<article class="dia"><div class="hd">${av(c||{name:'?'},30)}<b>${esc(dn(c))}</b><span>${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 周${WK[dt.getDay()]} ${hm(d.t)}${d.w?' · '+esc(d.w):''}${d.mood?' · '+esc(d.mood):''}</span></div><div class="tx">${esc(d.text)}</div><div class="btns" style="justify-content:flex-end"><button class="tb" data-a="delDiary" data-id="${d.id}">撕掉这页</button></div></article>`}).join('')||``)};
 },
 drawer(v){
-  const tab=v.tab||'diary',head=tabs([['diary','日记'],['heart','心事'],['theater','小剧场']],tab);
-  if(tab==='heart')return heartView(v,head);
+  const tab=v.tab||'diary',head=tabs([['diary','日记'],['theater','小剧场']],tab);
   if(tab==='theater'){const list=[...S.theaters].sort((a,b)=>b.t-a.t);
     return{title:'抽屉',sub:'小剧场',right:`<button class="tb" data-a="thPick">开演</button>`,body:head+``+
       (list.map(x=>thCard(x)).join('')||``)}}
@@ -2823,14 +2875,28 @@ music(v){
   <div class="panel"><h2>歌单<span class="pill">${L.length} 首</span></h2>${L.map(x=>`<div class="row song ${x.id===S.music.cur?'on':''}"><button class="meta" data-a="mPlay" data-id="${x.id}"><b>${x.id===S.music.cur&&mState.playing?'♪ ':''}${esc(x.title)}</b><small>${esc(x.artist||'未知歌手')} · ${x.local?'本地':x.src?'链接':'只有歌名'}${x.by&&x.by!=='me'?' · '+esc(dn(charById(x.by)))+'点的':''}</small></button><button class="tb" data-a="mSongMenu" data-id="${x.id}" aria-label="更多">···</button></div>`).join('')||''}</div>`,
   after(){const el=$('#mchat');if(el)el.scrollTop=el.scrollHeight;const ta=$('#mIn');if(ta)ta.addEventListener('input',()=>{ta.style.height='40px';ta.style.height=Math.min(120,ta.scrollHeight)+'px'})}};
 },
-takeout(v){return shopView(v,'food')},
 novel(v){return novelView(v)},
 novelRead(v){return novelReadView(v)},
-sched(v){const chars=S.chars.filter(visible);return{title:'日程',body:``+(chars.map(c=>`<div class="letter"><div class="lh"><span><b>${esc(dn(c))}</b></span><span>${c.nowDoing&&Date.now()-c.nowDoing.t<3600e3?'刚刚：'+esc(c.nowDoing.text):''}</span></div>
-    <p>${c.routine?esc(c.routine):'<span class="hint">还没有作息</span>'}</p><div class="btns"><button class="btn o" data-a="nowDoing" data-id="${c.id}">TA 在干嘛</button><button class="btn o" data-a="routineGen" data-id="${c.id}">${c.routine?'重新生成':'按人设生成'}</button><button class="tb" data-a="editChar" data-id="${c.id}">改</button></div></div>`).join('')||``)}},
 ctxPeek(v){const t=thread(v.id);if(!t)return{title:'不见了',body:''};const x=buildCtx(t);
-  return{title:'TA 知道什么',body:`<p class="hint">这是这次聊天会发给 TA 的全部设定（预设、人设、你的人设、命中的世界书、记忆……），后面再跟上最近 ${x.msgs.length} 条聊天记录。缺了什么，一眼就能看出来。</p><div class="letter"><p style="font-size:13px">${esc(x.system)}</p></div>`}},
-mall(v){return shopView(v,'goods')},
+  return{title:'TA 知道什么',body:`<p class="hint">这次聊天发给 TA 的全部设定，后面跟着最近 ${x.msgs.length} 条记录。</p><div class="letter"><p style="font-size:13px">${esc(x.system)}</p></div>`}},
+shop(v){return shopView(v)},
+games(v){const chars=S.chars.filter(visible),who=charById(v.who)||chars[0];
+  if(!who)return{title:'游戏',body:`<div class="empty"><big>还没有角色</big></div>`};
+  const row=(g,n,sub)=>`<button class="row" data-a="gFrom" data-id="${who.id}" data-g="${g}"><span class="meta"><b>${n}</b><small>${sub}</small></span></button>`;
+  return{title:'游戏',sub:isEn()?'with '+dn(who):'和 '+dn(who)+' 玩',
+    body:`<div class="chips">${chars.map(c=>`<button class="${who.id===c.id?'on':''}" data-a="gWho" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>
+    <div class="sec">一来一回，TA 陪你聊着玩</div>
+    ${row('truth','真心话大冒险','轮流选一个，问题可以暧昧一点')}
+    ${row('nvr','我从没有过','说一句你没做过的，看TA做没做过')}
+    ${row('pick','二选一','给对方两个选项，必须选一个')}
+    ${row('q20','二十问','你想一个东西，TA 用是非题来猜')}
+    ${row('soup','海龟汤','TA 出题，你来问')}
+    ${row('chain','词语接龙','接不上的人受罚')}
+    <div class="sec">几十秒一局</div>
+    ${row('bj','21点','轮流要牌，爆了就输')}
+    ${row('ttt','井字棋','你是 ✕')}
+    ${row('rps','石头剪刀布','一把定胜负')}
+    ${row('dice','掷骰子比大小','纯看运气')}`}},
 mail(v){return mailView(v)},
 wallet(v){const L=[...(S.orders||[]).map(o=>({t:o.t,n:(o.kind==='food'?'外卖 · ':'网购 · ')+o.content,a:-o.amt})),
     ...S.threads.flatMap(t=>t.msgs.filter(m=>m.from==='me'&&['order','parcel','hb','tf'].includes(m.type)).map(m=>({t:m.t,n:({order:'外卖',parcel:'网购',hb:'红包',tf:'转账'})[m.type]+' · '+dn(charById(t.chars[0]))+(m.content&&m.type!=='hb'?' · '+m.content:''),a:-m.amt})))].sort((a,b)=>b.t-a.t).slice(0,40);
@@ -2898,8 +2964,8 @@ settings(v){
       <label class="f">超出后每多少条总结一次<span class="inline"><input type="range" id="ch-every" min="10" max="100" step="5" data-s="chat" data-k="sumEvery" value="${C.sumEvery}"><output>${C.sumEvery}</output></span></label>
       <div class="f">总结和记忆用<div class="seg">${[['third','第三人称'],['first','TA 的第一人称']].map(([k,l])=>`<button class="${(C.memPov||'third')===k?'on':''}" data-a="setChat" data-k="memPov" data-v="${k}">${l}</button>`).join('')}</div></div>
       </div>
-    <div class="panel"><h2>潮汐</h2>
-      <label class="ck"><input type="checkbox" id="ch-tide" data-s="chat" data-k="tide" ${C.tide?'checked':''}>开启潮汐（角色有会涨落的心情水位）</label>
+    <div class="panel"><h2>水位</h2>
+      <label class="ck"><input type="checkbox" id="ch-tide" data-s="chat" data-k="tide" ${C.tide?'checked':''}>开启水位（角色的心情会涨落）</label>
       </div>
     <div class="panel"><h2>心声</h2>
       <label class="ck"><input type="checkbox" id="ch-inner" data-s="chat" data-k="inner" ${C.inner?'checked':''}>显示角色的心声</label>
@@ -2915,7 +2981,7 @@ settings(v){
       </div>`};
   if(tab==='look')return{title:'设置',body:head+`
     <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
-    <div class="panel"><h2>顶栏和底栏</h2><p class="hint">0 就是跟着手机自己的安全区。觉得挤或者太空，再往两边挪一点。</p>
+    <div class="panel"><h2>顶栏和底栏</h2><p class="hint">0 是手机自己的安全区。挤了或者太空，往两边挪一点。</p>
       <label class="f">顶栏微调<span class="inline"><input type="range" id="l-topx" min="-30" max="60" step="1" data-s="look" data-k="topX" value="${L.topX||0}"><output>${L.topX||0}</output></span></label>
       <label class="f">底栏微调<span class="inline"><input type="range" id="l-botx" min="-30" max="60" step="1" data-s="look" data-k="botX" value="${L.botX||0}"><output>${L.botX||0}</output></span></label>
       <p class="hint">${metrics()}</p></div>
@@ -2932,7 +2998,7 @@ settings(v){
       <label class="f">点图标的声音<select id="l-sfx" data-s="look" data-k="sfx">${[['drop','雨滴'],['ice','冰块'],['bubble','泡泡'],['mix','随机'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.sfx||'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f">桌面动效<select id="l-fxs" data-s="look" data-k="fxs">${[['drop','雨滴'],['bubble','泡泡'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.fx===false?'off':L.fxs==='bubble'?'bubble':'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="panel"><h2>每个App的背景</h2>
-      ${[['messages','消息'],['plaza','雨巷'],['bubble','泡泡'],['music','一起听'],['mail','信箱'],['takeout','外卖'],['shop','网购'],['novel','雨书'],['drawer','抽屉'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
+      ${[['messages','消息'],['plaza','雨巷'],['bubble','泡泡'],['mail','信箱'],['music','一起听'],['games','游戏'],['novel','雨书'],['drawer','抽屉'],['shop','下单'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
     <div class="panel"><h2>桌面图标</h2><p class="hint">换完要把手机桌面上的「冰雨机」删掉，再从 Safari 重新「添加到主屏幕」才会变。</p>
       <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
     <div class="panel"><h2>应用图标</h2>
@@ -3092,7 +3158,6 @@ const A={
     save();closeSheet();render();toast(m==='online'?'只线上：TA不会说要来找你了':m==='offline'?'只线下：你们一直在见面':'线上线下都可以')},
   setHeat(el){const t=thread(cur().id);t.heat=el.dataset.h;save();closeSheet();toast({slow:'慢热：TA 会收着点',normal:'正常',open:'放开：随你们'}[t.heat])},
   ctxPeek(){const t=thread(cur().id);closeSheet();go({v:'ctxPeek',id:t.id})},
-  hideMaskHint(){S.hintMask=1;save();render(true)},
   setMode(el){const t=thread(cur().id);if((t.meet||'both')!=='both'){closeSheet();return}if(t.mode===el.dataset.m||(!t.mode&&el.dataset.m==='online')){closeSheet();return}t.mode=el.dataset.m;sysMsg(t,t.mode==='offline'?`${mask().name}和${threadTitle(t)}见面了 · 线下`:'见面结束了，回到手机上 · 线上');save();closeSheet();render();toast(t.mode==='offline'?'线下：你们见面了':'线上：回到手机聊天')},
   openOffline(){closeSheet();go({v:'offline',id:cur().id})},
   offDefault(){S.offline={...thread(cur().id).offline};save();toast('设为默认了')},
@@ -3165,7 +3230,7 @@ const A={
   pPeek(){const t=thread(cur().id),c=charById(t.chars[0]);sheet(`<h3>让${esc(dn(c))}查你的手机</h3><button class="opt" data-a="peekGo" data-h="open">把手机递给TA</button><button class="opt" data-a="peekGo" data-h="sneak">假装没注意，让TA偷偷看</button><p class="hint" style="text-align:center">TA会看到你真实的聊天、动态、泡泡和歌单</p>`)},
   peekGo(el){const t=thread(cur().id);closeSheet();go({v:'peek',id:t.chars[0],how:el.dataset.h})},
   pGame(){const t=thread(cur().id),dm=t.type==='dm';const g=(a,l,ex='')=>`<button class="opt" data-a="${a}" ${ex}>${l}</button>`;
-    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋'):''}${g('gChat','真心话大冒险','data-g="truth"')}${g('gChat','海龟汤','data-g="soup"')}${g('gChat','词语接龙','data-g="chain"')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
+    sheet(`<h3>小游戏</h3>${t.game?g('gEnd','结束「'+GAME_NAMES[t.game]+'」'):''}<div class="grid2">${g('gRps','石头剪刀布')}${g('gDice','掷骰子比大小')}${dm?g('gTtt','井字棋')+g('gBj','21点'):''}${Object.keys(GAME_RULES).map(k=>g('gChat',GAME_NAMES[k],`data-g="${k}"`)).join('')}</div><button class="opt" data-a="closeSheet">算了</button>`)},
   gRps(){sheet(`<h3>出什么？</h3><div class="gvs" style="justify-content:center">${RPS.map(x=>`<button class="opt" data-a="gRpsGo" data-k="${x}" style="font-size:34px;padding:10px 16px" aria-label="${x}">${RPSI[x]}</button>`).join('')}</div>`)},
   gRpsGo(el){const a=el.dataset.k,b=RPS[Math.floor(Math.random()*3)],beat={石头:'剪刀',剪刀:'布',布:'石头'};closeSheet();pushMine(thread(cur().id),{type:'game',g:'rps',a,b,res:a===b?'draw':beat[a]===b?'win':'lose'})},
   gDice(){closeSheet();const r=()=>1+Math.floor(Math.random()*6);pushMine(thread(cur().id),{type:'game',g:'dice',a:r(),b:r()})},
@@ -3174,6 +3239,19 @@ const A={
     m.b[k]='X';let w=tttWin(m.b);m.lock=1;refreshChat();
     if(!w){await sleep(500);m.b[tttMove(m.b)]='O';w=tttWin(m.b)}
     m.lock=0;if(w)m.res=w;save();refreshChat();if(w&&!busy.has(t.id))reply(t)},
+  gBj(){closeSheet();pushMine(thread(cur().id),{type:'game',g:'bj',a:[bjDraw(),bjDraw()],b:[bjDraw(),bjDraw()],res:'',done:0},false)},
+  bjHit(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m||m.done||m.lock)return;
+    m.a.push(bjDraw());if(bjVal(m.a)>21)bjEnd(m);save();refreshChat();if(m.done&&!busy.has(t.id))reply(t)},
+  async bjStand(el){const t=thread(cur().id),m=t.msgs[+el.dataset.i];if(!m||m.done||m.lock)return;
+    m.lock=1;refreshChat();
+    while(bjVal(m.b)<17){await sleep(450);m.b.push(bjDraw());refreshChat()}
+    m.lock=0;bjEnd(m);save();refreshChat();if(!busy.has(t.id))reply(t)},
+  /* the 游戏 app opens the chat and starts the game there, so there is only one place a game can live */
+  gWho(el){cur().who=el.dataset.id;render(true)},
+  gFrom(el){const c=charById(el.dataset.id);if(!c)return;const t=dmFor(c.id),g=el.dataset.g;
+    stack=[{v:'threads'}];go({v:'chat',id:t.id});
+    if(GAME_RULES[g]){t.game=g;sysMsg(t,'开始玩「'+GAME_NAMES[g]+'」');save();render(true);reply(t,'（游戏开始了，你先来。）');return}
+    ({rps:A.gRps,dice:A.gDice,ttt:A.gTtt,bj:A.gBj})[g]?.()},
   gChat(el){const t=thread(cur().id),g=el.dataset.g;t.game=g;sysMsg(t,'开始玩「'+GAME_NAMES[g]+'」');save();closeSheet();render(true);reply(t,'（游戏开始了，你先来。）')},
   gEnd(){const t=thread(cur().id);sysMsg(t,'「'+GAME_NAMES[t.game]+'」结束了');t.game=null;save();closeSheet();render(true)},
   /* plaza comments */
@@ -3348,8 +3426,6 @@ ${talk?`你们刚才在聊这一章：\n${talk}\n\n接着${me}的话，用${c.na
       .then(txt=>{$('#toast').hidden=true;cm.push({c:c.id,text:String(txt).trim(),t:Date.now()});logEvent(c.id,`${c.name}和${me}一起看了小说《${b.title}》${ch.title}，${c.name}说：「${String(txt)}」`);save();if(cur()===v)render(true)})
       .catch(e=>toast(e.message||'TA 没说话',4000)).finally(()=>nvBusy=false)},
   readingGen(el){const c=charById(el.dataset.id);if(!c||nvBusy)return;nvBusy=true;toast('问问 TA…',20000);readingGen(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'TA 没说',4000)).finally(()=>nvBusy=false)},
-  heartWho(el){cur().who=el.dataset.id;render(true)},
-  heartGen(el){const c=charById(el.dataset.id);if(!c||nvBusy)return;nvBusy=true;toast('悄悄翻开 TA 的心事…',30000);heartGen(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没看到',4000)).finally(()=>nvBusy=false)},
   routineGen(el){const c=charById(el.dataset.id||cur().id);if(!c||nvBusy)return;nvBusy=true;toast('排一排 TA 的作息…',20000);routineGen(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没生成出来',4000)).finally(()=>nvBusy=false)},
   nowDoing(el){const c=charById(el.dataset.id);if(!c||nvBusy)return;nvBusy=true;toast('偷偷看一眼…',20000);nowDoing(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没看到',4000)).finally(()=>nvBusy=false)},
   shopAdd(el){sheet(`<h3>添加</h3><input type="text" id="shN" placeholder="名字" aria-label="名字"><input type="number" id="shP" placeholder="价格" inputmode="decimal" aria-label="价格"><button class="btn" data-a="shopAddGo" data-k="${el.dataset.k}">保存</button>`)},
@@ -3358,7 +3434,7 @@ ${talk?`你们刚才在聊这一章：\n${talk}\n\n接着${me}的话，用${c.na
   shopDel(el){S.shop[el.dataset.k].splice(+el.dataset.i,1);save();A.shopMng(el);render(true)},
   shopClr(el){confirmTap(el,()=>{S.shop[el.dataset.k]=[];save();closeSheet();render(true)})},
   ordDel(el){const id=el.dataset.id;S.orders=(S.orders||[]).filter(o=>o.id!==id);S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.id===id)m.hide=1}));save();render(true)},
-  ordClr(el){confirmTap(el,()=>{const k=el.dataset.k,ty=k==='food'?'order':'parcel';S.orders=(S.orders||[]).filter(o=>o.kind!==k);S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.type===ty)m.hide=1}));save();render(true)})},
+  ordClr(el){confirmTap(el,()=>{S.orders=[];S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.type==='order'||m.type==='parcel')m.hide=1}));save();render(true)})},
   shopTo(el){cur().to=el.dataset.id;render(true)},
   shopPick(el){$('#spN').value=el.dataset.n;$('#spA').value=el.dataset.p;el.closest('.content').querySelectorAll('.goods button').forEach(b=>b.classList.toggle('on',b===el))},
   shopGo(el){const food=el.dataset.k==='food',n=$('#spN').value.trim(),a=Math.round((+$('#spA').value||0)*100)/100,to=cur().to||'me',me=mask().name;
