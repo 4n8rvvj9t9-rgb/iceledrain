@@ -28,7 +28,11 @@
   --fs:15px; color-scheme:light; --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
 }
 html,body{height:100%;min-height:100dvh;margin:0}
-/* Safari stops fixed layers above its bottom toolbar; paint the canvas to match the wall's bottom so no pale strip shows */
+/* The band a home-screen app keeps below the page is out of reach of anything positioned fixed — only the root element's
+   background paints there. Give the root the full screen height so its background is sized against that, not against the
+   short viewport, and the wallpaper carries on through the band instead of stopping at a flat colour. The root keeps its
+   own height — making it taller would hand the document 68px it could scroll — so the background is told its height
+   directly instead, anchored to the top. */
 html{background:#e3edf3}
 /* Pages are sized by the browser itself: they keep their inset:0 and so fill exactly the box it paints, re-measured on every
    viewport change. Do not put a JS-computed height back here. A home-screen app reports a stale viewport on its first paint,
@@ -1339,7 +1343,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.31';
+const VER='2026.11.01';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1732,9 +1736,10 @@ const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',bubble:'bubble',bub
 function paintCanvas(){
   const wp=isOpen()?viewWall(cur()):S.look.wallpaper;
   document.documentElement.style.backgroundImage=wp?`url("${String(wp).replace(/"/g,'%22')}")`:'';
-  document.documentElement.style.backgroundSize=wp?'cover':'';
-  document.documentElement.style.backgroundPosition=wp?'center':'';
-  document.documentElement.style.backgroundAttachment=wp?'fixed':'';
+  const r=document.documentElement.style,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
+  r.backgroundSize=wp?`auto ${wh||'100%'}`:'';
+  r.backgroundPosition=wp?'center top':'';
+  r.backgroundRepeat='no-repeat';r.backgroundAttachment='';
 }
 function viewWall(v){const aw=S.look.appWalls||{};if(v.v==='chat'||v.v==='music'){const t=v.v==='chat'?thread(v.id):null;const c=t?(t.type==='dm'?charById(t.chars[0]):null):charById(S.music.with);if(t?.wall)return t.wall;if(c?.wall)return c.wall;if(v.v==='music'&&aw.music)return aw.music}else if(APPWALL[v.v]&&aw[APPWALL[v.v]])return aw[APPWALL[v.v]];return S.look.wallpaper}
 const tabs=(list,on,act='tab')=>`<div class="tabs" role="tablist">${list.map(([k,l])=>`<button class="${k===on?'on':''}" data-a="${act}" data-t="${k}">${l}</button>`).join('')}</div>`;
