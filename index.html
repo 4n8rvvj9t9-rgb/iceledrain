@@ -93,6 +93,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .inline output{font-size:13px;min-width:3em;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 
 .btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:600;white-space:nowrap}
 .btn.o{background:var(--accent-soft);color:var(--deep)}
@@ -168,7 +169,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .post .ft button{background:none;border:0;padding:2px 0;color:inherit}
 .post .ft .lk{color:var(--red)}
 .prof{display:flex;flex-direction:column;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;padding:0 15px 15px}
-.banner{aspect-ratio:5/2;margin:0 -15px;background:linear-gradient(135deg,var(--accent),var(--accent-soft)) center/cover}
+.banner{aspect-ratio:5/2;margin:0 -15px;background:linear-gradient(135deg,var(--accent-soft),#fff) center/cover}
 .prof .av{position:relative;margin-top:-44px;box-shadow:0 0 0 4px var(--panel)}
 .prof h3{margin:0;font:400 22px var(--display)}
 .prof .h{color:var(--muted);font-size:13px}
@@ -279,7 +280,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .fan .fb{background:var(--panel);border:1px solid var(--line);border-radius:16px;border-top-left-radius:5px;padding:4px 11px 6px;font-size:14px;line-height:1.5;min-width:0;word-break:break-word;white-space:pre-wrap}
 .fan .fb b{display:block;font-size:11.5px;font-weight:600;color:var(--fc,var(--deep))}
 .fan.known .fb{border-color:var(--accent);background:var(--accent-soft)}
-.fan .fd{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;color:#fff;background:var(--fc)}
+.fan .fd{width:26px;height:26px;border-radius:50%;flex:none;background:var(--accent-soft)}
 .fan .av{--s:26px}
 .away{align-self:center;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
 @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -398,6 +399,17 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .cb svg{width:28px;height:28px}
 .cb.sm{width:44px;height:44px;flex:none}.cb.sm svg{width:20px;height:20px}
 .cb.end{background:#e06c75}.cb.ok{background:#5cbf8a}
+/* no picture to blur behind the call: stay pale like the rest of the phone */
+.call.plain{color:var(--ink);background:linear-gradient(180deg,#f8fbfc,#e3edf3)}
+.call.plain .cbg{display:none}
+.call.plain .cwho{text-shadow:none}
+.call.plain .chead .av{box-shadow:0 0 0 6px rgba(141,184,210,.18)}
+.call.plain .ln{background:rgba(255,255,255,.8)}
+.call.plain .ln.me{background:var(--accent);color:#fff}
+.call.plain .cin input{background:rgba(255,255,255,.85);border-color:var(--line);color:var(--ink)}
+.call.plain .cin input::placeholder{color:var(--muted)}
+.call.plain .cb:not(.end):not(.ok){background:var(--accent-soft);color:var(--deep)}
+.call.plain .pip{background:var(--accent-soft);box-shadow:0 6px 18px rgba(110,150,175,.25)}
 .pip{position:absolute!important;right:16px;top:calc(var(--sat) + 16px);width:84px;height:118px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;overflow:hidden;font:28px var(--display);box-shadow:0 6px 18px rgba(0,0,0,.3)}
 .pip img{width:100%;height:100%;object-fit:cover}
 /* phone */
@@ -1350,7 +1362,7 @@ const reachable=c=>visible(c)&&!rel(c).theyBlocked&&!rel(c).theyDeleted;
 function spark(log){if(!log||log.length<2)return'';const w=300,h=60;
   const pts=log.map((p,i)=>`${(i/(log.length-1)*w).toFixed(1)},${(h-5-(p.v/100)*(h-10)).toFixed(1)}`).join(' ');
   return`<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="心情水位曲线"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`}
-function av(o,s=44){const nm=(o&&(o.name||o.title))||'?';return`<span class="av" style="--s:${s}px">${o&&o.avatar?`<img src="${esc(o.avatar)}" alt="">`:esc([...nm][0]||'?')}</span>`}
+function av(o,s=44){const nm=(o&&(o.name||o.title))||'?';return`<span class="av" style="--s:${s}px">${o&&o.avatar?`<img src="${esc(o.avatar)}" alt="">`:''}</span>`}
 
 /* ================= look ================= */
 const FONTS={system:null,custom:'"LedCustom"'};
@@ -2106,8 +2118,6 @@ function mchatHTML(){const c=charById(S.music.with);if(!c)return'';const t=S.thr
 
 /* ================= bubble (泡泡 · 你是偶像) ================= */
 let bbBusy=false;
-const FAN_COLORS=['#5f9ec2','#d0809a','#7fa978','#c29a52','#9184c2','#4fa8a8','#c4745f','#6c8fd1'];
-function fanColor(n){let h=0;for(const ch of String(n))h=(h*31+ch.charCodeAt(0))>>>0;return FAN_COLORS[h%FAN_COLORS.length]}
 const kfmt=n=>{n=Math.round(+n||0);return n>=1e4?(n/1e4).toFixed(n>=1e6?0:1).replace(/\.0$/,'')+'万':String(n)};
 function idol(){const m=mask(),b=S.bubble;return{name:b.name||m.name,avatar:m.avatar,handle:m.handle}}
 function gapText(ms){const m=ms/60e3;return m<60?Math.round(m)+'分钟':m<1440?Math.round(m/60)+'个小时':Math.round(m/1440)+'天'}
@@ -2116,7 +2126,7 @@ function bbHTML(){const b=S.bubble;let h='',last=0;
     if(m.from==='me')h+=`<div class="bbme">${m.q?`<span class="q">↪ ${esc(m.q.nick)}：${esc(m.q.text)}</span>`:''}<button class="bub" data-a="bbMsg" data-id="${m.id}">${esc(m.content)}</button><small>♡ ${kfmt(m.likes)} · 已读 ${kfmt(m.reads)}</small></div>`;
     else if(m.from==='away')h+=`<div class="away">${esc(m.content)}</div>`;
     else{const c=m.charId?charById(m.charId):null;
-      h+=`<button class="fan ${c?'known':''}" data-a="bbMsg" data-id="${m.id}" style="--fc:${fanColor(m.nick)}">${c?av(c,26):`<span class="fd">${esc([...m.nick][0]||'?')}</span>`}<span class="fb"><b>${esc(c?dn(c)+' · 认识的人':m.nick)}</b>${esc(m.content)}</span></button>`}});
+      h+=`<button class="fan ${c?'known':''}" data-a="bbMsg" data-id="${m.id}">${c?av(c,26):'<span class="fd"></span>'}<span class="fb"><b>${esc(c?dn(c)+' · 认识的人':m.nick)}</b>${esc(m.content)}</span></button>`}});
   if(bbBusy)h+=`<div class="away"><span class="dots"><i></i><i></i><i></i></span>粉丝们正在疯狂打字</div>`;
   if(!b.msgs.length&&!bbBusy)h+=``;
   return h}
@@ -2172,9 +2182,9 @@ function renderCall(){let e=$('#call');if(!call){if(e)e.remove();return}
   if(!e){e=document.createElement('div');e.id='call';document.body.appendChild(e)}
   const t=thread(call.tid),c=charById(t.chars[0]),me=mask(),video=call.kind==='video',on=call.status==='on';
   const bg=video?(c.vbg||c.avatar||c.wall||''):(c.avatar||c.wall||'');
-  e.className='call'+(video&&on?' video':'');
+  e.className='call'+(video&&on?' video':'')+(bg?'':' plain');
   e.innerHTML=`<div class="cbg" style="${bg?`background-image:url(${esc(bg)})`:''}"></div>
-  ${video&&on?`<div class="pip">${me.avatar?`<img src="${esc(me.avatar)}" alt="">`:esc([...me.name][0]||'我')}</div>`:''}
+  ${video&&on?`<div class="pip">${me.avatar?`<img src="${esc(me.avatar)}" alt="">`:''}</div>`:''}
   <div class="chead">${video&&on?'':av(c,100)}<div class="cwho">${esc(dn(c))}</div><div class="cst" id="callSt">${callStatus()}</div></div>
   <div class="subs" id="callSubs">${callSubsHTML()}</div>
   ${on?`<div class="cin"><input type="text" id="callIn" placeholder="说点什么…" autocomplete="off" aria-label="说话">${SR?`<button class="cb sm" data-a="callMic" aria-label="语音输入">${ICONS.mic}</button>`:''}<button class="cb sm" data-a="callSend" aria-label="说">${ICONS.send}</button></div>`:''}
@@ -2556,10 +2566,10 @@ plaza(v){
   if(tab==='me'){
     const m=mask(),mine=S.feed.filter(p=>p.author==='me').sort((a,b)=>b.t-a.t),likes=S.feed.reduce((s,p)=>s+(p.likes||[]).filter(x=>x!=='me').length,0);
     return{title:'雨巷',right:`<button class="tb" data-a="switchMask">换面具</button>`,body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="prof">
-      <label class="banner" style="${(m.banner||S.look.photo)?`background-image:url(${m.banner||S.look.photo})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label>${av(m,84)}
-      <div><h3>${esc(m.name)}</h3><div class="h">${m.handle?`@${esc(m.handle)} · `:''}ID ${String(m.id).slice(-6).toUpperCase()}</div></div>
+      <label class="banner" style="${m.banner?`background-image:url(${m.banner})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label>${av(m,84)}
+      <div><h3>${esc(m.name)}</h3><div class="h">${m.handle?`@${esc(m.handle)} · `:''}ID ${esc(m.pid||String(m.id).slice(-6).toUpperCase())}</div></div>
       ${m.bio?`<div>${esc(m.bio)}</div>`:''}
-      <div class="stats"><span><b>${S.chars.length}</b> 关注</span><span><b>${S.chars.length}</b> 粉丝</span><span><b>${likes}</b> 获赞</span></div>
+      <div class="stats"><span><b>${esc(m.follow||S.chars.length)}</b> 关注</span><span><b>${esc(m.fans||S.chars.length)}</b> 粉丝</span><span><b>${esc(m.likes||likes)}</b> 获赞</span></div>
       <div class="wallet"><div><small>钱包余额</small><br><b>¥${(+S.wallet||0).toFixed(2)}</b></div><button class="btn" data-a="open" data-v="wallet">打开钱包</button></div>
       <div class="btns"><button class="btn o" data-a="editMask" data-id="${m.id}">编辑资料</button></div></div>`+
       (mine.map(p=>postHTML(p)).join('')||``)};
@@ -2620,6 +2630,8 @@ maskEdit(v){
   return{title:m.name||'面具',sub:'面具',body:`<div class="panel"><div class="inline">${av(m,76)}${fileBtn('换头像','accept="image/*" data-img="mask"')}</div>
     <div class="grid2"><label class="f">名字<input type="text" id="m-name" data-s="mask" data-k="name" value="${esc(m.name)}"></label><label class="f">账号 @<input type="text" id="m-handle" data-s="mask" data-k="handle" value="${esc(m.handle)}"></label></div>
     <label class="f">签名（主页显示）<input type="text" id="m-bio" data-s="mask" data-k="bio" value="${esc(m.bio)}"></label>
+    <label class="f">ID（空着就自动生成）<input type="text" id="m-pid" data-s="mask" data-k="pid" value="${esc(m.pid||'')}" placeholder="${String(m.id).slice(-6).toUpperCase()}"></label>
+    <div class="grid3"><label class="f">关注<input type="text" id="m-follow" data-s="mask" data-k="follow" value="${esc(m.follow||'')}" placeholder="自动"></label><label class="f">粉丝<input type="text" id="m-fans" data-s="mask" data-k="fans" value="${esc(m.fans||'')}" placeholder="自动"></label><label class="f">获赞<input type="text" id="m-likes" data-s="mask" data-k="likes" value="${esc(m.likes||'')}" placeholder="自动"></label></div>
     <div class="grid2"><label class="f">生日（TA们会记得）<input type="text" id="m-bday" data-s="mask" data-k="bday" value="${esc(m.bday||'')}"></label><label class="f">外貌（生图用）<input type="text" id="m-look" data-s="mask" data-k="look" value="${esc(m.look||'')}"></label></div>
     <label class="f">人设（角色会知道）<textarea class="tall" id="m-persona" data-s="mask" data-k="persona">${esc(m.persona)}</textarea></label>${fileBtn('导入文档','data-doc="mask"')}</div>
     <div class="btns">${m.id===S.activeMask?'<span class="pill fill">正戴着</span>':`<button class="btn" data-a="useMask" data-id="${m.id}">戴上这个</button>`}${S.masks.length>1?'<button class="btn red" data-a="delMask">删除</button>':''}</div>`};
