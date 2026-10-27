@@ -639,7 +639,7 @@ function readText(file){return new Promise((ok,no)=>{const r=new FileReader();r.
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27.13';
+const VER='2026.10.27.14';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -795,9 +795,9 @@ const ICONS={
 /* One icon per place you can actually go. 通讯录, 小剧场 and 经期 were icons for a tab of an app already on this screen,
    so they live in 消息, 抽屉 and 日历; 外卖 and 网购 were one screen behind a flag and are now 下单. */
 const APPS=[
-  {id:'messages',name:'消息',v:'threads'},{id:'plaza',name:'雨巷',v:'plaza'},{id:'phone',name:'电话',v:'calls'},{id:'mail',name:'信箱',v:'mail'},
-  {id:'music',name:'音乐',v:'music'},{id:'games',name:'游戏',v:'games'},{id:'novel',name:'雨书',v:'novel'},{id:'drawer',name:'抽屉',v:'drawer'},
-  {id:'shop',name:'下单',v:'shop'},{id:'days',name:'日历',v:'cal'},{id:'library',name:'设定库',v:'library'},{id:'settings',name:'设置',v:'settings'}];
+  {id:'messages',name:'消息',v:'threads'},{id:'phone',name:'电话',v:'calls'},{id:'mail',name:'信箱',v:'mail'},{id:'plaza',name:'雨巷',v:'plaza'},
+  {id:'music',name:'音乐',v:'music'},{id:'novel',name:'雨书',v:'novel'},{id:'games',name:'游戏',v:'games'},{id:'drawer',name:'抽屉',v:'drawer'},
+  {id:'days',name:'日历',v:'cal'},{id:'shop',name:'下单',v:'shop'},{id:'library',name:'设定库',v:'library'},{id:'settings',name:'设置',v:'settings'}];
 function appIcon(a){const img=S.look.icons[a.id];const n=a.id==='messages'?S.threads.reduce((s,t)=>s+(t.unread||0),0):a.id==='mail'?mailUnread():0;
   return`<button class="ic-app" data-a="open" data-v="${a.v}"${a.t?` data-t="${a.t}"`:''} aria-label="${a.name}"><span class="ic-g">${img?`<img src="${esc(img)}" alt="">`:ICONS[a.id]}${n?`<span class="badge">${n>99?'99+':n}</span>`:''}</span><span class="ic-n">${a.name}</span></button>`}
 
@@ -1891,11 +1891,11 @@ async function strangerComments(p,n,toR){const a=authorOf(p.author,p);
 
 /* ================= 电话 ================= */
 function callsView(){const chars=S.chars.filter(reachable),me=mask().name;
-  const L=S.threads.filter(t=>t.type==='dm').flatMap(t=>t.msgs.filter(m=>m.type==='call'||m.type==='sys'&&/通话/.test(m.content)).map(m=>({t:m.t,c:charById(t.chars[0]),m}))).sort((a,b)=>b.t-a.t).slice(0,60);
+  const L=S.threads.filter(t=>t.type==='dm').flatMap(t=>t.msgs.filter(m=>!m.ch&&(m.type==='call'||m.type==='sys'&&/通话/.test(m.content))).map(m=>({t:m.t,c:charById(t.chars[0]),m}))).sort((a,b)=>b.t-a.t).slice(0,60);
   const row=({c,m})=>{const call=m.type==='call',video=call?m.kind==='video':/视频/.test(m.content),miss=!call&&/未接|拒接|取消/.test(m.content);
-    return`<div class="row"><span class="pv2c${miss?' miss':''}">${video?ICONS.video:ICONS.phone}</span><span class="meta"><b${miss?' class="miss"':''}>${esc(dn(c))}</b><small>${call?(m.from==='me'?'呼出':'呼入')+' · '+fmt(m.dur||0):esc(m.content.replace(dn(c),'').trim())}</small></span><span class="side">${ago(m.t)}</span></div>`};
+    return`<div class="row"><span class="pv2c${miss?' miss':''}">${video?ICONS.video:ICONS.phone}</span><span class="meta"><b${miss?' class="miss"':''}>${esc(dn(c))}</b><small>${call?(m.from==='me'?'呼出':'呼入')+' · '+fmt(m.dur||0):esc(m.content.replace(dn(c),'').trim())}</small></span><span class="side h">${ago(m.t)}<button class="tb" data-a="callLogDel" data-id="${m.id}" aria-label="删除">×</button></span></div>`};
   return{title:'电话',body:`<div class="panel"><h2>打给谁</h2>${chars.map(c=>`<div class="inline" style="flex-wrap:nowrap">${av(c,40)}<b style="flex:1;min-width:0">${esc(dn(c))}</b><button class="sq2" data-a="callFrom" data-id="${c.id}" data-k="voice" aria-label="语音">${ICONS.phone}</button><button class="sq2" data-a="callFrom" data-id="${c.id}" data-k="video" aria-label="视频">${ICONS.video}</button></div>`).join('')||'<p class="hint">还没有能打的人</p>'}</div>
-    ${L.length?'<div class="sec">最近通话</div>'+L.map(row).join(''):''}`}}
+    ${L.length?`<div class="sec" style="display:flex;justify-content:space-between;align-items:center">最近通话<button class="tb red" data-a="callLogClr">清空</button></div>`+L.map(row).join(''):''}`}}
 
 /* ================= media: image gen & voice api ================= */
 let vAudio=null,ttsWarned=false;
@@ -2328,7 +2328,7 @@ settings(v){
       <label class="f">点图标的声音<select id="l-sfx" data-s="look" data-k="sfx">${[['drop','雨滴'],['ice','冰块'],['bubble','泡泡'],['mix','随机'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.sfx||'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f">桌面动效<select id="l-fxs" data-s="look" data-k="fxs">${[['drop','雨滴'],['bubble','泡泡'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.fx===false?'off':L.fxs==='bubble'?'bubble':'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="panel"><h2>每个App的背景</h2>
-      ${[['messages','消息'],['plaza','雨巷'],['phone','电话'],['mail','信箱'],['music','音乐'],['games','游戏'],['novel','雨书'],['drawer','抽屉'],['shop','下单'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
+      ${APPS.map(a=>[a.id,a.name]).map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
     <div class="panel"><h2>桌面图标</h2>
       <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
     <div class="panel"><h2>应用图标</h2>
@@ -2664,6 +2664,8 @@ const A={
   newMask(){const m={id:uid(),name:'新面具',handle:'mask'+S.masks.length,avatar:'',bio:'',persona:''};S.masks.push(m);save();go({v:'maskEdit',id:m.id})},
   delMask(el){confirmTap(el,()=>{const id=cur().id;S.masks=S.masks.filter(m=>m.id!==id);if(S.activeMask===id)S.activeMask=S.masks[0].id;save();back()})},
   editWallet(){sheet(`<h3>钱包</h3><input type="number" id="walletIn" value="${S.wallet}" step="0.01" aria-label="余额"><button class="btn" data-a="saveWallet">保存</button>`)},
+  callLogDel(el){S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.id===el.dataset.id)m.ch=1}));save();render(true)},
+  callLogClr(el){confirmTap(el,()=>{S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.type==='call'||m.type==='sys'&&/通话/.test(m.content))m.ch=1}));save();render(true)})},
   callFrom(el){startCall(dmFor(el.dataset.id),el.dataset.k)},
   /* from the wallet: a card TA gave you; from a chat's ＋: a card you give TA */
   cardAdd(el){const to=el?.dataset?.to,chars=to?[charById(to)]:S.chars.filter(visible);if(!chars[0]){toast('先添加一个角色');return}
