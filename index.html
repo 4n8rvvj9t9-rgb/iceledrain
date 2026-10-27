@@ -34,6 +34,10 @@ html,body{height:100%;min-height:100dvh;margin:0}
    own height — making it taller would hand the document 68px it could scroll — so the background is told its height
    directly instead, anchored to the top. */
 html{background:#e3edf3}
+/* iOS 26 (WebKit bug 301108): a home-screen app whose page is shorter than the screen is handed a viewport shorter by the
+   status bar's height, and nothing fixed can paint in the strip left below it. A root at least as tall as the screen gets
+   the whole screen. 100lvh caps it at exactly the screen once that happens, so the page never gains anything to scroll. */
+@media (display-mode:standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
 /* Pages are sized by the browser itself: they keep their inset:0 and so fill exactly the box it paints, re-measured on every
    viewport change. Do not put a JS-computed height back here. A home-screen app reports a stale viewport on its first paint,
    and a page pinned to that number ends up taller than the screen, with its last panels impossible to scroll into view.
@@ -1350,7 +1354,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27.2';
+const VER='2026.10.27.3';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1664,11 +1668,6 @@ function setAppH(){
      page — so leave the bottom inset alone in that case. */
   const band=sa&&t>0&&sh>vh?Math.round(sh-vh):0;
   if(band>=8&&band<=200)b=Math.max(0,b-band);
-  /* The other way it goes wrong, and the one on her phone: iOS lays the page out over the whole screen (every number here
-     says 912) but only paints the top 844, leaving a strip as tall as the status bar unpainted at the bottom. Nothing on
-     the page can measure that strip, so keep the bottom UI above it: the top inset's worth of bottom padding, plus a little.
-     On a phone that really paints the whole screen this only costs a few pixels of air. */
-  else if(ios&&t>0&&vh>=sh-1)b=Math.max(b,t+10);
   r.setProperty('--sat',Math.max(0,t+(+L.topX||0))+'px');r.setProperty('--sab',b+'px');
   /* The wall runs on to the screen's full height, filling the strip iOS leaves over when a home-screen app's viewport is short.
      Page height is the browser's own business (see the CSS) apart from the overflow check below. */
