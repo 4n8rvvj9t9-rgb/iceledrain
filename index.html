@@ -14,6 +14,8 @@
 /* Layout: a cold, clear window on a rainy day. Home = one page: a see-through clock, a frosted polaroid with a little raindrop beside it, then app icons as glassy water drops.
    Apps open as full pages of thin frosted panels. One light theme only: ice blue, white, grey. */
 :root{
+  /* One wallpaper recipe, used by .wall and by the root background that paints the band iOS keeps below a short viewport */
+  --wallbg:radial-gradient(70% 40% at 85% 0%,rgba(255,255,255,.9),transparent 70%),radial-gradient(60% 45% at 0% 100%,rgba(196,221,236,.5),transparent 70%),linear-gradient(180deg,#f8fbfc 0%,#eef4f8 55%,#e3edf3 100%);
   --glass:255,255,255; --ga:.22; --gb:rgba(255,255,255,.7); --gh:rgba(255,255,255,.8); --ts:rgba(255,255,255,.7);
   --bg:#f3f6f8; --bg2:#fafcfd; --ink:#3a4a55; --muted:#8a9ca8; --line:rgba(160,190,208,.35);
   --accent:#8db8d2; --accent-soft:#e6f0f5; --accent-ink:#ffffff; --deep:#5d88a2; --red:#6f9bb6;
@@ -33,11 +35,13 @@ html,body{height:100%;min-height:100dvh;margin:0}
    short viewport, and the wallpaper carries on through the band instead of stopping at a flat colour. The root keeps its
    own height — making it taller would hand the document 68px it could scroll — so the background is told its height
    directly instead, anchored to the top. */
-html{background:#e3edf3}
+html{background-color:#e3edf3;background-image:var(--wallbg);background-repeat:no-repeat;background-position:center top;background-size:100% var(--wall-h,100dvh)}
 /* iOS 26 (WebKit bug 301108): a home-screen app whose page is shorter than the screen is handed a viewport shorter by the
-   status bar's height, and nothing fixed can paint in the strip left below it. A root at least as tall as the screen gets
-   the whole screen. 100lvh caps it at exactly the screen once that happens, so the page never gains anything to scroll. */
-@media (display-mode:standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
+   status bar's height, and nothing fixed can paint in the strip left below it. A root taller than that viewport gets the
+   whole screen back. The earlier 100lvh cap did nothing, because lvh is handed the same short viewport. Growing past the
+   screen costs nothing: body is overflow:hidden and the root's overflow is visible, so the viewport takes body's hidden
+   and the page has no scroll to gain. Every page is position:fixed and sized by the viewport, not by this height. */
+@media (display-mode:standalone){html{min-height:calc(100% + env(safe-area-inset-top,0px))}}
 /* Pages are sized by the browser itself: they keep their inset:0 and so fill exactly the box it paints, re-measured on every
    viewport change. Do not put a JS-computed height back here. A home-screen app reports a stale viewport on its first paint,
    and a page pinned to that number ends up taller than the screen, with its last panels impossible to scroll into view.
@@ -50,10 +54,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
-.wall{position:fixed;inset:0;z-index:0;background:
-  radial-gradient(70% 40% at 85% 0%,rgba(255,255,255,.9),transparent 70%),
-  radial-gradient(60% 45% at 0% 100%,rgba(196,221,236,.5),transparent 70%),
-  linear-gradient(180deg,#f8fbfc 0%,#eef4f8 55%,#e3edf3 100%);background-size:cover;background-position:center}
+.wall{position:fixed;inset:0;z-index:0;background:var(--wallbg);background-size:100% 100%;background-position:center}
 .wall.img{background-size:cover!important}
 
 /* ---------- home ---------- */
@@ -402,9 +403,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .money-big{text-align:center;font:600 40px var(--body);color:var(--deep);font-variant-numeric:tabular-nums}
 /* notification */
 /* The floor is what keeps the banner tappable: in a browser tab, on the first paint, or with a negative 顶栏微调,
-   --sat comes back 0 and the banner lands under the Dynamic Island, which swallows the taps. */
-.nbar{position:fixed;left:12px;right:12px;top:max(calc(var(--sat) + 8px),62px);z-index:45;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:22px;border:1px solid var(--line);background:var(--panel);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 12px 30px rgba(20,40,55,.18);transform:translateY(-160%);transition:transform .35s cubic-bezier(.2,.8,.2,1);text-align:left;color:var(--ink)}
-.nbar.show{transform:none}
+   --sat comes back 0 and the banner lands under the Dynamic Island, which swallows the taps.
+   It fades in place instead of flying down from above the screen: a banner that slides through the status bar spends
+   its whole entrance under iOS's own strip, where taps go to the system and never reach the avatar. Hidden it is
+   transparent AND untouchable, so it never eats taps meant for the page under it. */
+.nbar{position:fixed;left:12px;right:12px;top:max(calc(var(--sat) + 10px),64px);z-index:45;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:22px;border:1px solid var(--line);background:var(--panel);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 12px 30px rgba(20,40,55,.18);text-align:left;color:var(--ink);
+  transform:translateY(-10px) scale(.97);opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .26s ease,visibility 0s .3s}
+.nbar.show{transform:none;opacity:1;visibility:visible;pointer-events:auto;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .26s ease}
 .nbar>span:not(.av){flex:1;min-width:0;display:flex;flex-direction:column}
 .nbar .av{flex:none}
 .content>*{flex-shrink:0}
@@ -1450,7 +1456,10 @@ function applyLook(){
   const L=S.look,r=document.documentElement;r.lang=L.lang==='en'?'en':'zh-CN';
   r.style.setProperty('--alpha',L.alpha);setAppH();r.style.setProperty('--fs',L.fs+'px');
   if(FONTS[L.font])r.style.setProperty('--body',FONTS[L.font]+',-apple-system,"PingFang SC",sans-serif');else r.style.removeProperty('--body');
-  const w=$('#wall');if(w._wp!==L.wallpaper){w._wp=L.wallpaper;w.style.background=L.wallpaper?`url(${L.wallpaper}) center/cover no-repeat`:'';w.classList.toggle('img',!!L.wallpaper);r.style.background=L.wallpaper?`#e3edf3 url(${L.wallpaper}) center bottom/cover no-repeat fixed`:''}
+  /* the root background is paintCanvas's alone — it is what shows in the band iOS keeps below a short viewport, and two
+     writers disagreeing (bottom/cover/fixed here, top/wall-h there) left the band mismatched with the wall above it */
+  const w=$('#wall');if(w._wp!==L.wallpaper){w._wp=L.wallpaper;w.style.background=L.wallpaper?`url(${L.wallpaper}) center/cover no-repeat`:'';w.classList.toggle('img',!!L.wallpaper);
+    r.style.background='';painted=null;try{paintCanvas()}catch(e){}}
   document.querySelector('meta[name=theme-color]').content='#f3f6f8';
 }
 
@@ -2107,7 +2116,7 @@ function pushMine(t,m,auto=true){const c0=t.type==='dm'?charById(t.chars[0]):nul
   t.msgs.push({id:uid(),from:'me',t:Date.now(),...m});t.t=Date.now();save();onThreadUpdate(t);if(auto&&!busy.has(t.id)){t.pending=0;reply(t)}return true}
 function nbar(t,m){if(viewing(t))return;const c=charById(m.from);let e=$('#nbar');if(!e){e=document.createElement('button');e.id='nbar';e.type='button';e.className='nbar';document.body.appendChild(e)}
   e.dataset.a='openThreadHome';e.dataset.id=t.id;e.innerHTML=`${av(c||{name:'?'},38)}<span><b>${esc(threadTitle(t))}</b><small>${esc(pv(m))}</small></span>`;
-  requestAnimationFrame(()=>e.classList.add('show'));clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),4500)}
+  requestAnimationFrame(()=>e.classList.add('show'));clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),6000)}
 async function reply(t,extra){
   if(busy.has(t.id))return;busy.add(t.id);onThreadUpdate(t);
   try{
