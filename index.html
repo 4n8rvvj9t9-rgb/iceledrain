@@ -516,6 +516,28 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 html.full,html.full body{height:var(--scr-h);overflow:hidden}
 html.full .home,html.full .app,html.full .sheet,html.full .call{position:absolute;top:0;bottom:auto;height:var(--scr-h)!important}
 html.full .wall{height:var(--scr-h)}
+/* X-like lists: full width, hairline dividers, no cards */
+.content.xl{gap:0}.xl .tabs{margin-bottom:8px}
+.xl .row,.xl .post{width:auto;margin:0 -16px;padding:12px 16px;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;background:transparent}
+.xl .row:active,.xl .post:active{background:rgba(var(--accent-rgb),.08)}
+.xn{display:flex;gap:5px;align-items:baseline;min-width:0}.xn b{flex:none;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xn i{font-style:normal;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xl .row small.new{color:var(--ink);font-weight:600}
+.udot{width:10px;height:10px;border-radius:50%;background:var(--deep);flex:none}
+.xl .post .tx{font-size:15px;line-height:1.5}
+.xa{display:flex;justify-content:space-between;max-width:300px;margin-top:6px}
+.xa button{background:none;border:0;padding:2px 0;display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12.5px}
+.xa svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;stroke-linecap:round}
+.xa .lk{color:#e0245e}.xa .lk svg{fill:currentColor}
+.xcomp{display:flex;gap:11px;margin:0 -16px;padding:4px 16px 12px;border-bottom:1px solid var(--line)}
+.xcomp>div{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.xcomp textarea{min-height:60px;border:0;background:transparent;padding:8px 0;font-size:17px}
+.xl .prof{margin:0 -16px;border:0;border-radius:0;border-bottom:1px solid var(--line);background:transparent;padding:0 16px 14px}
+.xl .banner{margin:0 -16px}
+.xrow{display:flex;justify-content:space-between;align-items:flex-end}
+.xedit{background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 15px;font-weight:600;font-size:14px;color:var(--ink)}
+.xl .post.cmt{margin-left:-16px;padding-left:56px}
+.msg.me .bub{border-radius:22px 22px 6px 22px}.msg.ai .bub{border-radius:22px 22px 22px 6px}
 /* ---------- home: one clear page ---------- */
 .glass{background:rgba(var(--glass),var(--ga));border:1px solid var(--gb);box-shadow:0 8px 26px rgba(110,150,175,.12),inset 0 1px 0 var(--gh)}
 .home .fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
@@ -618,7 +640,7 @@ function readText(file){return new Promise((ok,no)=>{const r=new FileReader();r.
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27.11';
+const VER='2026.10.27.12';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1263,7 +1285,7 @@ function bubble(t,m,i){
   if(m.type==='narr')return`<button class="narr${mine?' me':''}" data-mi="${i}" data-a="msg" data-i="${i}">${esc(m.content)}</button>${folds(m)?`<div class="msg ai"><div class="col" style="max-width:100%">${folds(m)}</div></div>`:''}`;
   const inner=m.type==='sticker'?(()=>{const s=findSticker(m.content);return`<button class="stk" data-a="msg" data-i="${i}">${s?`<img src="${esc(s.src)}" alt="${esc(m.content)}">`:`<span class="bub">[${esc(m.content)}]</span>`}</button>`})()
     :richBody(t,m,i,mine,c);
-  return`<div class="msg ${mine?'me':'ai'}" data-mi="${i}">${mine?'':av(c||{name:'?'},36)}<div class="col">${grp&&!mine?`<span class="who">${esc(dn(c))}</span>`:''}${inner}${mine?(m.rejected?'<span class="rej"><i>!</i>被拒收</span>':''):folds(m)}</div>${mine?av(mask(),36):''}</div>`;
+  return`<div class="msg ${mine?'me':'ai'}" data-mi="${i}">${mine?'':av(c||{name:'?'},36)}<div class="col">${grp&&!mine?`<span class="who">${esc(dn(c))}</span>`:''}${inner}${mine?(m.rejected?'<span class="rej"><i>!</i>被拒收</span>':''):folds(m)}</div></div>`;
 }
 function richBody(t,m,i,mine,c){const tap=`data-a="msg" data-i="${i}"`;
   switch(m.type){
@@ -1432,9 +1454,11 @@ function maybeAutoDiary(c,t){
 
 /* ================= plaza ================= */
 function authorOf(a,r){if(a==='x')return{name:r?.nick||'路人',handle:'路人',avatar:''};if(a==='me'){const m=mask();return{name:m.name,handle:m.handle,avatar:m.avatar}}const c=charById(a);return c?{name:dn(c),handle:c.handle||c.name,avatar:c.avatar}:{name:'（已删除）',handle:'deleted',avatar:''}}
-function postHTML(p,showDel=true){const a=authorOf(p.author),liked=(p.likes||[]).includes('me');
+const XI={reply:'<svg viewBox="0 0 24 24"><path d="M4 12a7 7 0 0 1 7-7h2a7 7 0 0 1 0 14H8l-4 3z"/></svg>',rt:'<svg viewBox="0 0 24 24"><path d="M7 7h10l-3-3M17 17H7l3 3M7 7v6M17 17v-6"/></svg>',
+  like:'<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg>',share:'<svg viewBox="0 0 24 24"><path d="M12 4v11M7 9l5-5 5 5M5 14v5h14v-5"/></svg>',del:'<svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>'};
+function postHTML(p,showDel=true){const a=authorOf(p.author),liked=(p.likes||[]).includes('me'),n=x=>x?`<span>${x}</span>`:'';
   return`<article class="post">${av(a,42)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b><span>${a.handle?`@${esc(a.handle)} · `:''}${ago(p.t)}</span>${p.only?`<span class="pill">仅${esc(dn(charById(p.only)))}可见</span>`:''}</div><div class="tx">${esc(p.text)}</div>
-  <div class="ft"><button data-a="openPost" data-id="${p.id}">评论 ${(p.replies||[]).length}</button><button class="${liked?'lk':''}" data-a="like" data-id="${p.id}">${liked?'♥':'♡'} ${(p.likes||[]).length+(p.sl||0)}</button><button data-a="sharePost" data-id="${p.id}">分享</button>${showDel?`<button data-a="delPost" data-id="${p.id}">删除</button>`:''}</div></div></article>`}
+  <div class="xa"><button data-a="openPost" data-id="${p.id}" aria-label="评论">${XI.reply}${n((p.replies||[]).length)}</button><button data-a="sharePost" data-id="${p.id}" aria-label="分享">${XI.rt}</button><button class="${liked?'lk':''}" data-a="like" data-id="${p.id}" aria-label="点赞">${XI.like}${n((p.likes||[]).length+(p.sl||0))}</button>${showDel?`<button data-a="delPost" data-id="${p.id}" aria-label="删除">${XI.del}</button>`:'<span></span>'}</div></div></article>`}
 /* user is the placeholder name: the character should say 你, never call them user */
 const aboutMe=me=>(me.name==='user'?'和你聊天的人（user）还没设名字，称呼TA时直接用「你」，不要叫TA「user」。':'')+(me.persona?`关于${me.name}：${me.persona}`:me.name==='user'?'':`和你聊天的人叫${me.name}。`)+(me.name==='user'?'':`提到TA的时候，用你按人设会用的亲昵称呼，别总是叫全名。`);
 const sysFor=(c,extra)=>{const me=mask();return`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n${aboutMe(me)}\n\n${extra}`};
@@ -1651,7 +1675,7 @@ async function genPhoneApp(c,k){const me=mask(),A_=papp(k),P=c.phone,others=Obje
   const out=await callAI(sysFor(c,storyFor(c)+(others?`\n\n你手机里其他应用已经有的内容（要对得上）：\n${others}`:'')),[{role:'user',content:`${me.name}${P.how==='open'?'当着你的面拿着':'趁你不注意偷偷拿着'}你的手机，打开了「${A_[1]}」。写出里面现在真实的内容：${A_[3].replaceAll('{me}',me.name)}。符合你的人设、最近发生的事和你对${me.name}的感情，细节具体有生活感，可以藏一点小秘密。只输出 JSON：${A_[4]}`}],{max:3072,side:true});
   P.apps[k]=jsonFrom(out);save()}
 function phoneApp(c,k,d,v){const me=mask(),t=S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id),L=a=>Array.isArray(a)?a:[],h='@'+esc(c.handle||c.name);
-  const xi={reply:'<svg viewBox="0 0 24 24"><path d="M4 12a7 7 0 0 1 7-7h2a7 7 0 0 1 0 14H8l-4 3z"/></svg>',rt:'<svg viewBox="0 0 24 24"><path d="M7 7h10l-3-3M17 17H7l3 3M7 7v6M17 17v-6"/></svg>',like:'<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg>'};
+  const xi=XI;
   switch(k){
     case'chats':return`<div class="xlist">${t?`<details class="xdm" open><summary>${av(me,40)}<span><b>${esc(me.name)}</b> <i>📌 置顶</i><small>${esc(pv(t.msgs.filter(m=>m.type!=='sys').slice(-1)[0]||{content:''}))}</small></span></summary><div class="xbub">${t.msgs.filter(m=>m.type!=='sys').slice(-8).map(m=>`<p class="${m.from==='me'?'':'me'}">${esc(pv(m))}</p>`).join('')}</div></details>`:''}
       ${L(d.chats).map(x=>`<details class="xdm"><summary><span class="xav">${esc((x.name||'?')[0])}</span><span><b>${esc(x.name)}</b> <i>@${esc(x.handle||'')}</i><small>${esc(L(x.msgs).slice(-1)[0]?.[1]||'')}</small></span></summary><div class="xbub">${L(x.msgs).map(([w,s])=>`<p class="${w==='我'?'me':''}">${esc(s)}</p>`).join('')}</div></details>`).join('')}</div>`;
@@ -1999,8 +2023,8 @@ threads(v){
     S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>${m.handle?`@${esc(m.handle)} · `:''}${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
   const list=S.threads.filter(t=>t.type===tab&&!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
   const rows=list.map(t=>{const cs=t.chars.map(charById).filter(Boolean);const lm=t.msgs[t.msgs.length-1];
-    return`<button class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'}):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><b>${esc(threadTitle(t))}</b><small>${esc(lastPreview(t))}</small></span><span class="side">${lm?ago(lm.t):''}${t.unread?`<span class="pill n">${t.unread}</span>`:t.mode==='offline'?'<span class="pill">线下</span>':''}</span></button>`}).join('');
-  return{title:'消息',right:`<button class="tb" data-a="newThread">新建</button>`,
+    return`<button class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'},48):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><span class="xn"><b>${esc(threadTitle(t))}</b><i>${t.type==='dm'&&cs[0]?'@'+esc(cs[0].handle||cs[0].name)+' · ':''}${lm?ago(lm.t):''}${t.mode==='offline'?' · 线下':''}</i></span><small${t.unread?' class="new"':''}>${esc(lastPreview(t))}</small></span>${t.unread?'<i class="udot"></i>':''}</button>`}).join('');
+  return{title:'消息',cls:'xl',right:`<button class="tb" data-a="newThread">新建</button>`,
     body:tabs([['dm','单聊'],['group','群聊'],['people','通讯录']],tab)+(rows||`<div class="empty"><big>${tab==='dm'?'很安静 T_T':'还没有群'}</big></div>`)};
 },
 chat(v){
@@ -2045,24 +2069,23 @@ plaza(v){
   const tab=v.tab||'feed';
   if(tab==='me'){
     const m=mask(),mine=S.feed.filter(p=>p.author==='me').sort((a,b)=>b.t-a.t),likes=S.feed.reduce((s,p)=>s+(p.likes||[]).filter(x=>x!=='me').length,0);
-    return{title:'雨巷',right:`<button class="tb" data-a="switchMask">换面具</button>`,body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="prof">
-      <label class="banner" style="${m.banner?`background-image:url(${m.banner})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label>${av(m,84)}
+    return{title:'雨巷',cls:'xl',right:`<button class="tb" data-a="switchMask">换面具</button>`,body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="prof">
+      <label class="banner" style="${m.banner?`background-image:url(${m.banner})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label><div class="xrow">${av(m,84)}<button class="xedit" data-a="editMask" data-id="${m.id}">编辑资料</button></div>
       <div><h3>${esc(m.name)}</h3><div class="h">${m.handle?`@${esc(m.handle)} · `:''}ID ${esc(String(m.id).slice(-6).toUpperCase())}</div></div>
       ${m.bio?`<div>${esc(m.bio)}</div>`:''}
       <div class="stats"><span><b>${esc(m.follow||S.chars.length)}</b> 关注</span><span><b>${esc(m.fans||S.chars.length)}</b> 粉丝</span><span><b>${esc(m.likes||likes)}</b> 获赞</span></div>
-      <div class="wallet"><div><small>钱包余额</small><br><b>¥${(+S.wallet||0).toFixed(2)}</b></div><button class="btn" data-a="open" data-v="wallet">打开钱包</button></div>
-      <div class="btns"><button class="btn o" data-a="editMask" data-id="${m.id}">编辑资料</button></div></div>`+
+      </div>`+
       (mine.map(p=>postHTML(p)).join('')||``)};
   }
   const list=[...S.feed].filter(p=>p.author==='me'||visible(charById(p.author))).sort((a,b)=>b.t-a.t);
-  return{title:'雨巷',right:`<button class="tb" data-a="charPostPick">让TA发</button>`,
-    body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="panel"><div class="inline" style="align-items:flex-start;flex-wrap:nowrap">${av(mask(),40)}<textarea id="postIn" style="min-height:70px" aria-label="新动态"></textarea></div><div class="btns" style="justify-content:flex-end"><button class="btn" data-a="myPost">发布</button></div></div>`+
+  return{title:'雨巷',cls:'xl',right:`<button class="tb" data-a="charPostPick">让TA发</button>`,
+    body:tabs([['feed','动态'],['me','我的主页']],tab)+`<div class="xcomp">${av(mask(),42)}<div><textarea id="postIn" placeholder="有什么新鲜事？" aria-label="新动态"></textarea><button class="btn" data-a="myPost">发帖</button></div></div>`+
       (list.map(p=>postHTML(p)).join('')||``)};
 },
 post(v){
   const p=S.feed.find(x=>x.id===v.id);if(!p)return{title:'不见了',body:''};
   const rs=p.replies||[];rs.forEach(r=>{if(!r.id)r.id=uid()});
-  return{title:'动态',body:postHTML(p,false)+rs.map(r=>{const a=authorOf(r.author,r),lk=(r.likes||[]).includes('me'),to=r.to?rs.find(x=>x.id===r.to):null;
+  return{title:'动态',cls:'xl',body:postHTML(p,false)+rs.map(r=>{const a=authorOf(r.author,r),lk=(r.likes||[]).includes('me'),to=r.to?rs.find(x=>x.id===r.to):null;
     return`<article class="post cmt">${av(a,32)}<div class="pb"><div class="hd"><b>${esc(a.name)}</b>${r.author==='x'?'<span class="pill">路人</span>':''}<span>${ago(r.t)}</span></div><div class="tx">${to?`<span class="rto">回复 ${esc(authorOf(to.author,to).name)}：</span>`:''}${esc(r.text)}</div>
     <div class="ft">${r.author!=='me'?`<button data-a="rReply" data-id="${r.id}">回复</button>`:''}<button class="${lk?'lk':''}" data-a="rLike" data-id="${r.id}">${lk?'♥':'♡'} ${(r.likes||[]).length}</button></div></div></article>`}).join(''),
     footCls:v.rq?'wrap':'',
