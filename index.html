@@ -398,8 +398,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .money-big{text-align:center;font:600 40px var(--body);color:var(--deep);font-variant-numeric:tabular-nums}
 /* notification */
 /* The floor is what keeps the banner tappable: in a browser tab, on the first paint, or with a negative 顶栏微调,
-   --sat comes back 0 and the banner lands under the Dynamic Island, which swallows the taps. CSS only — never
-   measure this in JS (see CLAUDE.md). */
+   --sat comes back 0 and the banner lands under the Dynamic Island, which swallows the taps. */
 .nbar{position:fixed;left:12px;right:12px;top:max(calc(var(--sat) + 8px),62px);z-index:45;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:22px;border:1px solid var(--line);background:var(--panel);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 12px 30px rgba(20,40,55,.18);transform:translateY(-160%);transition:transform .35s cubic-bezier(.2,.8,.2,1);text-align:left;color:var(--ink)}
 .nbar.show{transform:none}
 .nbar>span:not(.av){flex:1;min-width:0;display:flex;flex-direction:column}
@@ -633,6 +632,8 @@ const EN=Object.fromEntries(`点我=Tap to
 前情总结=Story so far
 现在总结一次=Summarize now
 清空总结=Clear summary
+小结=Recap
+不能忘的事=Never forget
 总结=Summary
 让TA发=Let them post
 动态=Feed
@@ -825,7 +826,6 @@ TA 也在看=They’re reading it too
 后台生成=Background
 其他=Other
 清零=Reset
-删图标会连数据一起清掉，先去「数据」备份。=Deleting the icon wipes its data — back up under 数据 first.
 写一本=Write one
 TA们在看=Their reads
 题材（可以不选）=Genre (optional)
@@ -924,8 +924,6 @@ TA知道天气、节日、生日和纪念日=They know weather, holidays, birthd
 每次读取最近几条消息=Recent messages to read
 自动总结更早的消息=Auto-summarize older messages
 超出后每多少条总结一次=Summarize every N extra messages
-总结和记忆用=Summary & memory in
-TA 的第一人称=Their first person
 开启水位（角色的心情会涨落）=Enable mood level (rises and falls)
 心声=Inner voice
 显示角色的心声=Show inner voice
@@ -940,9 +938,8 @@ TA 的第一人称=Their first person
 恢复默认=Reset
 语言 Language=Language
 中文=中文
-顶栏和底栏=Top & bottom bars
+顶栏=Top bar
 顶栏微调=Top bar nudge
-底栏微调=Bottom bar nudge
 字体和大小=Font & size
 字体=Font
 系统默认=System
@@ -1044,7 +1041,6 @@ TA 的第一人称=Their first person
 再点一次确认=Tap again to confirm
 世界书=Lorebooks
 写回信=Reply
-小游戏=Games
 换面具=Switch mask
 新群聊=New group
 群名=Group name
@@ -1072,7 +1068,6 @@ TA 的第一人称=Their first person
 点开收款=Accept
 TA好像在忙 · 晚点会回你=Seems busy · will reply later
 看更早的=Earlier messages
-前情总结 · 点开查看或修改=Story so far · tap to view or edit
 被拒收=Rejected
 你已拉黑=You blocked
 TA删了你=They deleted you
@@ -1355,7 +1350,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27';
+const VER='2026.10.27.2';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1374,7 +1369,7 @@ const DEFAULT_ITEMS=()=>[
   {id:uid(),name:'线下 · 见面',role:'system',mode:'offline',on:true,content:'这是面对面的场景。细腻地描写{{char}}的动作、神态、环境和对话。'},
   {id:uid(),name:'语言',role:'system',mode:'both',on:true,content:'用{{user}}使用的语言回复。'}];
 const THINK_DEF='用{{char}}自己的口吻、第一人称在心里过一遍：此刻的情绪、对{{user}}这句话的真实反应、打算怎么回。像内心独白，不要分析、不要列条目，120字以内。';
-const CHAT_DEF=()=>({mailAuto:true,world:true,real:true,busy:true,proactive:'low',life:true,tts:true,strangers:true,ctx:40,autoSum:true,sumEvery:30,inner:true,innerOpen:false,innerName:'心声',innerStyle:'用一两句话写出{{char}}此刻没说出口的真实想法，可以和嘴上说的相反，带一点小情绪。',think:false,thinkName:'思维链',tide:true,autoReply:false,thinkSrc:'char',thinkStyle:THINK_DEF,memPov:'third'});
+const CHAT_DEF=()=>({mailAuto:true,world:true,real:true,busy:true,proactive:'low',life:true,tts:true,strangers:true,ctx:40,autoSum:true,sumEvery:30,inner:true,innerOpen:false,innerName:'心声',innerStyle:'用一两句话写出{{char}}此刻没说出口的真实想法，可以和嘴上说的相反，带一点小情绪。',think:false,thinkName:'思维链',tide:true,autoReply:false,thinkSrc:'char',thinkStyle:THINK_DEF});
 const def=()=>({v:4,loc:null,wx:{},days:[],
   media:{img:{base:'',key:'',model:'gpt-image-1',size:'1024x1024',style:'',auto:false},tts:{provider:'browser',base:'',key:'',group:'',model:'speech-02-hd',voice:'female-shaonv'}},
   api:{active:'a1',side:'',profiles:[{id:'a1',name:'Gemini',provider:'gemini',key:'',base:'https://generativelanguage.googleapis.com/v1beta',model:'gemini-2.5-pro',temp:1,topP:null,topK:null,maxTokens:8192}]},
@@ -1669,7 +1664,12 @@ function setAppH(){
      page — so leave the bottom inset alone in that case. */
   const band=sa&&t>0&&sh>vh?Math.round(sh-vh):0;
   if(band>=8&&band<=200)b=Math.max(0,b-band);
-  r.setProperty('--sat',Math.max(0,t+(+L.topX||0))+'px');r.setProperty('--sab',Math.max(0,b+(+L.botX||0))+'px');
+  /* The other way it goes wrong, and the one on her phone: iOS lays the page out over the whole screen (every number here
+     says 912) but only paints the top 844, leaving a strip as tall as the status bar unpainted at the bottom. Nothing on
+     the page can measure that strip, so keep the bottom UI above it: the top inset's worth of bottom padding, plus a little.
+     On a phone that really paints the whole screen this only costs a few pixels of air. */
+  else if(ios&&t>0&&vh>=sh-1)b=Math.max(b,t+10);
+  r.setProperty('--sat',Math.max(0,t+(+L.topX||0))+'px');r.setProperty('--sab',b+'px');
   /* The wall runs on to the screen's full height, filling the strip iOS leaves over when a home-screen app's viewport is short.
      Page height is the browser's own business (see the CSS) apart from the overflow check below. */
   r.setProperty('--wall-h',Math.max(sh,vh,innerHeight)+'px');fitPage()}
@@ -1737,9 +1737,11 @@ function render(keep){
   /* a view that throws used to leave a blank screen with no way back */
   try{r=VIEWS[v.v](v)}catch(e){console.error(e);toast('这个页面打不开：'+(e.message||e));stack.pop();if(stack.length)render();else{appEl.classList.remove('open');renderHome()}return}const sc=keep?$('#content')?.scrollTop:0;
   const kept={};if(keep)for(const id of ['msgIn','mIn','bbIn','postIn','replyIn','callIn','nvIn']){const x=document.getElementById(id);if(x&&x.value)kept[id]=x.value}
-  const wp=viewWall(v);
-  appEl.innerHTML=`<div class="wall2 wall" style="${wp?`background:url(${wp}) center/cover no-repeat`:''}"></div><header class="bar"><button class="bk" data-a="back" aria-label="返回">${ICONS.back}<span>返回</span></button><h1>${esc(r.title)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</h1><div class="br">${r.right||''}</div></header>
+  /* the wallpaper element outlives the rebuild, so a big wallpaper is not re-parsed out of the HTML on every render */
+  const wp=viewWall(v),wall=appEl.querySelector(':scope>.wall2')||Object.assign(document.createElement('div'),{className:'wall2 wall'});
+  appEl.innerHTML=`<header class="bar"><button class="bk" data-a="back" aria-label="返回">${ICONS.back}<span>返回</span></button><h1>${esc(r.title)}${r.sub?`<small>${esc(r.sub)}</small>`:''}</h1><div class="br">${r.right||''}</div></header>
   <main class="content ${r.cls||''}" id="content">${r.body}</main>${r.foot?`<footer class="foot ${r.footCls||''}">${r.foot}</footer>`:''}`;
+  if(wall._wp!==wp){wall._wp=wp;wall.style.background=wp?`url("${String(wp).replace(/"/g,'%22')}") center/cover no-repeat`:''}appEl.prepend(wall);
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
   tr(appEl);if(keep)$('#content').scrollTop=sc;r.after&&r.after();paintCanvas();
 }
@@ -1747,10 +1749,12 @@ const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',bubble:'bubble',bub
 /* A home-screen app can hand the page a viewport shorter than the window it actually draws in. Nothing positioned
    fixed reaches past that viewport — but the root element's background does, which is why a flat #e3edf3 band shows
    up under the UI. Paint that background with whatever wallpaper is on screen so the band stops looking like a hole. */
+let painted;
 function paintCanvas(){
-  const wp=isOpen()?viewWall(cur()):S.look.wallpaper;
+  const wp=isOpen()?viewWall(cur()):S.look.wallpaper,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
+  if(painted===wp+'|'+wh)return;painted=wp+'|'+wh;
   document.documentElement.style.backgroundImage=wp?`url("${String(wp).replace(/"/g,'%22')}")`:'';
-  const r=document.documentElement.style,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
+  const r=document.documentElement.style;
   r.backgroundSize=wp?`auto ${wh||'100%'}`:'';
   r.backgroundPosition=wp?'center top':'';
   r.backgroundRepeat='no-repeat';r.backgroundAttachment='';
@@ -1822,7 +1826,7 @@ function loreFor(chars,scanText){
 }
 const HBS={new:'还没收',got:'已收下',back:'已退回'};
 function bodyText(m){switch(m.type){
-  case'sticker':return`[表情:${m.content}]`;case'theater':return`[小剧场：${m.content}]`;
+  case'sticker':{const s=findSticker(m.content);return`[表情:${m.content}${s?.desc?'（'+s.desc+'）':''}]`}case'theater':return`[小剧场：${m.content}]`;
   case'img':return'[照片]'+(m.content?' '+m.content:'');case'pic':return`[图片:${m.content}]`;case'voice':return`[语音:${m.content}]`;
   case'hb':return`[红包:${m.amt}:${m.content}]（${HBS[m.state]||'还没收'}）`;case'tf':return`[转账:${m.amt}:${m.content}]（${HBS[m.state]||'还没收'}）`;
   case'order':return`[外卖:${m.content}:${m.amt}]（${m.state==='done'?'已送达':'配送中'}）`;
@@ -1849,10 +1853,10 @@ function elsewhere(c,exceptId){const lim=Date.now()-30*864e5,me=mask();
   const out=[...ev,...gl].sort((a,b)=>a.t-b.t).slice(-36).map(x=>x.s);if(c.longMem)out.unshift('· 很久以前：'+c.longMem);return out}
 async function memRoll(c){const lim=Date.now()-30*864e5,old=(S.events||[]).filter(e=>e.t<=lim&&e.t>(c.memAt||0)&&(e.who===c.id||e.who===null));
   if(old.length<8||!api()?.key)return;c.memAt=old[old.length-1].t;
-  try{const txt=await callAI(`你在帮${c.name}整理很久以前的记忆。`,[{role:'user',content:`${c.name}原来记得的很久以前的事：${c.longMem||'（没有）'}\n\n又有这些事情变成了很久以前：\n${old.map(e=>'· '+new Date(e.t).toLocaleDateString()+' '+e.text).join('\n')}\n\n把它们合并成一段${S.chat.memPov==='first'?`${c.name}第一人称「我」写的`:`第三人称写的${c.name}的`}长期记忆，保留重要的人、事、感受和约定，500字以内。只输出这段记忆。`}],{max:1024,side:true});
+  try{const txt=await callAI(`你在帮${c.name}整理很久以前的记忆。`,[{role:'user',content:`${c.name}原来记得的很久以前的事：${c.longMem||'（没有）'}\n\n又有这些事情变成了很久以前：\n${old.map(e=>'· '+new Date(e.t).toLocaleDateString()+' '+e.text).join('\n')}\n\n把它们合并成一段${c.name}第一人称「我」写的长期记忆，保留重要的人、事、感受和约定，500字以内。只输出这段记忆。`}],{max:1024,side:true});
     if(txt)c.longMem=txt.trim().slice(0,700);save()}catch(e){c.memAt=0}}
 function storyFor(c,n=14){const me=mask(),t=S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id);const out=[];
-  if(t?.summary)out.push('【之前的事】\n'+t.summary);
+  if(t&&sumBlock(t))out.push(sumBlock(t));
   if(t&&t.msgs.length)out.push(`【和${me.name}最近的聊天】\n`+t.msgs.slice(-n).map(m=>(m.from==='me'?me.name:m.from==='sys'?'系统':c.name)+'：'+pv(m)).join('\n'));
   const el=elsewhere(c,t?.id);if(el.length)out.push('【最近在别处发生的事】\n'+el.join('\n'));
   if(S.chat.life&&c.today?.day===dayKey()&&c.today.text)out.push(`【${c.name}的今天】${c.today.text}`);
@@ -1877,7 +1881,7 @@ function buildCtx(t,o={}){
   chars.forEach(c=>sys.push(`【角色：${c.name}】${c.remark?`（${me.name}给${c.name}的备注是「${c.remark}」）`:''}\n${mac(c.persona)}`));
   sys.push(`【${me.name}（用户）】\n${me.name==='user'?'用户还没设名字。聊天时直接用「你」称呼TA，不要叫TA「user」。\n':''}${me.persona?mac(me.persona):'（没有详细设定）'}`);
   const lore=loreFor(chars,scan);if(lore.length)sys.push('【世界书】\n'+lore.map(mac).join('\n---\n'));
-  if(t.summary)sys.push('【之前发生的事（总结）】\n'+t.summary);
+  if(sumBlock(t))sys.push(sumBlock(t));
   sys.push('【现在】'+nowText()+(()=>{const ms=t.msgs.filter(m=>m.type!=='sys');if(ms.length<2)return'';const g=ms[ms.length-1].t-ms[ms.length-2].t;return g>2*3600e3?`。距离你们上一次说话已经过了${gapText(g)}`:''})());
   const wd=worldFor(chars);if(wd)sys.push(wd);
   const el=[...new Set(chars.flatMap(c=>elsewhere(c,t.id)))];if(el.length)sys.push('【最近在别处发生的事（你们都记得）】\n'+el.join('\n'));
@@ -1936,7 +1940,11 @@ function buildCtx(t,o={}){
     +(C.inner?`\n【别忘了${C.innerName||'心声'}】每一条回复的最后都要另起一行写 <inner>…</inner>，一次都不要漏。`:''));
   return{system:sys.join('\n\n'),msgs,chars,group,mode};
 }
-function findSticker(name){name=String(name).trim().toLowerCase();return allStickers().find(s=>s.name.toLowerCase()===name)}
+/* 表情包第一次被发出去时让模型看一眼，记一句它画的是什么；看不了图就算了，只用名字 */
+function describeSticker(s){if(!s||s.desc!=null||!/^data:image\/(png|jpe?g|webp)/.test(s.src||''))return;s.desc='';
+  callAI('你在给表情包写备注。',[{role:'user',content:`这个表情包叫「${s.name}」。用10个字以内说它画的是什么、什么表情。只输出这句话。`,imgs:[s.src]}],{max:256,side:true})
+    .then(x=>{s.desc=String(x).trim().replace(/[。.]$/,'').slice(0,20);save()}).catch(()=>{})}
+function findSticker(name){name=String(name).replace(/[（(][^）)]*[）)]\s*$/,'').trim().toLowerCase();return allStickers().find(s=>s.name.toLowerCase()===name)}
 const voiceDur=s=>Math.max(1,Math.min(60,Math.round([...String(s)].length/4)));
 function splitStickers(line){const out=[];let rest=line;const re=/\[(sticker|表情|图片|照片|语音|红包|转账|外卖|网购)[:：]\s*([^\]]+)\]/i;let m;
   while((m=rest.match(re))){const before=rest.slice(0,m.index).trim();if(before)out.push({type:'text',content:before});
@@ -2051,7 +2059,7 @@ function richBody(t,m,i,mine,c){const tap=`data-a="msg" data-i="${i}"`;
     default:return`<button class="bub" ${tap}>${esc(m.content)}</button>`}}
 function msgsHTML(t){
   let h='',last=0;const lim=(cur()?.id===t.id&&cur().more)||120,st=Math.max(0,t.msgs.length-lim);
-  if(t.summary)h+=`<button class="sumcard" data-a="editSummary">${ICONS.drop.replace('<svg','<svg width="12" height="12"')} 前情总结 · 点开查看或修改</button>`;
+  if(t.summary||t.keep)h+=`<button class="sumcard" data-a="editSummary">${ICONS.drop.replace('<svg','<svg width="12" height="12"')} 前情总结</button>`;
   if(st)h+=`<button class="more" data-a="moreMsgs">看更早的 ${st} 条</button>`;
   t.msgs.forEach((m,i)=>{if(i<st)return;if(m.t-last>40*60e3)h+=`<div class="stamp">${ago(m.t)} · ${hm(m.t)}</div>`;last=m.t;h+=bubble(t,m,i)});
   if(t.pending&&!busy.has(t.id))h+=`<div class="stamp">TA好像在忙 · 晚点会回你</div>`;
@@ -2164,13 +2172,17 @@ function softTick(mins){
 
 /* ================= summary ================= */
 let summing=false;
+/* Two layers, both short: 小结 is a sentence or two of what happened, in the character's own voice; 记住 holds the hard
+   facts (names, promises, dates, likes) that must survive however many times the 小结 gets rewritten. */
+const sumBlock=t=>[t.summary?'【之前的事】\n'+t.summary:'',t.keep?'【不能忘的事】\n'+t.keep:''].filter(Boolean).join('\n');
 async function summarize(t,manual){
   const n=Math.max(4,num(S.chat.ctx)||40);const from=t.sumUpTo||0;const to=Math.max(from,t.msgs.length-(manual?Math.min(n,10):n));
   const chunk=t.msgs.slice(from,to);if(!chunk.length){if(manual)toast('还没有需要总结的旧消息');return}
-  const me=mask(),log=chunk.map(m=>(m.from==='me'?me.name:(charById(m.from)?.name||'?'))+'：'+pv(m)).join('\n');
-  const sys='你是负责整理剧情记录的助手。只输出总结本身。';
-  const txt=await callAI(sys,[{role:'user',content:(t.summary?`已有的总结：\n${t.summary}\n\n`:'')+`新的聊天记录：\n${log}\n\n请把新内容并入总结，${S.chat.memPov==='first'&&t.type==='dm'?`用${charById(t.chars[0])?.name}的第一人称「我」写，称对方为${me.name}`:'用第三人称'}、按时间顺序，保留重要事件、关系变化、约定、称呼和情绪转折，删掉寒暄。300字以内。`}],{max:2048,temp:.4,side:true});
-  t.summary=txt;t.sumUpTo=to;save();
+  const me=mask(),c=t.type==='dm'?charById(t.chars[0]):null,log=chunk.map(m=>(m.from==='me'?me.name:(charById(m.from)?.name||'?'))+'：'+pv(m)).join('\n');
+  const voice=c?`用${c.name}自己的口吻、第一人称「我」写，像${c.name}心里记着的，称呼对方用你平时叫TA的亲昵称呼`:'用旁白的口吻写';
+  const txt=await callAI(c?sysFor(c,''):'你在整理一段群聊的记录。',[{role:'user',content:(t.summary?`之前的小结：${t.summary}\n`:'')+(t.keep?`之前记下的：${t.keep}\n`:'')+`\n新的聊天记录：\n${log}\n\n输出两行，别的都不要：\n小结：${voice}，一两句话说清最近发生了什么，只说关键的，60字以内。\n记住：只记不能忘的硬信息——名字、称呼、约定、日子、喜好和忌讳，把之前记下的并进来，过时的删掉，用「；」隔开，100字以内。`}],{max:1024,temp:.4,side:true});
+  const pick=k=>(String(txt).match(new RegExp(k+'[:：]\\s*([^\\n]+)'))||[])[1]?.trim()||'';
+  t.summary=(pick('小结')||String(txt).trim()).slice(0,120);t.keep=(pick('记住')||t.keep||'').slice(0,200);t.sumUpTo=to;save();
 }
 async function maybeSummarize(t){
   if(!S.chat.autoSum||summing)return;const n=Math.max(4,num(S.chat.ctx)||40),every=Math.max(10,num(S.chat.sumEvery)||30);
@@ -2184,7 +2196,7 @@ async function writeDiary(c,silent){
   const t=S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id),me=mask();
   const recent=t?t.msgs.slice(-24).map(m=>(m.from==='me'?me.name:c.name)+'：'+pv(m)).join('\n'):'';
   const lore=loreFor([c],recent+' '+c.name);
-  const sys=`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n${aboutMe(me)}`+(lore.length?'\n\n【世界书】\n'+lore.join('\n'):'')+(t?.summary?'\n\n【之前的事】\n'+t.summary:'')+extraFor(c)+`\n\n你一个人在写私人日记，没有人会看到。`;
+  const sys=`你是${c.name}。\n${c.persona.replaceAll('{{user}}',me.name).replaceAll('{{char}}',c.name)}\n\n${aboutMe(me)}`+(lore.length?'\n\n【世界书】\n'+lore.join('\n'):'')+(t&&sumBlock(t)?'\n\n'+sumBlock(t):'')+extraFor(c)+`\n\n你一个人在写私人日记，没有人会看到。`;
   const txt=await callAI(sys,[{role:'user',content:(recent?`今天和${me.name}的聊天：\n${recent}\n\n`:'')+`以${c.name}的口吻写今天的日记，诚实写出心情，250字以内，像平时说话一样口语，不要写成作文。不用写日期和天气。只输出日记正文。`}],{side:true});
   S.diary.push({id:uid(),charId:c.id,text:txt,t:Date.now(),w:w?w.desc+' '+w.temp+'°':'',mood:S.chat.tide?c.mood||'':''});logEvent(c.id,`${c.name}写了一篇私人日记，大意：${txt}`);S.diaryMark[c.id]=Date.now();save();
   if(silent)toast(`${dn(c)} 偷偷写了一篇日记`);
@@ -2232,7 +2244,7 @@ async function makeTheater(c,topic,into){
   const me=mask(),ctxT=into||S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id);
   const recent=ctxT?ctxT.msgs.slice(-20).filter(m=>m.type!=='theater').map(m=>(m.from==='me'?me.name:m.from==='sys'?'系统':(charById(m.from)?.name||'?'))+'：'+pv(m)).join('\n'):'';
   const lore=loreFor([c],recent+' '+c.name);
-  const sys=sysFor(c,(lore.length?'【世界书】\n'+lore.join('\n')+'\n\n':'')+(ctxT?.summary?'【之前的事】\n'+ctxT.summary+'\n\n':'')+`现在你同时是一个会写网页的小剧场编剧，要用 HTML 演出关于${c.name}和${me.name}的一个小片段。`);
+  const sys=sysFor(c,(lore.length?'【世界书】\n'+lore.join('\n')+'\n\n':'')+(ctxT&&sumBlock(ctxT)?sumBlock(ctxT)+'\n\n':'')+`现在你同时是一个会写网页的小剧场编剧，要用 HTML 演出关于${c.name}和${me.name}的一个小片段。`);
   const tp=topic==='随便演一个'?'你自己挑一个最有意思、最符合现在剧情的形式':topic;
   const out=await callAI(sys,[{role:'user',content:(recent?`最近的聊天：\n${recent}\n\n`:'')+`写一个小剧场，题目：${tp}。\n要求：\n1. 第一行写 <title>小剧场的标题</title>（10个字以内）。\n2. 然后只输出一段自包含的 HTML 片段：内联 <style>，可以用少量 <script> 做点击、展开之类的小交互；不要引用任何外部图片、字体、脚本或链接。\n3. 适配手机宽度（360px 左右，不要写死更宽的宽度），做成这个东西本身的样子，比如真的像一张备忘录、一个论坛页面、一张小票，有质感有细节。\n4. 内容要符合${c.name}的性格和你们最近的故事，具体、有趣，可以甜也可以有点虐。\n不要解释，不要写多余的话。`}],{max:8192,tag:'other'});
   const title=((out.match(/<title>([\s\S]*?)<\/title>/i)||[])[1]||topic).trim().slice(0,30);
@@ -2652,9 +2664,14 @@ async function genImage(prompt){const I=S.media.img;if(!I.key||!I.base)throw new
   /* 生图接口不回报 token，只能记张数 */
   (S.tok||(S.tok=def().tok)).img++;save();
   const x=d.data?.[0];if(x?.b64_json)return shrinkUrl('data:image/png;base64,'+x.b64_json);if(x?.url)return x.url;throw new Error('没拿到图片')}
-function imgPrompt(m,t){const I=S.media.img;
-  return[I.style,`这是一张手机随手拍的照片，画面：${m.content}`].filter(Boolean).join('。')}
-async function developMsg(t,m){if(m.dev)return;m.dev=1;onThreadUpdate(t);try{m.img=await genImage(imgPrompt(m,t));save()}catch(e){toast(e.message,5600)}finally{m.dev=0;onThreadUpdate(t)}}
+/* 生图用的外貌：从人设里摘一句，存着，人设改了才重摘 */
+async function lookOf(x){if(!x?.persona)return'';if(x.lookAuto?.src===x.persona)return x.lookAuto.text;
+  const txt=String(await callAI('你在从人物设定里摘外貌。',[{role:'user',content:`${x.persona.slice(0,3000)}\n\n从上面的设定里找出这个人的外貌：长相、发型、身材、常穿的衣服。一句话，40字以内。设定里没写外貌就只输出：无`}],{max:256,side:true}).catch(()=>'')).trim();
+  if(!txt)return'';const text=/^无[。.]?$/.test(txt)?'':txt.slice(0,80);x.lookAuto={src:x.persona,text};save();return text}
+async function imgPrompt(m,t){const I=S.media.img,me=mask(),c=m.from!=='me'?charById(m.from):t.type==='dm'?charById(t.chars[0]):null;
+  const[cl,ml]=await Promise.all([lookOf(c),lookOf(me)]);
+  return[I.style,cl&&`如果画面里出现${c.name}，TA的样子：${cl}`,ml&&`如果画面里出现${me.name}，TA的样子：${ml}`,`这是一张手机随手拍的照片，画面：${m.content}`].filter(Boolean).join('。')}
+async function developMsg(t,m){if(m.dev)return;m.dev=1;onThreadUpdate(t);try{m.img=await genImage(await imgPrompt(m,t));save()}catch(e){toast(e.message,5600)}finally{m.dev=0;onThreadUpdate(t)}}
 async function ttsAudio(text,c){const T=S.media.tts,v=c?.voice||{};
   if(T.provider==='minimax'){let url=(T.base||'https://api.minimaxi.com/v1/t2a_v2').trim();if(T.group)url+=(url.includes('?')?'&':'?')+'GroupId='+encodeURIComponent(T.group.trim());
     let res;try{res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+T.key.trim()},body:JSON.stringify({model:T.model||'speech-02-hd',text,stream:false,voice_setting:{voice_id:(v.vid||T.voice||'female-shaonv').trim(),speed:Math.max(.5,Math.min(2,+v.rate||1)),vol:1,pitch:Math.max(-12,Math.min(12,Math.round(((v.pitch===undefined?1:+v.pitch)-1)*10)))},audio_setting:{sample_rate:32000,bitrate:128000,format:'mp3',channel:1}})})}catch(e){throw new Error('语音接口连不上')}
@@ -2761,7 +2778,8 @@ offline(v){
 summaryEdit(v){
   const t=thread(v.id);
   return{title:'前情总结',sub:threadTitle(t),body:`<div class="panel">
-    <textarea class="tall" id="sum-ta" data-s="thread" data-k="summary" aria-label="总结">${esc(t.summary||'')}</textarea>
+    <label class="f">小结<textarea id="sum-ta" data-s="thread" data-k="summary">${esc(t.summary||'')}</textarea></label>
+    <label class="f">不能忘的事<textarea id="sum-keep" data-s="thread" data-k="keep">${esc(t.keep||'')}</textarea></label>
     <div class="btns"><button class="btn" data-a="sumNow">现在总结一次</button><button class="btn red" data-a="sumClear">清空总结</button></div></div>`};
 },
 groupEdit(v){
@@ -3090,7 +3108,6 @@ settings(v){
       <label class="f">每次读取最近几条消息<span class="inline"><input type="range" id="ch-ctx" min="6" max="200" step="2" data-s="chat" data-k="ctx" value="${C.ctx}"><output>${C.ctx}</output></span></label>
       <label class="ck"><input type="checkbox" id="ch-sum" data-s="chat" data-k="autoSum" ${C.autoSum?'checked':''}>自动总结更早的消息</label>
       ${C.autoSum?`<label class="f">超出后每多少条总结一次<span class="inline"><input type="range" id="ch-every" min="10" max="100" step="5" data-s="chat" data-k="sumEvery" value="${C.sumEvery}"><output>${C.sumEvery}</output></span></label>`:''}
-      <div class="f">总结和记忆用<div class="seg">${[['third','第三人称'],['first','TA 的第一人称']].map(([k,l])=>`<button class="${(C.memPov||'third')===k?'on':''}" data-a="setChat" data-k="memPov" data-v="${k}">${l}</button>`).join('')}</div></div>
       </div>
     <div class="panel"><h2>回复之外还写什么</h2>
       <label class="ck"><input type="checkbox" id="ch-inner" data-s="chat" data-k="inner" ${C.inner?'checked':''}>心声</label>
@@ -3104,9 +3121,8 @@ settings(v){
       </div>`};
   if(tab==='look')return{title:'设置',body:head+`
     <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
-    <div class="panel"><h2>顶栏和底栏</h2>
+    <div class="panel"><h2>顶栏</h2>
       <label class="f">顶栏微调<span class="inline"><input type="range" id="l-topx" min="-30" max="60" step="1" data-s="look" data-k="topX" value="${L.topX||0}"><output>${L.topX||0}</output></span></label>
-      <label class="f">底栏微调<span class="inline"><input type="range" id="l-botx" min="-30" max="60" step="1" data-s="look" data-k="botX" value="${L.botX||0}"><output>${L.botX||0}</output></span></label>
       <p class="hint">${metrics()}</p></div>
     <div class="panel"><h2>字体和大小</h2>
       <label class="f">字体<select id="l-font" data-s="look" data-k="font">${[['system','系统默认'],...(L.customFont?[['custom','自己的字体 · '+L.customFont.name]]:[])].map(([k,l])=>`<option value="${k}" ${L.font===k?'selected':''}>${l}</option>`).join('')}</select></label>
@@ -3122,7 +3138,7 @@ settings(v){
       <label class="f">桌面动效<select id="l-fxs" data-s="look" data-k="fxs">${[['drop','雨滴'],['bubble','泡泡'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.fx===false?'off':L.fxs==='bubble'?'bubble':'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="panel"><h2>每个App的背景</h2>
       ${[['messages','消息'],['plaza','雨巷'],['bubble','泡泡'],['mail','信箱'],['music','一起听'],['games','游戏'],['novel','雨书'],['drawer','抽屉'],['shop','下单'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
-    <div class="panel"><h2>桌面图标</h2><p class="hint">删图标会连数据一起清掉，先去「数据」备份。</p>
+    <div class="panel"><h2>桌面图标</h2>
       <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
     <div class="panel"><h2>应用图标</h2>
       <div class="icons" style="margin:0">${APPS.map(a=>`<label class="ic-app"><span class="ic-g">${L.icons[a.id]?`<img src="${esc(L.icons[a.id])}" alt="">`:ICONS[a.id]}</span><span class="ic-n">${a.name}</span><input type="file" accept="image/*" data-img="icon" data-id="${a.id}" class="vh" aria-label="更换${a.name}图标"></label>`).join('')}</div>
@@ -3177,7 +3193,6 @@ const A={
   coaxGo(el){const v=$('#coaxTa').value.trim();if(!v){toast('写点什么');return}const t=thread(cur().id),c=charById(t.chars[0]);closeSheet();doCoax(t,c,el.dataset.k,v)},
   /* theater */
   thPick(){pickChar('谁来演？','thSheet')},
-  thFromChat(){const t=thread(cur().id);closeSheet();A.thSheet({dataset:{id:t.chars[0],chat:'1'}})},
   thSheet(el){const c=charById(el.dataset.id);
     sheet(`<h3>小剧场 · ${esc(dn(c))}</h3><div class="chips">${TH_TOPICS.map(x=>`<button data-a="chipFill" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div><input type="text" id="thIn" placeholder="选一个，或者自己写题目" aria-label="题目"><button class="btn" data-a="thGo" data-id="${c.id}" data-chat="${el.dataset.chat||''}">开演</button>${CANCEL}`)},
   async thGo(el){const c=charById(el.dataset.id),topic=$('#thIn').value.trim()||'随便演一个',into=el.dataset.chat?thread(cur().id):null;closeSheet();
@@ -3235,7 +3250,6 @@ const A={
       if(lines.length>1)t.msgs.push({id:uid(),from:c.id,type:'text',content:lines.slice(1).join('\n'),...(ex.inner.length?{inner:ex.inner.join('\n')}:{}),t:Date.now()});
       t.t=Date.now();save();mLoad(s.id);toast('加进歌单了，有音频可以在「···」里补上',4200)}
     catch(e){toast(e.message,5600)}finally{if(el.isConnected){el.disabled=false;el.textContent='让TA点歌'}}},
-  listenWith(){const t=thread(cur().id),c=charById(t.chars[0]);closeSheet();if(!reachable(c)){toast('现在叫不到TA');return}go({v:'music'});if(S.music.with!==c.id)A.mWith({dataset:{id:c.id}})},
   tab(el){cur().tab=el.dataset.t;render()},
   tideOpen(el){const t=dmFor(el.dataset.id);stack=[{v:'threads'}];go({v:'chat',id:t.id})},
   block(){const t=thread(cur().id),c=charById(t.chars[0]);rel(c).youBlocked=true;sysMsg(t,`你拉黑了 ${dn(c)}`);save();closeSheet();render()},
@@ -3289,8 +3303,7 @@ const A={
     <div class="grp"><p class="sec">见面</p><div class="seg">${[['both','都可以'],['online','只线上'],['offline','只线下']].map(([k,l])=>`<button class="${mt===k?'on':''}" data-a="setMeet" data-m="${k}">${l}</button>`).join('')}</div>
     ${mt==='both'?`<div class="seg"><button class="${t.mode!=='offline'?'on':''}" data-a="setMode" data-m="online">线上 · 发消息</button><button class="${t.mode==='offline'?'on':''}" data-a="setMode" data-m="offline">线下 · 见面</button></div>`:''}
     <p class="sec">分寸</p><div class="seg">${[['slow','慢热'],['normal','正常'],['open','放开']].map(([k,l])=>`<button class="${(t.heat||'normal')===k?'on':''}" data-a="setHeat" data-h="${k}">${l}</button>`).join('')}</div></div>
-    <div class="grp">${o('ctxPeek','TA 知道什么')}${o('openOffline','线下文风 · 字数 · 人称')}${o('openSummary','前情总结'+(t.summary?' · 已有':''))}${o('apiSwitch','接口：'+esc(api().name)+' · '+esc(api().model))}${o('presetSwitch','预设：'+esc(preset().name))}</div>
-    ${dm?`<div class="grp">${o('thFromChat','小剧场')}${o('listenWith','一起听歌')}</div>`:''}
+    <div class="grp">${o('ctxPeek','TA 知道什么')}${o('openOffline','线下文风 · 字数 · 人称')}${o('openSummary','前情总结'+(t.summary||t.keep?' · 已有':''))}${o('apiSwitch','接口：'+esc(api().name)+' · '+esc(api().model))}${o('presetSwitch','预设：'+esc(preset().name))}</div>
     <div class="grp">${dm?o('openCharFromChat','查看角色')+(rel(c).youBlocked?o('unblock','解除拉黑'):o('block','拉黑TA',' red'))+o('delFriend','删除好友',' red')+`<button class="opt l red" data-a="delChar" data-id="${c.id}"><span>永久删除（聊天记录也删）</span></button>`:o('openGroupEdit','群名和成员')}
     ${o('clearThread','清空聊天记录',' red')}${o('delThread','删除这个聊天',' red')}</div>
     <button class="opt" data-a="closeSheet">关闭</button>`)},
@@ -3307,16 +3320,16 @@ const A={
   openSummary(){closeSheet();go({v:'summaryEdit',id:cur().id})},
   editSummary(){go({v:'summaryEdit',id:cur().id})},
   async sumNow(el){const t=thread(cur().id);el.disabled=true;el.textContent='总结中…';try{await summarize(t,true);render(true);toast('总结好了')}catch(e){toast(e.message,5600)}finally{if(el.isConnected){el.disabled=false;el.textContent='现在总结一次'}}},
-  sumClear(el){confirmTap(el,()=>{const t=thread(cur().id);t.summary='';t.sumUpTo=0;save();render()})},
+  sumClear(el){confirmTap(el,()=>{const t=thread(cur().id);t.summary='';t.keep='';t.sumUpTo=0;save();render()})},
   openGroupEdit(){closeSheet();go({v:'groupEdit',id:cur().id})},
   openCharFromChat(){const t=thread(cur().id);closeSheet();go({v:'charEdit',id:t.chars[0]})},
   presetSwitch(){sheet(`<h3>预设</h3>`+S.presets.map(p=>`<button class="opt" data-a="presetSet" data-id="${p.id}">${esc(p.name)}${p.id===S.activePreset?' ✓':''}</button>`).join(''))},
   presetSet(el){S.activePreset=el.dataset.id;save();closeSheet();toast('预设：'+preset().name)},
-  clearThread(el){confirmTap(el,()=>{const t=thread(cur().id);t.msgs=[];t.summary='';t.sumUpTo=0;save();closeSheet();render()})},
+  clearThread(el){confirmTap(el,()=>{const t=thread(cur().id);t.msgs=[];t.summary='';t.keep='';t.sumUpTo=0;save();closeSheet();render()})},
   delThread(el){confirmTap(el,()=>{const id=cur().id;S.threads=S.threads.filter(t=>t.id!==id);save();closeSheet();back()})},
   stickerPicker(){const gs=S.stickers.groups.filter(g=>g.items.length);if(!gs.length){toast('还没有表情包，去「表情包」里添加');return}
     sheet(`<h3>表情包</h3>`+gs.map(g=>`<div class="sec">${esc(g.name)}</div><div class="sgrid">${g.items.map(s=>`<button data-a="sendSticker" data-n="${esc(s.name)}"><img src="${esc(s.src)}" alt="${esc(s.name)}" loading="lazy"><span>${esc(s.name)}</span></button>`).join('')}</div>`).join(''))},
-  sendSticker(el){const t=thread(cur().id);t.msgs.push({id:uid(),from:'me',type:'sticker',content:el.dataset.n,t:Date.now()});t.t=Date.now();save();closeSheet();refreshChat()},
+  sendSticker(el){const t=thread(cur().id);describeSticker(findSticker(el.dataset.n));t.msgs.push({id:uid(),from:'me',type:'sticker',content:el.dataset.n,t:Date.now()});t.t=Date.now();save();closeSheet();refreshChat()},
   /* plaza */
   async myPost(){const tx=$('#postIn').value.trim();if(!tx){toast('写点什么再发');return}
     const p={id:uid(),author:'me',text:tx,t:Date.now(),likes:[],replies:[]};S.feed.push(p);logEvent(null,`${mask().name}在雨巷发了动态：「${tx}」`);save();render();
