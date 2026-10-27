@@ -419,26 +419,31 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .call.plain .pip{background:var(--accent-soft);box-shadow:0 6px 18px rgba(110,150,175,.25)}
 .pip{position:absolute!important;right:16px;top:calc(var(--sat) + 16px);width:84px;height:118px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;overflow:hidden;font:28px var(--display);box-shadow:0 6px 18px rgba(0,0,0,.3)}
 .pip img{width:100%;height:100%;object-fit:cover}
-/* check TA's phone: drawn like an iPhone */
-.iphone{align-self:center;position:relative;width:min(100%,330px);aspect-ratio:9/19.5;box-sizing:border-box;border:10px solid #1e2328;border-radius:54px;overflow:hidden;display:flex;flex-direction:column;
-  background:linear-gradient(165deg,#bcd9ec,#f3d6e2 55%,#ddd5f3);box-shadow:0 18px 44px rgba(30,50,65,.3),0 0 0 2px #3a434b;color:#1c2b36}
-.iphone .isl{position:absolute;top:9px;left:50%;width:92px;height:26px;margin-left:-46px;border-radius:14px;background:#000;z-index:2}
-.ist{display:flex;justify-content:space-between;align-items:center;padding:12px 24px 0 28px;height:26px;font:600 13.5px var(--body);flex:none}
-.ist span:last-child{display:flex;gap:5px;align-items:center}.ist svg{height:11px;width:auto}
-.iwid{margin:24px 16px 6px;border-radius:22px;padding:12px 16px;background:rgba(255,255,255,.42);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;flex-direction:column;gap:2px;font-size:12.5px}
-.iwid b{font:300 38px/1.1 var(--body);letter-spacing:-.02em}.iwid small{opacity:.7}
-.igrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px 2px;padding:14px 12px}
-.igrid button,.idock button{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:#1c2b36}
-.iphone i{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;font-style:normal;color:#fff;box-shadow:0 3px 8px rgba(30,50,65,.18)}
-.iphone i svg{width:26px;height:26px}
-.idock{margin:auto 10px 6px;padding:10px 6px;border-radius:28px;background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);display:flex;justify-content:space-around}
-.ihome{flex:none;align-self:center;width:118px;height:5px;border-radius:3px;background:#1c2b36;margin:4px 0 8px}
-.iphone.app-in{background:#f2f2f7}
-.iapp{flex:1;min-height:0;display:flex;flex-direction:column;padding:6px 14px 0}
-.inav{align-self:flex-start;background:none;border:0;padding:6px 0;color:#0a84ff;font-size:15px}
-.iapp h4{margin:0 0 8px;font:700 28px var(--body)}
-.iapp .pbody{flex:1;max-height:none}
-.iapp .pchat p{background:#e9e9eb}.iapp .pchat p.me{background:#0a84ff;color:#fff}
+/* check TA's phone: grey pixel phone filling the page */
+.content.pxv{padding:0;gap:0}
+.pxp{--px:3px;flex:1;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:12px 18px calc(24px + var(--sab));color:#222;
+  font-family:ui-monospace,"SF Mono",Menlo,monospace,var(--body);background:#ececec repeating-conic-gradient(#e4e4e4 0 25%,#ececec 0 50%) 0 0/6px 6px}
+.pxp svg{fill:currentColor}
+.pxs{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.1em;color:#555}
+.pxw{display:flex;flex-direction:column;align-items:center;gap:2px;padding:16px 12px 14px;background:#2b2b2b;color:#eee;text-align:center;
+  box-shadow:0 calc(-1*var(--px)) 0 #2b2b2b,0 var(--px) 0 #2b2b2b,calc(-1*var(--px)) 0 0 #2b2b2b,var(--px) 0 0 #2b2b2b,6px 9px 0 rgba(0,0,0,.18)}
+.pxw b{font:400 46px/1.1 ui-monospace,Menlo,monospace;letter-spacing:.04em}.pxw small{font-size:11px;color:#aaa;letter-spacing:.12em}.pxw span{font-size:12.5px;color:#ccc;margin-top:4px}
+.pxc{position:relative;width:60px;height:46px;color:#d0d0d0}.pxc svg{width:60px;height:36px}
+.pxc i{position:absolute;top:36px;width:3px;height:6px;background:#9a9a9a;animation:pxr 1.2s steps(3) infinite}.pxc i:nth-of-type(1){left:14px}.pxc i:nth-of-type(2){left:29px;animation-delay:.4s}.pxc i:nth-of-type(3){left:44px;animation-delay:.8s}
+@keyframes pxr{from{transform:translateY(-4px);opacity:1}to{transform:translateY(8px);opacity:0}}
+.pxg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 8px;padding:6px 4px}
+.pxg button{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:7px;font:12px ui-monospace,Menlo,monospace,var(--body);color:#333}
+.pxg i{width:58px;height:58px;display:grid;place-items:center;box-shadow:0 -3px 0 #222,0 3px 0 #222,-3px 0 0 #222,3px 0 0 #222,5px 6px 0 rgba(0,0,0,.18)}
+.pxg i svg{width:28px;height:28px}
+.pxsad{text-align:center;font-size:12px;color:#777;margin:auto 0 0}
+.pxbtn{align-self:flex-start;background:#fff;border:0;padding:4px 10px;font:13px ui-monospace,Menlo,monospace,var(--body);color:#222;box-shadow:0 -2px 0 #222,0 2px 0 #222,-2px 0 0 #222,2px 0 0 #222}
+.pxa{display:flex;flex-direction:column;gap:10px;flex:1}.pxa h4{margin:4px 0 0;font:700 22px ui-monospace,Menlo,monospace,var(--body)}
+.pxp .pbody{max-height:none;overflow:visible;gap:12px}
+.pxp .pchat,.pxp .pmemo,.pxp .psearch p{background:#fff;border-radius:0;box-shadow:0 -2px 0 #222,0 2px 0 #222,-2px 0 0 #222,2px 0 0 #222}
+.pxp .pchat p{border-radius:0;background:#e6e6e6;color:#222}.pxp .pchat p.me{background:#3a3a3a;color:#f2f2f2}
+.pxp .pmemo.secret{background:#3a3a3a;color:#eee}.pxp .pill{background:#ddd;color:#333;border-radius:0}
+.pxp .psearch p{border-radius:0}.pxp .psearch svg,.pxp .pmemo svg{width:16px;height:16px;color:#666}
+.pxp .empty big{font-family:inherit;color:#333}
 /* phone: a small, round, candy-coloured phone */
 .pframe{align-self:center;width:min(100%,330px);box-sizing:border-box;background:linear-gradient(170deg,#fdfeff,#eaf3f9);border:6px solid #fff;border-radius:42px;padding:10px 14px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 16px 40px rgba(93,136,162,.22),inset 0 0 0 1px var(--line)}
 .pnotch{align-self:center;width:84px;height:20px;border-radius:12px;background:#dbe8f0}
@@ -490,11 +495,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .lock b{font:400 24px var(--display);color:var(--deep)}.lock p{margin:0;max-width:300px;line-height:1.7}.lock p span{color:var(--deep)}
 .lock big{font:200 46px/1 var(--body);font-variant-numeric:tabular-nums;color:var(--deep)}
 .bcard{position:relative;aspect-ratio:1.586;border-radius:20px;padding:18px 20px;box-sizing:border-box;color:#fff;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
-  background:linear-gradient(135deg,#8cbfdc,#4d7e9c);box-shadow:0 12px 28px rgba(77,126,156,.3);text-shadow:0 1px 2px rgba(0,0,0,.15)}
+  background:linear-gradient(135deg,#d9d9d9,#7d7d7d);box-shadow:0 12px 28px rgba(0,0,0,.22);text-shadow:0 1px 2px rgba(0,0,0,.15)}
 .bcard::after{content:"";position:absolute;right:-40px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.12)}
-.bcard.fam{background:linear-gradient(135deg,#e7a9bd,#a77fb8)}
+.bcard.fam{background:linear-gradient(135deg,#8a8a8a,#3f3f3f)}
 .bcard header{display:flex;justify-content:space-between;align-items:center;font-size:13px;letter-spacing:.06em}
-.bcard .chip{width:40px;height:30px;border-radius:7px;background:linear-gradient(135deg,#f3e2a8,#cdb26a)}
+.bcard .chip{width:40px;height:30px;border-radius:7px;background:linear-gradient(135deg,#f4f4f4,#a9a9a9)}
 .bcard b{font:300 30px/1 var(--body);font-variant-numeric:tabular-nums}
 .bcard footer{display:flex;justify-content:space-between;align-items:flex-end;font:13px var(--body);letter-spacing:.12em}
 .bcard footer button{background:rgba(255,255,255,.22);border:0;color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;letter-spacing:0}
@@ -536,6 +541,10 @@ html.full .wall{height:var(--scr-h)}
 
 .ic-app:active .ic-g{transform:scale(.9)}
 .badge{position:absolute;top:-8px;right:-4px;min-width:19px;height:19px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:var(--red);color:#fff;font:600 11px/19px var(--body);text-align:center;z-index:2}
+.content .ic-g{animation:none}.content .ic-g::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.55)}
+html.glassy .panel{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+html.glassy .bub,html.glassy .narr,html.glassy .scard{-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4)}
+html.glassy{--bub:rgba(var(--panel-rgb),max(.24,calc(var(--alpha) - .36)))}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .ava{display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;padding:0;color:var(--ink);cursor:pointer;min-width:0}
 .ava .ring{position:relative;width:108px;height:108px;display:grid;place-items:center}
@@ -1383,7 +1392,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27.6';
+const VER='2026.10.27.7';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1477,7 +1486,7 @@ async function loadFont(){const F=S.look.customFont;if(!F)return;const sig=F.loc
       const ff=new FontFace('LedCustom',srcv);await ff.load();document.fonts.add(ff)}
     applyLook()}catch(e){fontLoaded='';toast('字体加载不了，换个文件或链接试试')}}
 function applyLook(){
-  const L=S.look,r=document.documentElement;r.lang=L.lang==='en'?'en':'zh-CN';r.classList.toggle('full',!!L.full&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches));
+  const L=S.look,r=document.documentElement;r.lang=L.lang==='en'?'en':'zh-CN';r.classList.toggle('glassy',!!L.glassy);r.classList.toggle('full',!!L.full&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches));
   r.style.setProperty('--alpha',L.alpha);setAppH();r.style.setProperty('--fs',L.fs+'px');
   if(FONTS[L.font])r.style.setProperty('--body',FONTS[L.font]+',-apple-system,"PingFang SC",sans-serif');else r.style.removeProperty('--body');
   const w=$('#wall');if(w._wp!==L.wallpaper){w._wp=L.wallpaper;w.style.background=L.wallpaper?`url(${L.wallpaper}) center/cover no-repeat`:'';w.classList.toggle('img',!!L.wallpaper);r.style.background=L.wallpaper?`#e3edf3 url(${L.wallpaper}) center bottom/cover no-repeat fixed`:''}
@@ -2403,22 +2412,28 @@ async function genPhone(c,how){const me=mask();
 {"lock":"锁屏壁纸是什么","chats":[{"name":"联系人备注","msgs":[["对方","内容"],["我","内容"]]}],"memo":[{"title":"","text":""}],"search":["搜索记录"],"album":["照片描述"],"orders":[{"item":"买了什么","note":"备注或状态"}],"secret":"藏得比较深的一个小秘密"}
 chats 3到4个（不要包括和${me.name}的聊天），每个3到6条；memo 2到3条；search 6到8条；album 4到6张；orders 2到4个。`}],{max:4096,side:true});
   const d=jsonFrom(out);c.phone={t:Date.now(),how,data:d};save();return d}
-const PAPPS=[['chats','聊天','messages','#8fc9e8'],['memo','备忘录','diary','#f3c77b'],['search','搜索','search','#b6a9e6'],['album','相册','image','#f2a8ba'],['orders','订单','shop','#94d4b0'],['secret','秘密','lock','#aebfcc']];
+/* TA's phone: grey, pixelated, a little sad. Icons are drawn from tiny bitmaps so they stay crisp. */
+const PX=rows=>`<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" aria-hidden="true">${rows.flatMap((r,y)=>[...r].map((ch,x)=>ch==='#'?`<rect x="${x}" y="${y}" width="1" height="1"/>`:'')).join('')}</svg>`;
+const PXI={chats:['.#####.','#.....#','#.#.#.#','#.....#','.####..','...#...','.......'],memo:['######.','#....##','#.##..#','#.....#','#.###.#','#.....#','#######'],
+  search:['.###...','#...#..','#...#..','#...#..','.###...','....##.','.....##'],album:['#######','#.....#','#.##..#','#.....#','#..#..#','#.###.#','#######'],
+  orders:['..###..','.#...#.','#######','#.....#','#.....#','#.....#','#######'],secret:['..###..','.#...#.','.#...#.','#######','#..#..#','#..#..#','#######'],
+  cloud:['...####...','..#....##.','.#......#.','#........#','#........#','.########.']};
+const PAPPS=[['chats','聊天','#2e2e2e'],['memo','备忘录','#5a5a5a'],['search','搜索','#808080'],['album','相册','#a6a6a6'],['orders','订单','#c8c8c8'],['secret','秘密','#454545']];
 function phoneView(c,v){const P=c.phone,d=P?.data,tab=v.tab,me=mask(),t=S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id),now=new Date();
-  const top=`<span class="isl"></span><div class="ist"><span>${hm(now)}</span><span><svg viewBox="0 0 18 12"><path d="M1 11h2V8H1zm4 0h2V6H5zm4 0h2V3H9zm4 0h2V1h-2z" fill="currentColor"/></svg><svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="16" height="8" rx="1.6" fill="currentColor"/><path d="M24 4v4" stroke="currentColor" opacity=".5"/></svg></span></div>`;
-  const app=(k,l,ic,col)=>`<button data-a="tab" data-t="${k}"><i style="background:linear-gradient(160deg,${col},${col}cc)">${ICONS[ic]}</i>${l}</button>`;
-  if(!d)return`<div class="iphone">${top}<div class="empty"><big>正在解锁…</big><span><span class="dots"><i></i><i></i><i></i></span></span></div><span class="ihome"></span></div>`;
-  if(!tab)return`<div class="iphone">${top}<div class="iwid"><small>${now.getMonth()+1}月${now.getDate()}日 星期${WK[now.getDay()]}</small><b>${hm(now)}</b><span>${esc(d.lock||'')}</span></div>
-    <div class="igrid">${PAPPS.map(x=>app(...x)).join('')}</div><div class="idock">${PAPPS.slice(0,4).map(([k,,ic,col])=>`<button data-a="tab" data-t="${k}" aria-label="${k}"><i style="background:linear-gradient(160deg,${col},${col}cc)">${ICONS[ic]}</i></button>`).join('')}</div><span class="ihome"></span></div>`;
+  const top=`<div class="pxs"><span>${hm(now)}</span><span>▮▮▮ ▭</span></div>`;
+  if(!d)return`<div class="pxp">${top}<div class="empty"><big>解锁中…</big><span class="pxsad">(｡•́︿•̀｡)</span></div></div>`;
+  if(!tab)return`<div class="pxp">${top}<div class="pxw"><div class="pxc">${PX(PXI.cloud)}<i></i><i></i><i></i></div><b>${hm(now)}</b><small>${now.getMonth()+1}.${now.getDate()} 周${WK[now.getDay()]}</small><span>${esc(d.lock||'')}</span></div>
+    <div class="pxg">${PAPPS.map(([k,l,col])=>`<button data-a="tab" data-t="${k}"><i style="background:${col};color:${parseInt(col.slice(1,3),16)>150?'#222':'#f2f2f2'}">${PX(PXI[k])}</i>${l}</button>`).join('')}</div>
+    <p class="pxsad">( ˘･_･˘ ) 今天也有点想下雨</p></div>`;
   let body='';
-  if(tab==='chats')body=(t?`<details class="pchat" open><summary><b>${esc(c.remark?me.name:me.name)}</b><span class="pill">置顶</span></summary>${t.msgs.filter(m=>m.type!=='sys').slice(-6).map(m=>`<p class="${m.from==='me'?'':'me'}">${esc(pv(m))}</p>`).join('')}</details>`:'')+
+  if(tab==='chats')body=(t?`<details class="pchat" open><summary><b>${esc(me.name)}</b><span class="pill">置顶</span></summary>${t.msgs.filter(m=>m.type!=='sys').slice(-6).map(m=>`<p class="${m.from==='me'?'':'me'}">${esc(pv(m))}</p>`).join('')}</details>`:'')+
     (d.chats||[]).map(x=>`<details class="pchat"><summary><b>${esc(x.name)}</b><small>${esc((x.msgs||[]).slice(-1)[0]?.[1]||'')}</small></summary>${(x.msgs||[]).map(([w,s])=>`<p class="${w==='我'?'me':''}">${esc(s)}</p>`).join('')}</details>`).join('');
   else if(tab==='memo')body=(d.memo||[]).map(x=>`<div class="pmemo"><b>${esc(x.title)}</b><p>${esc(x.text)}</p></div>`).join('');
-  else if(tab==='search')body=`<div class="psearch">${(d.search||[]).map(s=>`<p>${ICONS.search}<span>${esc(s)}</span></p>`).join('')}</div>`;
-  else if(tab==='album')body=`<div class="palbum">${(d.album||[]).map(s=>`<div class="tphoto"><span class="tp-in">${ICONS.camera}<span>${esc(s)}</span></span></div>`).join('')}</div>`;
-  else if(tab==='orders')body=(d.orders||[]).map(x=>`<div class="row"><span class="meta"><b>${esc(x.item)}</b><small>${esc(x.note||'')}</small></span></div>`).join('');
-  else body=v.reveal?`<div class="pmemo secret"><b>藏起来的东西</b><p>${esc(d.secret||'什么也没有')}</p></div>`:`<div class="empty"><big>这里好像藏了东西</big><button class="btn o" data-a="phoneReveal">要看吗</button></div>`;
-  return`<div class="iphone app-in">${top}<div class="iapp"><button class="inav" data-a="tab" data-t="">‹ 主屏幕</button><h4>${PAPPS.find(x=>x[0]===tab)?.[1]||''}</h4><div class="pbody">${body||'<p class="hint">空空的</p>'}</div></div><span class="ihome"></span></div>`}
+  else if(tab==='search')body=`<div class="psearch">${(d.search||[]).map(s=>`<p>${PX(PXI.search)}<span>${esc(s)}</span></p>`).join('')}</div>`;
+  else if(tab==='album')body=`<div class="palbum">${(d.album||[]).map(s=>`<div class="pmemo">${PX(PXI.album)}<p>${esc(s)}</p></div>`).join('')}</div>`;
+  else if(tab==='orders')body=(d.orders||[]).map(x=>`<div class="pmemo"><b>${esc(x.item)}</b><p>${esc(x.note||'')}</p></div>`).join('');
+  else body=v.reveal?`<div class="pmemo secret"><b>藏起来的东西</b><p>${esc(d.secret||'什么也没有')}</p></div>`:`<div class="empty"><big>这里好像藏了东西</big><button class="pxbtn" data-a="phoneReveal">要看吗</button></div>`;
+  return`<div class="pxp">${top}<div class="pxa"><button class="pxbtn" data-a="tab" data-t="">◀ 主屏幕</button><h4>${PAPPS.find(x=>x[0]===tab)?.[1]||''}</h4><div class="pbody">${body||'<p class="pxsad">空空的 (´-ω-`)</p>'}</div></div></div>`}
 async function genPeek(c,how){const me=mask(),t=dmFor(c.id);
   const L=[];S.threads.filter(x=>!(x.type==='dm'&&x.chars[0]===c.id)&&x.msgs.some(m=>m.type!=='sys')).sort((a,b)=>b.t-a.t).slice(0,5).forEach(x=>L.push(`聊天「${threadTitle(x)}」最近：`+x.msgs.filter(m=>m.type!=='sys').slice(-4).map(m=>(m.from==='me'?'我':charById(m.from)?.name||'?')+'：'+pv(m)).join(' / ')));
   const posts=S.feed.filter(p=>p.author==='me').slice(-3);if(posts.length)L.push('雨巷上发的动态：'+posts.map(p=>p.text).join(' / '));
@@ -2924,7 +2939,7 @@ drawer(v){
   const r=VIEWS.diary(v);return{...r,title:'抽屉',sub:'日记',body:head+r.body};
 },
 phone(v){const c=charById(v.id);if(!c)return{title:'不见了',body:''};
-  return{title:dn(c)+'的手机',sub:c.phone?((c.phone.how==='open'?'当面看':'偷偷看')+' · '+ago(c.phone.t)):'正在拿过来',right:`<button class="tb" data-a="phoneAgain">再翻一次</button>`,
+  return{title:dn(c)+'的手机',cls:'pxv',sub:c.phone?((c.phone.how==='open'?'当面看':'偷偷看')+' · '+ago(c.phone.t)):'正在拿过来',right:`<button class="tb" data-a="phoneAgain">再翻一次</button>`,
     body:v.err&&!c.phone?`<div class="empty"><big>没打开</big><button class="btn o" data-a="phoneAgain">再试一次</button></div>`:phoneView(c,v),
     after(){if(!v.gen&&(v.force||!c.phone)){v.gen=1;v.force=0;v.err=0;phoneGen(c,v)}}}},
 peek(v){const c=charById(v.id);if(!c)return{title:'不见了',body:''};
@@ -3079,7 +3094,8 @@ settings(v){
       </div>`};
   if(tab==='look')return{title:'设置',body:head+`
     <div class="panel"><h2>语言 Language</h2><div class="seg">${[['zh','中文'],['en','English']].map(([k,l])=>`<button class="${(L.lang||'zh')===k?'on':''}" data-a="setLang" data-l="${k}">${l}</button>`).join('')}</div></div>
-    <div class="panel"><h2>屏幕</h2><label class="ck"><input type="checkbox" id="l-full" data-s="look" data-k="full" ${L.full?'checked':''}>全屏显示，铺满整个屏幕</label></div>
+    <div class="panel"><h2>屏幕</h2><label class="ck"><input type="checkbox" id="l-full" data-s="look" data-k="full" ${L.full?'checked':''}>全屏显示，铺满整个屏幕</label>
+      <label class="ck"><input type="checkbox" id="l-glassy" data-s="look" data-k="glassy" ${L.glassy?'checked':''}>毛玻璃（面板和气泡透出模糊的壁纸，更好看，但滑动会卡）</label></div>
     <div class="panel"><h2>字体和大小</h2>
       <label class="f">字体<select id="l-font" data-s="look" data-k="font">${[['system','系统默认'],...(L.customFont?[['custom','自己的字体 · '+L.customFont.name]]:[])].map(([k,l])=>`<option value="${k}" ${L.font===k?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f">字号<span class="inline"><input type="range" id="l-fs" min="12" max="20" step="1" data-s="look" data-k="fs" value="${L.fs}"><output>${L.fs}</output></span></label>
