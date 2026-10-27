@@ -14,11 +14,11 @@
 /* Layout: a cold, clear window on a rainy day. Home = one page: a see-through clock, a frosted polaroid with a little raindrop beside it, then app icons as glassy water drops.
    Apps open as full pages of thin frosted panels. One light theme only: ice blue, white, grey. */
 :root{
-  --glass:255,255,255; --ga:.22; --gb:rgba(255,255,255,.7); --gh:rgba(255,255,255,.8); --ts:rgba(255,255,255,.7);
+  --glass:255,255,255; --ga:.6; --gb:rgba(255,255,255,.7); --gh:rgba(255,255,255,.8); --ts:rgba(255,255,255,.7);
   --bg:#f3f6f8; --bg2:#fafcfd; --ink:#3a4a55; --muted:#8a9ca8; --line:rgba(160,190,208,.35);
   --accent:#8db8d2; --accent-soft:#e6f0f5; --accent-ink:#ffffff; --deep:#5d88a2; --red:#6f9bb6;
   --alpha:.92; --panel-rgb:255,255,255; --accent-rgb:141,184,210;
-  --bub:rgba(var(--panel-rgb),max(.24,calc(var(--alpha) - .36)));
+  --bub:rgba(var(--panel-rgb),max(.55,calc(var(--alpha) - .2)));
   --bub-me:rgba(var(--accent-rgb),max(.5,calc(var(--alpha) - .14)));
   --lift:0 1px 10px rgba(93,136,162,.055);
   --panel:rgba(var(--panel-rgb),var(--alpha));
@@ -45,7 +45,7 @@ html{background:#e3edf3}
    The wall alone runs on to the screen's height, so a strip left below a short viewport shows the wallpaper, not blank paper. */
 .home,.app,.sheet,.call{height:var(--app-h,auto);box-sizing:border-box}
 .wall{bottom:auto;height:var(--wall-h,100dvh);min-height:100%;box-sizing:border-box}
-body{background:linear-gradient(180deg,#f8fbfc 0%,#eef4f8 55%,#e3edf3 100%) fixed;color:var(--ink);font:var(--fs)/1.6 var(--body);overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+body{background:linear-gradient(180deg,#f8fbfc 0%,#eef4f8 55%,#e3edf3 100%);color:var(--ink);font:var(--fs)/1.6 var(--body);overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
@@ -67,7 +67,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .foot input{flex:1;min-width:0}
 
 /* ---------- app page ---------- */
-.app{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;background:transparent;transform:scale(.28);opacity:0;pointer-events:none;transition:transform .38s cubic-bezier(.2,.85,.25,1),opacity .26s ease;border-radius:30px;overflow:hidden;will-change:transform,opacity}
+.app{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;background:transparent;transform:scale(.28);opacity:0;pointer-events:none;transition:transform .38s cubic-bezier(.2,.85,.25,1),opacity .26s ease;border-radius:30px;overflow:hidden}
 .app.open{transform:none;opacity:1;pointer-events:auto;border-radius:0}
 .app .wall2{position:absolute;inset:0;z-index:-1}
 @media (prefers-reduced-motion:reduce){.app{transition:none}}
@@ -80,7 +80,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .br{justify-self:end;display:flex}
 .tb{background:none;border:0;color:var(--deep);font-size:14px;padding:8px 8px;white-space:nowrap}
 .tb:disabled{opacity:.3}
-.content{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px;
+.content{flex:1;overflow-y:auto;contain:layout paint;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px;
   padding:14px max(16px,env(safe-area-inset-right,0px)) calc(28px + var(--sab)) max(16px,env(safe-area-inset-left,0px))}
 .foot{display:flex;gap:8px;align-items:flex-end;background:var(--panel);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line);
   padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + var(--sab)) max(10px,env(safe-area-inset-left,0px))}
@@ -89,7 +89,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .foot .sq.go{background:var(--accent);color:var(--accent-ink)}
 .foot .sq svg{width:20px;height:20px}
 
-.panel{background:var(--panel);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--lift)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--lift)}
 .panel h2{margin:0;font:400 17px var(--display);color:var(--deep);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .hint{margin:0;font-size:12.5px;color:var(--muted);line-height:1.55}
 .f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted)}
@@ -156,14 +156,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
    opening 思维链/心声 makes the fold the widest child, and a stretched bubble gets dragged out to that width. */
 .msg .col>.bub{align-self:flex-start}
 .msg.me .col>.bub{align-self:flex-end}
-.bub{padding:9px 13px;border-radius:20px;background:var(--bub);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(255,255,255,.6);box-shadow:var(--lift);white-space:pre-wrap;word-break:break-word;text-align:left;font:inherit;color:inherit;border-top-left-radius:6px}
+.bub{padding:9px 13px;border-radius:20px;background:var(--bub);border:1px solid rgba(255,255,255,.6);box-shadow:var(--lift);white-space:pre-wrap;word-break:break-word;text-align:left;font:inherit;color:inherit;border-top-left-radius:6px}
 .msg.me .bub{background:var(--bub-me);color:var(--accent-ink);border-color:rgba(255,255,255,.45);border-top-left-radius:20px;border-top-right-radius:6px;text-shadow:0 1px 2px rgba(64,98,122,.22)}
 .stk{border:0;background:none;padding:0}
 .stk img{width:112px;height:112px;object-fit:contain;display:block}
-.narr{align-self:stretch;background:var(--bub);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.55);box-shadow:var(--lift);border-radius:18px;padding:15px 17px;white-space:pre-wrap;font:calc(var(--fs) + 1px)/1.85 var(--display);text-align:left;color:inherit}
+.narr{align-self:stretch;background:var(--bub);border:1px solid rgba(255,255,255,.55);box-shadow:var(--lift);border-radius:18px;padding:15px 17px;white-space:pre-wrap;font:calc(var(--fs) + 1px)/1.85 var(--display);text-align:left;color:inherit}
 .narr.me{align-self:flex-end;width:fit-content;max-width:82%;padding:10px 15px;border-radius:18px 6px 18px 18px;font-size:var(--fs);line-height:1.7;background:var(--bub-me);color:var(--accent-ink);border-color:rgba(255,255,255,.45);text-shadow:0 1px 2px rgba(64,98,122,.22)}
 .narr:not(.me){border-left:3px solid rgba(var(--accent-rgb),.55);border-top-left-radius:6px}
-.stamp{align-self:center;font-size:11.5px;color:var(--muted);background:var(--bub);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:1px 10px;border-radius:999px}
+.stamp{align-self:center;font-size:11.5px;color:var(--muted);background:var(--bub);padding:1px 10px;border-radius:999px}
 .fold{align-self:stretch;border-radius:14px;font-size:13.5px}
 .fold summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--deep);font-size:12px;padding:2px 10px;border-radius:999px;background:var(--accent-soft)}
 .fold summary::-webkit-details-marker{display:none}
@@ -359,7 +359,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .bjr i{margin-left:auto;font-style:normal;font:600 15px var(--body);color:var(--deep)}
 .bjh{display:flex;gap:4px}
 .card{min-width:26px;height:36px;padding:0 4px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);display:grid;place-items:center;font:600 14px var(--body);color:var(--deep)}
-.scard{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;width:100%;background:var(--bub);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.6);box-shadow:var(--lift);border-radius:16px;padding:10px 13px;color:inherit;font:inherit}
+.scard{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;width:100%;background:var(--bub);border:1px solid rgba(255,255,255,.6);box-shadow:var(--lift);border-radius:16px;padding:10px 13px;color:inherit;font:inherit}
 .scard small{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted)}
 .scard small svg{width:14px;height:14px;color:var(--deep)}
 .scard b{font:400 15px var(--display)}
@@ -500,9 +500,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .bcard footer button{background:rgba(255,255,255,.22);border:0;color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;letter-spacing:0}
 .msg .qt{font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 9px;max-width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .msg.me .qt{align-self:flex-end}.msg .qt{align-self:flex-start}
-html.full .home,html.full .app,html.full .sheet,html.full .call,html.full .wall{bottom:-10px}
+html.full,html.full body{height:var(--scr-h);overflow:hidden}
+html.full .home,html.full .app,html.full .sheet,html.full .call{position:absolute;top:0;bottom:auto;height:var(--scr-h)!important}
+html.full .wall{height:var(--scr-h)}
 /* ---------- home: one clear page ---------- */
-.glass{background:rgba(var(--glass),var(--ga));-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--gb);box-shadow:0 8px 26px rgba(110,150,175,.12),inset 0 1px 0 var(--gh)}
+.glass{background:rgba(var(--glass),var(--ga));border:1px solid var(--gb);box-shadow:0 8px 26px rgba(110,150,175,.12),inset 0 1px 0 var(--gh)}
 .home .fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .home>*:not(.fx){position:relative;z-index:1}
 .hm{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:space-between;gap:22px;scrollbar-width:none;
@@ -1381,7 +1383,7 @@ function tr(root){if(!isEn()||!root)return;const w=document.createTreeWalker(roo
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27.5';
+const VER='2026.10.27.6';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -1475,7 +1477,7 @@ async function loadFont(){const F=S.look.customFont;if(!F)return;const sig=F.loc
       const ff=new FontFace('LedCustom',srcv);await ff.load();document.fonts.add(ff)}
     applyLook()}catch(e){fontLoaded='';toast('字体加载不了，换个文件或链接试试')}}
 function applyLook(){
-  const L=S.look,r=document.documentElement;r.lang=L.lang==='en'?'en':'zh-CN';r.classList.toggle('full',!!L.full);
+  const L=S.look,r=document.documentElement;r.lang=L.lang==='en'?'en':'zh-CN';r.classList.toggle('full',!!L.full&&(navigator.standalone||matchMedia('(display-mode: standalone)').matches));
   r.style.setProperty('--alpha',L.alpha);setAppH();r.style.setProperty('--fs',L.fs+'px');
   if(FONTS[L.font])r.style.setProperty('--body',FONTS[L.font]+',-apple-system,"PingFang SC",sans-serif');else r.style.removeProperty('--body');
   const w=$('#wall');if(w._wp!==L.wallpaper){w._wp=L.wallpaper;w.style.background=L.wallpaper?`url(${L.wallpaper}) center/cover no-repeat`:'';w.classList.toggle('img',!!L.wallpaper);r.style.background=L.wallpaper?`#e3edf3 url(${L.wallpaper}) center bottom/cover no-repeat fixed`:''}
@@ -1663,7 +1665,7 @@ function setAppH(){
      Only when the page overlaps the status bar (a top inset above zero) is the band known to be at the bottom. With an
      opaque status bar the top inset is zero, the band is up top instead, and the home indicator really is inside the
      page — so leave the bottom inset alone in that case. */
-  const band=sa&&t>0&&sh>vh?Math.round(sh-vh):0;
+  const full=sa&&S.look?.full,band=!full&&sa&&t>0&&sh>vh?Math.round(sh-vh):0;r.setProperty('--scr-h',sh+'px');
   if(band>=8&&band<=200)b=Math.max(0,b-band);
   r.setProperty('--sat',(t+10)+'px');r.setProperty('--sab',b+'px');
   /* The wall runs on to the screen's full height, filling the strip iOS leaves over when a home-screen app's viewport is short.
@@ -1675,7 +1677,7 @@ function setAppH(){
 function fitPage(){
   const r=document.documentElement.style,a=document.activeElement;
   /* only in a home-screen app: a browser tab's own toolbars make the visible box smaller than the page on purpose */
-  if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)){r.removeProperty('--app-h');return}
+  if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)||S.look?.full){r.removeProperty('--app-h');return}
   if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;/* an open keyboard shrinks the visible box; that is not an overflow */
   r.removeProperty('--app-h');
   let vis=0;try{vis=Math.round(visualViewport.height*(visualViewport.scale||1))}catch(e){}
@@ -1744,7 +1746,7 @@ function viewWall(v){const aw=S.look.appWalls||{};if(v.v==='chat'||v.v==='music'
 const tabs=(list,on,act='tab')=>`<div class="tabs" role="tablist">${list.map(([k,l])=>`<button class="${k===on?'on':''}" data-a="${act}" data-t="${k}">${l}</button>`).join('')}</div>`;
 
 /* ================= AI ================= */
-const PROVIDERS={gemini:{name:'Gemini',base:'https://generativelanguage.googleapis.com/v1beta',model:'gemini-2.5-pro'},openai:{name:'OpenAI 格式',base:'https://api.openai.com/v1',model:'gpt-4o'},claude:{name:'Claude',base:'https://api.anthropic.com',model:'claude-sonnet-5-5'}};
+const provOf=p=>/generativelanguage\.googleapis/.test(p.base||'')?'gemini':/anthropic\.com/.test(p.base||'')?'claude':'openai';
 function normalize(msgs){
   const m=[];for(const x of msgs){if(!x.content&&!(x.imgs&&x.imgs.length))continue;const role=x.role==='user'?'user':'assistant';const imgs=role==='user'?(x.imgs||[]):[];
     if(m.length&&m[m.length-1].role===role){const l=m[m.length-1];l.content+='\n'+(x.content||'');l.imgs=[...(l.imgs||[]),...imgs]}else m.push({role,content:x.content||'',imgs})}
@@ -1757,10 +1759,11 @@ const TOKTAG={chat:'聊天',novel:'小说',bg:'后台生成',other:'其他'};
 function addTok(tag,i,o){if(!i&&!o)return;const T=S.tok||(S.tok=def().tok);T.n++;T.i+=i;T.o+=o;
   const b=T.by[tag]||(T.by[tag]={n:0,i:0,o:0});b.n++;b.i+=i;b.o+=o;save()}
 async function callAI(system,messages,o={}){
-  const p=(o.side&&S.api.side&&apiById(S.api.side))||api();if(!p)throw new Error('先在「设置 · 接口」里添加一个接口');
+  let p=(o.side&&S.api.side&&apiById(S.api.side))||api();if(!p)throw new Error('先在「设置 · 接口」里添加一个接口');p={...p,provider:provOf(p)};
   const key=(p.key||'').trim(),model=(p.model||'').trim(),base=(p.base||'').trim().replace(/\/+$/,'');
   if(!key)throw new Error('还没填 API Key，去「设置 · 接口」填一下');
   if(!model)throw new Error('还没填模型名，去「设置 · 接口」填一下');
+  if(!base)throw new Error('还没填接口地址，去「设置 · 接口」填一下');
   const temp=o.temp??num(p.temp),topP=num(p.topP),topK=num(p.topK),max=o.max??(num(p.maxTokens)||2048);
   const m=normalize(messages);let res;
   const ctl=new AbortController(),tmo=setTimeout(()=>ctl.abort(),o.timeout||120000),sig=ctl.signal;
@@ -2458,7 +2461,6 @@ function shopView(v){const tab=v.tab||'food',kind=tab==='goods'?'goods':'food',f
 
 /* ================= 雨书 · 作息 · TA 心里的事 ================= */
 const pj=(txt,arr)=>{const m=String(txt||'').match(arr?/\[[\s\S]*\]/:/\{[\s\S]*\}/);try{return m?JSON.parse(m[0]):null}catch(e){return null}};
-const GENRES=['古早虐恋','霸总','追妻火葬场','先婚后爱','破镜重圆','校园','甜宠','仙侠','宫斗','悬疑','末世','娱乐圈'];
 const NV=()=>S.novel||(S.novel={rank:[],books:[]});
 function leadNames(b){const L=b.leads||{},c=charById(L.charId),me=mask().name;return L.kind==='me'?me:L.kind==='char'?(c?.name||''):L.kind==='both'?`${me}和${c?.name||''}`:(L.other||'')}
 function leadsDesc(b){const L=b.leads||{},c=charById(L.charId),me=mask(),cut=x=>String(x||'').replace(/\s+/g,' ').slice(0,300),o=[];
@@ -2496,7 +2498,7 @@ async function nowDoing(c){const txt=await callAI(sysFor(c,(c.routine?'你的作
 function novelView(v){const N=NV(),tab=v.tab||'rank',chars=S.chars.filter(visible),head=tabs([['rank','排行榜'],['shelf','书架'],['write','写一本']],tab);
   if(tab==='shelf'){const L=[...N.books].sort((a,b)=>b.t-a.t);return{title:'雨书',body:head+(L.map(b=>`<div class="row"><button class="meta" data-a="novelOpen" data-id="${b.id}"><b>《${esc(b.title)}》</b><small>${esc(b.genre)}${leadNames(b)?' · 主角 '+esc(leadNames(b)):''} · ${b.chapters.length} 章</small></button><span class="side h"><span>${ago(b.t)}</span><button class="tb red" data-a="novelDel" data-id="${b.id}">删掉</button></span></div>`).join('')||`<div class="empty"><big>书架是空的</big></div>`)}}
   if(tab==='write'){const G=v.genres||[],L=v.lead||'both';
-    return{title:'雨书',body:head+`<div class="panel"><h2>题材（可以不选）</h2><div class="chips">${GENRES.map(g=>`<button class="${G.includes(g)?'on':''}" data-a="novelGenre" data-g="${g}">${g}</button>`).join('')}</div><input type="text" id="nvG" value="${esc(v.g||'')}" placeholder="或者自己写题材" aria-label="题材"></div>
+    return{title:'雨书',body:head+`<div class="panel"><h2>题材（可以不写）</h2><input type="text" id="nvG" value="${esc(v.g||'')}" aria-label="题材"></div>
       <div class="panel"><h2>主角</h2><div class="seg">${[['me','我'],['char','TA'],['both','我和TA'],['other','别人']].map(([k,l])=>`<button class="${L===k?'on':''}" data-a="novelLead" data-l="${k}">${l}</button>`).join('')}</div>
         ${L==='char'||L==='both'?`<div class="chips">${chars.map(c=>`<button class="${(v.lc||chars[0]?.id)===c.id?'on':''}" data-a="novelLeadChar" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div>`:''}
         ${L==='other'?`<input type="text" id="nvO" value="${esc(v.o||'')}" placeholder="主角是谁（名字和一句话设定，可以空着让作者定）" aria-label="主角">`:''}</div>
@@ -2682,7 +2684,7 @@ async function mmVoices(){const T=S.media.tts;if(!T.key)throw new Error('先填�
   return[...(d.system_voice||[]),...(d.voice_cloning||[]),...(d.voice_generation||[])].map(x=>[x.voice_id,x.voice_name||x.voice_id])}
 const MM_VOICES=[['female-shaonv','少女'],['female-yujie','御姐'],['female-chengshu','成熟女性'],['female-tianmei','甜美女性'],['male-qn-qingse','青涩青年'],['male-qn-jingying','精英青年'],['male-qn-badao','霸道青年'],['male-qn-daxuesheng','青年大学生'],['presenter_male','男主持人'],['presenter_female','女主持人'],['audiobook_male_1','有声书男声'],['audiobook_female_1','有声书女声']];
 const OA_VOICES=['alloy','ash','ballad','coral','echo','fable','nova','onyx','sage','shimmer'];
-async function listModels(p){const key=(p.key||'').trim(),base=(p.base||'').trim().replace(/\/+$/,'');if(!key)throw new Error('先填 Key');let r;
+async function listModels(p){p={...p,provider:provOf(p)};const key=(p.key||'').trim(),base=(p.base||'').trim().replace(/\/+$/,'');if(!key)throw new Error('先填 Key');let r;
   try{if(p.provider==='openai')r=await fetch(base+'/models',{headers:{Authorization:'Bearer '+key}});
     else if(p.provider==='gemini')r=await fetch(base+'/models?pageSize=200&key='+encodeURIComponent(key));
     else r=await fetch(base+'/v1/models?limit=100',{headers:{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}})}catch(e){throw new Error('连不上，检查地址和网络')}
@@ -3020,10 +3022,10 @@ settings(v){
   const tab=v.tab||'api',L=S.look,C=S.chat;
   const head=tabs([['api','接口'],['chat','聊天'],['look','外观'],['data','数据']],tab);
   if(tab==='api'){const I=S.media.img,T=S.media.tts,mm=T.provider==='minimax';
-    const card=p=>`<div class="row apic${p.id===S.api.active?' on':''}"><span class="pv">${esc((PROVIDERS[p.provider]?.name||'?')[0])}</span><button class="meta" data-a="editApi" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.model||'没填模型')} · 温度 ${p.temp??1}${p.key?'':' · 没填 Key'}</small></button><span class="side h">${p.id===S.api.side?'<span class="pill">副</span>':''}${p.id===S.api.active?'<span class="pill fill">使用中</span>':`<button class="tb" data-a="useApiId" data-id="${p.id}">切换</button>`}</span></div>`;
+    const card=p=>`<div class="row apic${p.id===S.api.active?' on':''}"><span class="pv">${esc((p.name||'?')[0])}</span><button class="meta" data-a="editApi" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.model||'没填模型')} · 温度 ${p.temp??1}${p.key?'':' · 没填 Key'}</small></button><span class="side h">${p.id===S.api.side?'<span class="pill">副</span>':''}${p.id===S.api.active?'<span class="pill fill">使用中</span>':`<button class="tb" data-a="useApiId" data-id="${p.id}">切换</button>`}</span></div>`;
     return{title:'设置',body:head+`
     <div class="sec apih"><b>聊天模型</b><button class="tb" data-a="newApi">＋ 新预设</button></div>
-    ${Object.entries(PROVIDERS).map(([k,x])=>{const L=S.api.profiles.filter(p=>p.provider===k);return L.length?`<div class="grp"><p class="sec">${x.name}</p>${L.map(card).join('')}</div>`:''}).join('')}
+    <div class="grp">${S.api.profiles.map(card).join('')}</div>
     <div class="sec apih"><b>后台副接口</b></div>
     <div class="panel"><label class="f">写日记、总结、评论这些后台活用哪个（省额度）<select id="api-side" data-s="apiroot" data-k="side"><option value="">和使用中的一样</option>${S.api.profiles.map(p=>`<option value="${p.id}" ${S.api.side===p.id?'selected':''}>${esc(p.name)} · ${esc(p.model)}</option>`).join('')}</select></label></div>
     <div class="sec apih"><b>生图</b></div>
@@ -3109,9 +3111,8 @@ apiEdit(v){
   const p=apiById(v.id);if(!p)return{title:'不见了',body:''};
   return{title:p.name,sub:'接口',body:`<div class="panel"><h2>连接</h2>
     <label class="f">名字<input type="text" id="a-name" data-s="api" data-k="name" value="${esc(p.name)}"></label>
-    <div class="seg">${Object.entries(PROVIDERS).map(([k,x])=>`<button class="${p.provider===k?'on':''}" data-a="prov" data-p="${k}">${x.name}</button>`).join('')}</div>
     <label class="f">API Key<input type="password" id="a-key" data-s="api" data-k="key" value="${esc(p.key)}" autocomplete="off"></label>
-    <label class="f">接口地址<input type="url" id="a-base" data-s="api" data-k="base" value="${esc(p.base)}" autocomplete="off"></label></div>
+    <label class="f">接口地址<input type="url" id="a-base" data-s="api" data-k="base" value="${esc(p.base)}" placeholder="https://…/v1" autocomplete="off"></label></div>
   <div class="panel"><h2>模型<button class="tb" data-a="fetchModels">拉取列表</button></h2>
     <input type="text" id="a-model" data-s="api" data-k="model" value="${esc(p.model)}" autocomplete="off" aria-label="模型"></div>
   <div class="panel"><h2>输出</h2><div class="seg">${[[false,'非流式'],[true,'流式']].map(([k,l])=>`<button class="${!!p.stream===k?'on':''}" data-a="setStream" data-v="${k?1:''}">${l}</button>`).join('')}</div><p class="hint">中转站老是超时或断开，就换成流式试试。</p></div>
@@ -3496,11 +3497,8 @@ const A={
   async diaryGo(el){const c=charById(el.dataset.id);closeSheet();toast(dn(c)+' 正在写…',12000);try{await writeDiary(c);$('#toast').hidden=true;if(cur()?.v==='drawer')render()}catch(e){toast(e.message,5600)}},
   delDiary(el){confirmTap(el,()=>{S.diary=S.diary.filter(d=>d.id!==el.dataset.id);save();render(true)})},
   /* api */
-  newApi(){const p={id:uid(),name:'新接口',provider:'openai',key:'',base:PROVIDERS.openai.base,model:PROVIDERS.openai.model,temp:1,topP:null,topK:null,maxTokens:8192};S.api.profiles.push(p);save();go({v:'apiEdit',id:p.id})},
+  newApi(){const p={id:uid(),name:'新接口',key:'',base:'',model:'',temp:1,topP:null,topK:null,maxTokens:8192};S.api.profiles.push(p);save();go({v:'apiEdit',id:p.id})},
   editApi(el){go({v:'apiEdit',id:el.dataset.id})},
-  prov(el){const p=apiById(cur().id),k=el.dataset.p;if(p.provider===k)return;
-    if(!p.base||Object.values(PROVIDERS).some(x=>x.base===p.base))p.base=PROVIDERS[k].base;if(!p.model||Object.values(PROVIDERS).some(x=>x.model===p.model))p.model=PROVIDERS[k].model;
-    p.provider=k;save();render(true)},
   setStream(el){apiById(cur().id).stream=!!el.dataset.v;save();render(true)},
   useApi(){S.api.active=cur().id;save();render(true);toast('正在用 '+api().name)},
   async testApi(el){const prev=S.api.active;S.api.active=cur().id;el.disabled=true;el.textContent='测试中…';
@@ -3518,10 +3516,9 @@ const A={
   tokClr(el){confirmTap(el,()=>{S.tok=def().tok;save();render(true)})},
   novelRank(){if(nvBusy)return;nvBusy=true;toast('去看看榜单…',2000);novelRank().then(()=>render(true)).catch(e=>toast(e.message||'没刷出来',4000)).finally(()=>nvBusy=false)},
   novelFromRank(el){const r=NV().rank[+el.dataset.i];if(!r||nvBusy)return;const b={id:uid(),title:r.title,genre:(r.tags||[]).join('、')||'网文',brief:r.blurb||'',leads:{kind:'other',other:''},chapters:[],t:Date.now()};NV().books.push(b);save();novelGo(b)},
-  novelGenre(el){const v=cur();keepNv(v);const G=v.genres||(v.genres=[]),g=el.dataset.g;v.genres=G.includes(g)?G.filter(x=>x!==g):[...G,g];render(true)},
   novelLead(el){const v=cur();keepNv(v);v.lead=el.dataset.l;render(true)},
   novelLeadChar(el){const v=cur();keepNv(v);v.lc=el.dataset.id;render(true)},
-  novelWrite(){const v=cur();keepNv(v);const genre=[...(v.genres||[]),v.g].filter(Boolean).join('、');if(!genre&&!v.co){toast('写点想看的内容吧');return}if(nvBusy)return;
+  novelWrite(){const v=cur();keepNv(v);const genre=(v.g||'').trim();if(!genre&&!v.co){toast('写点想看的内容吧');return}if(nvBusy)return;
     const L=v.lead||'both',chars=S.chars.filter(visible);const b={id:uid(),title:v.ti||'',genre,brief:v.co||'',leads:{kind:L,charId:v.lc||chars[0]?.id,other:v.o||''},chapters:[],t:Date.now()};NV().books.push(b);save();novelGo(b)},
   novelOpen(el){go({v:'novelRead',id:el.dataset.id})},
   novelWith(el){cur().with=el.dataset.id;render(true)},
