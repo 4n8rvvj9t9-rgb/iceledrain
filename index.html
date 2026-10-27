@@ -176,6 +176,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .dots i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bl 1.2s infinite}
 .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
 @keyframes bl{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.sq2{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--accent-soft);color:var(--deep);display:grid;place-items:center;padding:0}.sq2 svg{width:19px;height:19px}
+.pv2c{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--deep)}.pv2c svg{width:18px;height:18px}
+.pv2c.miss,b.miss{color:#c0617a}
 .sumcard{align-self:center;background:var(--bub);border-radius:999px;padding:2px 12px;font-size:11.5px;color:var(--muted);border:0}
 
 /* plaza */
@@ -498,10 +501,6 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .grp .apic{border:0;box-shadow:none;background:none;border-radius:12px;padding:9px 8px}.grp .apic+.apic{border-top:1px solid var(--line);border-radius:0}
 .apic .pv{width:36px;height:36px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--accent-soft);color:var(--deep);font:600 16px var(--body)}
 .apic.on .pv{background:var(--accent);color:var(--accent-ink)}
-.lock{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center;color:var(--ink);
-  background:linear-gradient(180deg,#f8fbfc,#dce9f1);-webkit-user-select:none;user-select:none}
-.lock b{font:400 24px var(--display);color:var(--deep)}.lock p{margin:0;max-width:300px;line-height:1.7}.lock p span{color:var(--deep)}
-.lock big{font:200 46px/1 var(--body);font-variant-numeric:tabular-nums;color:var(--deep)}
 .wbal{display:flex;flex-direction:column;align-items:center;gap:2px;padding:18px 0 6px;color:var(--deep)}
 .wbal small{font-size:12.5px;color:var(--muted)}.wbal b{font:200 46px/1.15 var(--body);font-variant-numeric:tabular-nums}
 .kcard{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.9);text-align:left;font:inherit;color:var(--ink);
@@ -640,7 +639,7 @@ function readText(file){return new Promise((ok,no)=>{const r=new FileReader();r.
 
 /* ================= storage ================= */
 /* Bumped whenever index.html changes, so 检查更新 can tell a cached home-screen copy from the live one. */
-const VER='2026.10.27.12';
+const VER='2026.10.27.13';
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('ledphone',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch(e){r()}})},
   get(k){return new Promise(r=>{if(!this.db){try{r(localStorage.getItem(k))}catch(e){r(null)}return}try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch(e){r(null)}})},
@@ -670,7 +669,7 @@ const def=()=>({v:4,loc:null,wx:{},days:[],
   chars:[],books:[],
   presets:[{id:'p1',name:'默认',items:DEFAULT_ITEMS()}],activePreset:'p1',
   offline:{style:'细腻，有画面感',words:300,pov:'third'},
-  health:{eye:true,sleep:false,bed:'23:30',wake:'07:00',who:'',use:0,last:0,lock:0,why:'',nag:''},cards:[],
+  cards:[],
   threads:[],feed:[],mail:[],orders:[],novel:{rank:[],books:[]},diary:[],diaryAuto:true,diaryMark:{},theaters:[],
   stickers:{groups:[{id:'g1',name:'默认',items:[]}]},
   music:{songs:[],cur:null,with:null,mode:'all'},lastTick:0,events:[],bkKey:false,lastSeen:0,
@@ -695,7 +694,7 @@ function mergeState(d){
   if(!s.stickers||!Array.isArray(s.stickers.groups))s.stickers=def().stickers;
   s.media={img:Object.assign(def().media.img,d.media?.img||{}),tts:Object.assign(def().media.tts,d.media?.tts||{})};delete s.media.tts.group;if(/minimax/.test(s.media.tts.base)&&s.media.tts.base.endsWith('/t2a_v2'))s.media.tts.base='';s.look.appWalls=s.look.appWalls||{};
   if(!Array.isArray(s.days))s.days=[];s.wx=s.wx&&typeof s.wx==='object'?s.wx:{};
-  s.health=Object.assign(def().health,d.health||{});if(!Array.isArray(s.cards))s.cards=[];delete s.caps;
+  if(!Array.isArray(s.cards))s.cards=[];delete s.caps;delete s.health;
   if(s.chat.thinkStyle===THINK_OLD)s.chat.thinkStyle=THINK_DEF;
   s.diaryMark=s.diaryMark||{};delete s.lock;delete s.bubble;delete s.cycle;s.v=4;
   return s;
@@ -789,7 +788,6 @@ const ICONS={
   bowl:SV('<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20h8M9 8c0-1.5 1-1.5 1-3M13 8c0-1.5 1-1.5 1-3"/>'),
   wave:SV('<path d="M5 10v4M8.5 7.5v9M12 5v14M15.5 8v8M19 10.5v3"/>'),
   theater:SV('<path d="M4 6h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4z"/><path d="M14 6.5v11" stroke-dasharray="1.5 2"/>'),
-  health:SV('<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/><path d="M5 12.5h3.5l1.5-2.5 2.5 5 1.5-2.5H19"/>'),
   pin:SV('<path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>'),
   xlogo:SV('<path d="M5 4.5l14 15M19 4.5l-14 15" stroke-width="2"/>'),
   games:SV('<rect x="3" y="7" width="12" height="14" rx="2.5"/><path d="M8 13.5h2M9 12.5v2"/><path d="M9.5 7V5.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H15"/><circle cx="17" cy="8.5" r="1" fill="currentColor"/>')
@@ -797,7 +795,7 @@ const ICONS={
 /* One icon per place you can actually go. 通讯录, 小剧场 and 经期 were icons for a tab of an app already on this screen,
    so they live in 消息, 抽屉 and 日历; 外卖 and 网购 were one screen behind a flag and are now 下单. */
 const APPS=[
-  {id:'messages',name:'消息',v:'threads'},{id:'plaza',name:'雨巷',v:'plaza'},{id:'health',name:'健康',v:'health'},{id:'mail',name:'信箱',v:'mail'},
+  {id:'messages',name:'消息',v:'threads'},{id:'plaza',name:'雨巷',v:'plaza'},{id:'phone',name:'电话',v:'calls'},{id:'mail',name:'信箱',v:'mail'},
   {id:'music',name:'音乐',v:'music'},{id:'games',name:'游戏',v:'games'},{id:'novel',name:'雨书',v:'novel'},{id:'drawer',name:'抽屉',v:'drawer'},
   {id:'shop',name:'下单',v:'shop'},{id:'days',name:'日历',v:'cal'},{id:'library',name:'设定库',v:'library'},{id:'settings',name:'设置',v:'settings'}];
 function appIcon(a){const img=S.look.icons[a.id];const n=a.id==='messages'?S.threads.reduce((s,t)=>s+(t.unread||0),0):a.id==='mail'?mailUnread():0;
@@ -972,7 +970,7 @@ function render(keep){
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
   if(keep)$('#content').scrollTop=sc;r.after&&r.after();paintCanvas();
 }
-const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',health:'health',music:'music',drawer:'drawer',theaterFull:'drawer',days:'days',cal:'days',library:'library',bookEdit:'library',entryEdit:'library',presetEdit:'library',itemEdit:'library',settings:'settings',apiEdit:'settings',data:'settings',shop:'shop',wallet:'wallet',mail:'mail',novel:'novel',novelRead:'novel',games:'games'};
+const APPWALL={threads:'messages',plaza:'plaza',post:'plaza',calls:'phone',music:'music',drawer:'drawer',theaterFull:'drawer',days:'days',cal:'days',library:'library',bookEdit:'library',entryEdit:'library',presetEdit:'library',itemEdit:'library',settings:'settings',apiEdit:'settings',data:'settings',shop:'shop',wallet:'wallet',mail:'mail',novel:'novel',novelRead:'novel',games:'games'};
 /* A home-screen app can hand the page a viewport shorter than the window it actually draws in. Nothing positioned
    fixed reaches past that viewport — but the root element's background does, which is why a flat #e3edf3 band shows
    up under the UI. Paint that background with whatever wallpaper is on screen so the band stops looking like a hole. */
@@ -1891,39 +1889,13 @@ async function strangerComments(p,n,toR){const a=authorOf(p.author,p);
     (p.replies||=[]).push({id:uid(),author:'x',nick:toR?toR.nick:mm[1].replace(/[*「」]/g,'').trim(),text:mm[2].trim(),t:Date.now(),likes:[],...(toR?{to:toR.id}:{})});if(++k>=(toR?1:n))break}
   p.sl=(p.sl||0)+k+Math.floor(Math.random()*25);save()}
 
-/* ================= 健康: 护眼 & 睡觉 ================= */
-/* Used an hour straight, the phone locks for ten minutes; at bedtime it locks until morning, and TA is the one telling you. */
-const H=()=>S.health;
-const hmMin=s=>{const [h,m]=String(s||'0:0').split(':').map(Number);return(h||0)*60+(m||0)};
-function inBed(d=new Date()){const h=H();if(!h.sleep)return false;const m=d.getHours()*60+d.getMinutes(),b=hmMin(h.bed),w=hmMin(h.wake);return b<w?m>=b&&m<w:m>=b||m<w}
-function wakeAt(){const d=new Date(),w=hmMin(H().wake);d.setHours(Math.floor(w/60),w%60,0,0);if(d<=new Date())d.setDate(d.getDate()+1);return d.getTime()}
-const nanny=()=>charById(H().who)||moodChar()||S.chars.find(visible);
-function healthTick(){const h=H(),now=Date.now();if(document.hidden)return;
-  const gap=now-(h.last||now);if(gap<10*60e3)h.use+=Math.min(gap,2*60e3);else{h.use=0;h.warned=0}h.last=now;
-  if(h.lock>now){lockShow();return}
-  if(inBed()){h.lock=wakeAt();h.why='sleep';h.use=0;save();lockShow();return}
-  const c=nanny(),t=c&&reachable(c)?dmFor(c.id):null;
-  if(h.sleep&&t&&h.nag!==dayKey()){const m=new Date().getHours()*60+new Date().getMinutes(),left=(hmMin(h.bed)-m+1440)%1440;
-    if(left<=10){h.nag=dayKey();save();if(api()?.key&&!busy.has(t.id))reply(t,`（还有${left}分钟就到${mask().name}定的睡觉时间${h.bed}了，到点手机会锁上。这次请你催TA去睡觉，几句话，温柔或者凶一点都行，符合你的性格。）`)}}
-  if(h.eye&&h.use>=55*60e3&&!h.warned){h.warned=1;toast('再过 5 分钟要休息眼睛啦',6000)}
-  if(h.eye&&h.use>=60*60e3){h.lock=now+10*60e3;h.why='eye';h.use=0;h.warned=0;save();lockShow()}}
-let lockT=0;
-function lockShow(){const h=H();let e=$('#lock');if(h.lock<=Date.now()){if(e)e.remove();clearInterval(lockT);lockT=0;h.lock=0;return}
-  if(!e){e=document.createElement('div');e.id='lock';e.className='lock';document.body.appendChild(e)}
-  const c=nanny(),t=c?S.threads.find(x=>x.type==='dm'&&x.chars[0]===c.id):null,last=t&&[...t.msgs].reverse().find(m=>m.from===c.id&&Date.now()-m.t<30*60e3&&m.type==='text');
-  const left=Math.ceil((h.lock-Date.now())/1000),sleep=h.why==='sleep';
-  const say=sleep?(last?last.content:'该睡觉啦，手机放下，明天见。'):'眼睛累了，看看远处，休息一下再来找我。';
-  e.innerHTML=`${c?av(c,84):''}<b>${sleep?'睡觉时间':'护眼休息'}</b><p>${c?`<span>${esc(dn(c))}：</span>`:''}${esc(say)}</p><big>${sleep?'明早 '+esc(h.wake)+' 解锁':fmt(left)}</big>`;
-  if(!lockT)lockT=setInterval(lockShow,1000)}
-function healthView(){const h=H(),chars=S.chars.filter(visible),who=nanny();
-  return{title:'健康',body:`<div class="panel"><h2>护眼<span class="pill">已连续用 ${Math.round(h.use/60e3)} 分钟</span></h2>
-    <label class="ck"><input type="checkbox" id="h-eye" data-s="health" data-k="eye" ${h.eye?'checked':''}>连续用满 1 小时，锁机休息 10 分钟</label>
-    <p class="hint">离开 10 分钟以上会重新算。</p></div>
-  <div class="panel"><h2>睡觉</h2>
-    <label class="ck"><input type="checkbox" id="h-sleep" data-s="health" data-k="sleep" ${h.sleep?'checked':''}>到点锁机，早上再开</label>
-    <div class="grid2"><label class="f">几点睡<input type="time" id="h-bed" data-s="health" data-k="bed" value="${esc(h.bed)}"></label><label class="f">几点起<input type="time" id="h-wake" data-s="health" data-k="wake" value="${esc(h.wake)}"></label></div>
-    <div class="f">谁来催你<div class="chips">${chars.map(c=>`<button class="${who?.id===c.id?'on':''}" data-a="hWho" data-id="${c.id}">${esc(dn(c))}</button>`).join('')||'<span class="hint">还没有角色</span>'}</div></div>
-    <p class="hint">睡前 10 分钟 TA 会来催你，到点就不能玩了。</p></div>`}}
+/* ================= 电话 ================= */
+function callsView(){const chars=S.chars.filter(reachable),me=mask().name;
+  const L=S.threads.filter(t=>t.type==='dm').flatMap(t=>t.msgs.filter(m=>m.type==='call'||m.type==='sys'&&/通话/.test(m.content)).map(m=>({t:m.t,c:charById(t.chars[0]),m}))).sort((a,b)=>b.t-a.t).slice(0,60);
+  const row=({c,m})=>{const call=m.type==='call',video=call?m.kind==='video':/视频/.test(m.content),miss=!call&&/未接|拒接|取消/.test(m.content);
+    return`<div class="row"><span class="pv2c${miss?' miss':''}">${video?ICONS.video:ICONS.phone}</span><span class="meta"><b${miss?' class="miss"':''}>${esc(dn(c))}</b><small>${call?(m.from==='me'?'呼出':'呼入')+' · '+fmt(m.dur||0):esc(m.content.replace(dn(c),'').trim())}</small></span><span class="side">${ago(m.t)}</span></div>`};
+  return{title:'电话',body:`<div class="panel"><h2>打给谁</h2>${chars.map(c=>`<div class="inline" style="flex-wrap:nowrap">${av(c,40)}<b style="flex:1;min-width:0">${esc(dn(c))}</b><button class="sq2" data-a="callFrom" data-id="${c.id}" data-k="voice" aria-label="语音">${ICONS.phone}</button><button class="sq2" data-a="callFrom" data-id="${c.id}" data-k="video" aria-label="视频">${ICONS.video}</button></div>`).join('')||'<p class="hint">还没有能打的人</p>'}</div>
+    ${L.length?'<div class="sec">最近通话</div>'+L.map(row).join(''):''}`}}
 
 /* ================= media: image gen & voice api ================= */
 let vAudio=null,ttsWarned=false;
@@ -2240,7 +2212,7 @@ music(v){
   after(){const el=$('#mchat');if(el)el.scrollTop=el.scrollHeight;const ta=$('#mIn');if(ta)ta.addEventListener('input',()=>{ta.style.height='40px';ta.style.height=Math.min(120,ta.scrollHeight)+'px'})}};
 },
 novel(v){return novelView(v)},
-health(){return healthView()},
+calls(){return callsView()},
 novelRead(v){return novelReadView(v)},
 ctxPeek(v){const t=thread(v.id);if(!t)return{title:'不见了',body:''};const x=buildCtx(t);
   return{title:'TA 知道什么',body:`<p class="hint">这次聊天发给 TA 的全部设定，后面跟着最近 ${x.msgs.length} 条记录。</p><div class="letter"><p style="font-size:13px">${esc(x.system)}</p></div>`}},
@@ -2356,7 +2328,7 @@ settings(v){
       <label class="f">点图标的声音<select id="l-sfx" data-s="look" data-k="sfx">${[['drop','雨滴'],['ice','冰块'],['bubble','泡泡'],['mix','随机'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.sfx||'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f">桌面动效<select id="l-fxs" data-s="look" data-k="fxs">${[['drop','雨滴'],['bubble','泡泡'],['off','关掉']].map(([k,l])=>`<option value="${k}" ${(L.fx===false?'off':L.fxs==='bubble'?'bubble':'drop')===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="panel"><h2>每个App的背景</h2>
-      ${[['messages','消息'],['plaza','雨巷'],['health','健康'],['mail','信箱'],['music','音乐'],['games','游戏'],['novel','雨书'],['drawer','抽屉'],['shop','下单'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
+      ${[['messages','消息'],['plaza','雨巷'],['phone','电话'],['mail','信箱'],['music','音乐'],['games','游戏'],['novel','雨书'],['drawer','抽屉'],['shop','下单'],['days','日历'],['library','设定库'],['settings','设置']].map(([k,l])=>`<div class="row"><span class="meta"><b>${l}</b><small>${L.appWalls[k]?'已设置':'用桌面壁纸'}</small></span><span class="side h">${fileBtn('换','accept="image/*" data-img="appwall" data-id="'+k+'"')}${L.appWalls[k]?`<button class="tb" data-a="clrAppWall" data-id="${k}">去掉</button>`:''}</span></div>`).join('')}</div>
     <div class="panel"><h2>桌面图标</h2>
       <div class="inline"><img src="${esc(touchIconUrl())}" alt="现在的桌面图标" style="width:64px;height:64px;border-radius:15px;object-fit:cover;flex:none"><div class="btns">${fileBtn('用自己的图片','accept="image/*" data-img="homeicon"')}${L.homeIcon?'<button class="btn o" data-a="clrHomeIcon">恢复雪花</button>':''}</div></div></div>
     <div class="panel"><h2>应用图标</h2>
@@ -2692,7 +2664,7 @@ const A={
   newMask(){const m={id:uid(),name:'新面具',handle:'mask'+S.masks.length,avatar:'',bio:'',persona:''};S.masks.push(m);save();go({v:'maskEdit',id:m.id})},
   delMask(el){confirmTap(el,()=>{const id=cur().id;S.masks=S.masks.filter(m=>m.id!==id);if(S.activeMask===id)S.activeMask=S.masks[0].id;save();back()})},
   editWallet(){sheet(`<h3>钱包</h3><input type="number" id="walletIn" value="${S.wallet}" step="0.01" aria-label="余额"><button class="btn" data-a="saveWallet">保存</button>`)},
-  hWho(el){H().who=el.dataset.id;save();render(true)},
+  callFrom(el){startCall(dmFor(el.dataset.id),el.dataset.k)},
   /* from the wallet: a card TA gave you; from a chat's ＋: a card you give TA */
   cardAdd(el){const to=el?.dataset?.to,chars=to?[charById(to)]:S.chars.filter(visible);if(!chars[0]){toast('先添加一个角色');return}
     sheet(`<h3>${to?'送'+esc(dn(chars[0]))+'一张亲属卡':'TA给我的亲属卡'}</h3>${to?'':`<select id="cdC" aria-label="谁给的">${chars.map(c=>`<option value="${c.id}">${esc(dn(c))}</option>`).join('')}</select>`}<input type="number" id="cdL" placeholder="每月额度（空着＝不限）" inputmode="decimal" aria-label="额度"><button class="btn" data-a="cardGo" data-to="${to||''}">开通</button>${CANCEL}`)},
@@ -2869,7 +2841,7 @@ function scopeObj(s){const v=cur()||{};
   switch(s){case'look':return S.look;case'root':return S;case'chat':return S.chat;case'char':return charById(v.id);case'mask':return maskById(v.id);
     case'book':return S.books.find(x=>x.id===v.id);case'entry':return S.books.find(x=>x.id===v.id)?.entries.find(x=>x.id===v.eid);
     case'preset':return presetById(v.id);case'item':return presetById(v.id)?.items.find(x=>x.id===v.iid);
-    case'mimg':return S.media.img;case'health':return S.health;case'mtts':return S.media.tts;case'apiroot':return S.api;
+    case'mimg':return S.media.img;case'mtts':return S.media.tts;case'apiroot':return S.api;
     case'api':return apiById(v.id);case'thread':return thread(v.id);case'off':{const t=thread(v.id);return t&&(t.offline||(t.offline={...S.offline}))}}}
 function bind(e){const el=e.target;if(!el.dataset||!el.dataset.k)return;const o=scopeObj(el.dataset.s);if(!o)return;
   const val=el.type==='checkbox'?el.checked:(el.type==='range'||el.type==='number')?(el.value===''&&el.dataset.null?null:+el.value):el.value;
@@ -2934,7 +2906,7 @@ function setTouchIcon(){try{let l=document.getElementById('touchIcon');if(!l){l=
   setTouchIcon();
   /* the tick used to re-apply the whole look and re-save everything (pictures included) every 20s, which made the phone hitch; the look only changes from settings, and the background save waits for an idle moment */
   let tickSaved=0;const idle=f=>window.requestIdleCallback?requestIdleCallback(f,{timeout:3000}):setTimeout(f,200);
-  const tick=()=>{const now=Date.now(),m=S.lastTick?Math.min(180,(now-S.lastTick)/60e3):0;S.lastTick=now;if(m>0){softTick(m);lifeTick(m)}healthTick();if(now-tickSaved>60e3){tickSaved=now;idle(save)}};
+  const tick=()=>{const now=Date.now(),m=S.lastTick?Math.min(180,(now-S.lastTick)/60e3):0;S.lastTick=now;if(m>0){softTick(m);lifeTick(m)}if(now-tickSaved>60e3){tickSaved=now;idle(save)}};
   tick();setInterval(tick,20e3);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(saveT);DB.set('state',JSON.stringify(S))}else{setAppH();tick()}});
 })();
