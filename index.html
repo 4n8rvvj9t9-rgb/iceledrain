@@ -72,7 +72,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .app .wall2{position:absolute;inset:0;z-index:-1}
 @media (prefers-reduced-motion:reduce){.app{transition:none}}
 .bar{display:grid;grid-template-columns:72px minmax(0,1fr) 72px;align-items:center;background:var(--panel);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
-  padding:calc(var(--sat) + 6px) max(8px,env(safe-area-inset-right,0px)) 8px max(8px,env(safe-area-inset-left,0px))}
+  padding:calc(var(--sat) + 11px) max(8px,env(safe-area-inset-right,0px)) 8px max(8px,env(safe-area-inset-left,0px))}
 .bar h1{margin:0;font:400 20px/1.2 var(--display);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar h1 small{display:block;font:11px var(--body);color:var(--muted);letter-spacing:.06em}
 .bk{justify-self:start;background:none;border:0;color:var(--deep);font-size:15px;padding:8px 8px;display:flex;align-items:center;gap:2px}
@@ -814,11 +814,12 @@ const ICONS={
 };
 /* One icon per place you can actually go. 通讯录, 小剧场 and 经期 were icons for a tab of an app already on this screen,
    so they live in 消息, 抽屉 and 日历; 外卖 and 网购 were one screen behind a flag and are now 下单. */
+/* one row per kind: talking to them, things to read and play, everyday life and you, then the AI's setup with 设置 last */
 const APPS=[
-  {id:'messages',name:'聊天',v:'threads'},{id:'mail',name:'信箱',v:'mail'},{id:'forum',name:'论坛',v:'ig'},{id:'diary',name:'日记',v:'diary'},
+  {id:'messages',name:'聊天',v:'threads'},{id:'forum',name:'论坛',v:'ig'},{id:'mail',name:'信箱',v:'mail'},{id:'diary',name:'日记',v:'diary'},
   {id:'theater',name:'小剧场',v:'theaters'},{id:'novel',name:'小说',v:'novel'},{id:'music',name:'音乐',v:'music'},{id:'games',name:'游戏',v:'games'},
-  {id:'food',name:'外卖',v:'food',ic:'bowl'},{id:'shop',name:'网购',v:'goods'},{id:'days',name:'日历',v:'cal'},{id:'settings',name:'设置',v:'settings'},
-  {id:'library',name:'世界书',v:'books'},{id:'preset',name:'预设',v:'presets'},{id:'brain',name:'思维链',v:'think'},{id:'stickers',name:'设定',v:'setting'}];
+  {id:'food',name:'外卖',v:'food',ic:'bowl'},{id:'shop',name:'网购',v:'goods'},{id:'days',name:'日历',v:'cal'},{id:'stickers',name:'设定',v:'setting'},
+  {id:'library',name:'世界书',v:'books'},{id:'preset',name:'预设',v:'presets'},{id:'brain',name:'思维链',v:'think'},{id:'settings',name:'设置',v:'settings'}];
 /* 图标顺序 lives in 设置 · 外观; icons it has never heard of keep their default place at the end */
 const appsOrdered=()=>{const o=S.look.order||[],at=a=>{const i=o.indexOf(a.id);return i<0?o.length+APPS.indexOf(a):i};return[...APPS].sort((a,b)=>at(a)-at(b))};
 function appIcon(a){const img=S.look.icons[a.id];const n=a.id==='messages'?S.threads.reduce((s,t)=>s+(t.unread||0),0):a.id==='mail'?mailUnread():0;
