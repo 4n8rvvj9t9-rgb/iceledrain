@@ -65,6 +65,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .rej i{width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font:700 10px/15px var(--body);text-align:center;font-style:normal}
 .notice{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13.5px;color:var(--muted);min-height:40px;flex-wrap:wrap}
 .foot input{flex:1;min-width:0}
+/* X-style bottom bar: icons only */
+.foot.tabbar{align-items:center;gap:0;padding-top:6px;padding-bottom:max(6px,calc(var(--sab) - 14px))}
+.tabbar button{flex:1;position:relative;display:grid;place-items:center;height:40px;background:none;border:0;padding:0;color:var(--muted)}
+.tabbar button svg{width:26px;height:26px}.tabbar button.on{color:var(--ink)}.tabbar button.on svg{stroke-width:2.4}
+.tabbar button .av{opacity:.75}.tabbar button.on .av{opacity:1;box-shadow:0 0 0 2px var(--ink)}
+.tabbar .udot{position:absolute;top:4px;left:calc(50% + 8px);width:8px;height:8px}
 
 /* ---------- app page ---------- */
 .app{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;background:transparent;transform:scale(.28);opacity:0;pointer-events:none;transition:transform .38s cubic-bezier(.2,.85,.25,1),opacity .26s ease;border-radius:30px;overflow:hidden}
@@ -490,7 +496,7 @@ html.full .wall{height:var(--scr-h)}
 .xl .prof{margin:0 -16px;border:0;border-radius:0;border-bottom:1px solid var(--line);background:transparent;padding:0 16px 14px}
 .xl .banner{margin:0 -16px}
 .xrow{display:flex;justify-content:space-between;align-items:flex-end}
-.xedit{background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 15px;font-weight:600;font-size:14px;color:var(--ink)}
+.xbtns{display:flex;gap:8px}.xedit{background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 15px;font-weight:600;font-size:14px;color:var(--ink)}
 .xl .post.cmt{margin-left:-16px;padding-left:56px}
 .msg.me .bub{border-radius:22px 22px 6px 22px}.msg.ai .bub{border-radius:22px 22px 22px 6px}
 /* ---------- home: one clear page ---------- */
@@ -511,7 +517,7 @@ html.full .wall{height:var(--scr-h)}
 .polaroid .ph-c{padding:7px 2px 9px;text-align:center;color:rgba(70,98,116,.8);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .polaroid::before{content:"";position:absolute;top:-10px;left:50%;width:68px;height:20px;margin-left:-34px;transform:rotate(3deg);z-index:2;
   background:repeating-linear-gradient(45deg,rgba(255,255,255,.55) 0 6px,rgba(180,212,232,.5) 6px 12px);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.icons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 0;justify-items:center;padding:4px 0 6px}
+.icons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 0;justify-items:center;padding:4px 0 6px}
 .timg{display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;box-sizing:border-box;width:100%;color:#3f5b6c;font:14px/1.65 var(--display);
   background:linear-gradient(160deg,#d3e8f4,#eef4f8 55%,#e3ecf1);overflow:hidden}
 .timg span{display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden}
@@ -957,7 +963,7 @@ const APPWALL={threads:'messages',post:'messages',wallet:'messages',cal:'days',d
    up under the UI. Paint that background with whatever wallpaper is on screen so the band stops looking like a hole. */
 let painted;
 function paintCanvas(){
-  const foot=isOpen()&&!!appEl.querySelector('.foot'),wp=foot?'':isOpen()?viewWall(cur()):S.look.wallpaper,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
+  const foot=isOpen()&&!!appEl.querySelector('.foot:not(.tabbar)'),wp=foot?'':isOpen()?viewWall(cur()):S.look.wallpaper,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
   if(painted===wp+'|'+wh+foot)return;painted=wp+'|'+wh+foot;
   document.documentElement.style.backgroundColor=foot?'#f9fbfc':'';
   document.documentElement.style.backgroundImage=wp?`url("${String(wp).replace(/"/g,'%22')}")`:'';
@@ -1307,7 +1313,7 @@ function msgsHTML(t){
  /* swallow the tap that ends a long press, so holding a 红包 does not also open it */
  addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault()}},true);}
 function refreshChat(){const v=cur();if(!v||v.v!=='chat')return;const t=thread(v.id);const c=$('#content');if(!c||!t)return;c.innerHTML=msgsHTML(t);c.scrollTop=c.scrollHeight}
-const onFeed=()=>cur()?.v==='threads'&&cur().tab==='feed';
+const onFeed=()=>cur()?.v==='threads'&&['home','me'].includes(cur().tab);
 const isOpen=()=>appEl.classList.contains('open');
 function viewing(t){const v=cur();if(!v||!isOpen())return false;return v.v==='chat'&&v.id===t.id}
 function onThreadUpdate(t){const v=cur();if(!v||!isOpen())return;
@@ -1753,19 +1759,23 @@ const base_=n=>n.replace(/\.[^.]+$/,'');
 const fileBtn=(label,attrs)=>`<span class="btn o filebtn">${label}<input type="file" ${attrs}></span>`;
 const ROLE={system:'系统',user:'用户',assistant:'角色'},MODE={both:'线上+线下',online:'仅线上',offline:'仅线下'};
 const VIEWS={
+/* 聊天 is laid out like X: icons along the bottom for 首页 (动态), 消息, 通讯录 and 我; single and group chats share 消息. */
 threads(v){
-  const tab=v.tab||'dm',TT=[['dm','单聊'],['group','群聊'],['feed','动态'],['people','通讯录']];
-  if(tab==='feed'){const r=VIEWS.plaza({...v,tab:v.pt||'feed',head:tabs(TT,tab)+tabs([['feed','全部'],['me','我的主页']],v.pt||'feed','ptab')});return{...r,title:'聊天'}}
-  if(tab==='people')return{title:'聊天',right:`<button class="tb" data-a="charMenu">添加</button>`,
-    body:tabs(TT,tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
+  const tab=['home','dm','people','me'].includes(v.tab)?v.tab:'dm';
+  const bar=[['home',ICONS.plaza,'首页'],['dm',ICONS.messages,'消息'],['people',ICONS.contacts,'通讯录'],['me',ICONS.eye,'我']].map(([k,ic,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-t="${k}" aria-label="${l}">${k==='me'?av(mask(),28):ic}${k==='dm'&&S.threads.some(t=>t.unread)?'<i class="udot"></i>':''}</button>`).join('');
+  const nav={foot:bar,footCls:'tabbar'};
+  if(tab==='home')return{...VIEWS.plaza({...v,tab:'feed'}),title:'首页',...nav};
+  if(tab==='me'){const r=VIEWS.plaza({...v,tab:'me'});return{...r,title:mask().name,...nav}}
+  if(tab==='people')return{title:'通讯录',cls:'xl',...nav,right:`<button class="tb" data-a="charMenu">添加</button>`,
+    body:(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
     (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">删除好友</button></span></div>`).join(''):'')+
     `<div class="sec" style="display:flex;justify-content:space-between;align-items:center">我的面具 · 角色看到的是你戴着的那个<button class="tb" data-a="newMask">新面具</button></div>`+
     S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>${m.handle?`@${esc(m.handle)} · `:''}${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
-  const list=S.threads.filter(t=>t.type===tab&&!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
+  const list=S.threads.filter(t=>!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
   const rows=list.map(t=>{const cs=t.chars.map(charById).filter(Boolean);const lm=t.msgs[t.msgs.length-1];
     return`<button class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'},48):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><span class="xn"><b>${esc(threadTitle(t))}</b><i>${t.type==='dm'&&cs[0]?'@'+esc(cs[0].handle||cs[0].name)+' · ':''}${lm?ago(lm.t):''}${t.mode==='offline'?' · 线下':''}</i></span><small${t.unread?' class="new"':''}>${esc(lastPreview(t))}</small></span>${t.unread?'<i class="udot"></i>':''}</button>`}).join('');
-  return{title:'聊天',cls:'xl',right:`<button class="tb" data-a="newThread">新建</button>`,
-    body:tabs(TT,tab)+(rows||`<div class="empty"><big>${tab==='dm'?'很安静 T_T':'还没有群'}</big></div>`)};
+  return{title:'消息',cls:'xl',right:`<button class="tb" data-a="newThread">新建</button>`,...nav,
+    body:rows||`<div class="empty"><big>很安静 T_T</big></div>`};
 },
 chat(v){
   const t=thread(v.id);if(!t)return{title:'不见了',body:''};if(t.unread){t.unread=0;save()}
@@ -1820,7 +1830,7 @@ plaza(v){
   if(tab==='me'){
     const m=mask(),mine=S.feed.filter(p=>p.author==='me').sort((a,b)=>b.t-a.t),likes=S.feed.reduce((s,p)=>s+(p.likes||[]).filter(x=>x!=='me').length,0);
     return{title:'雨巷',cls:'xl',right:`<button class="tb" data-a="switchMask">换面具</button>`,body:head+`<div class="prof">
-      <label class="banner" style="${m.banner?`background-image:url(${m.banner})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label><div class="xrow">${av(m,84)}<button class="xedit" data-a="editMask" data-id="${m.id}">编辑资料</button></div>
+      <label class="banner" style="${m.banner?`background-image:url(${m.banner})`:''}"><input type="file" accept="image/*" data-img="banner" class="vh" aria-label="换主页背景"><span class="bedit">换背景</span></label><div class="xrow">${av(m,84)}<span class="xbtns"><button class="xedit" data-a="chatSet">聊天设置</button><button class="xedit" data-a="editMask" data-id="${m.id}">编辑资料</button></span></div>
       <div><h3>${esc(m.name)}</h3><div class="h">${m.handle?`@${esc(m.handle)} · `:''}ID ${esc(String(m.id).slice(-6).toUpperCase())}</div></div>
       ${m.bio?`<div>${esc(m.bio)}</div>`:''}
       <div class="stats"><span><b>${esc(m.follow||S.chars.length)}</b> 关注</span><span><b>${esc(m.fans||S.chars.length)}</b> 粉丝</span><span><b>${esc(m.likes||likes)}</b> 获赞</span></div>
@@ -2127,6 +2137,7 @@ const A={
     catch(e){toast(e.message,5600);if(el.isConnected){el.disabled=false;el.textContent='申请加回'}}},
   /* threads */
   newThread(){sheet(`<h3>新建</h3><button class="opt" data-a="newDm">单聊</button><button class="opt" data-a="newGroupChat">群聊</button>${CANCEL}`)},
+  chatSet(){go({v:'settings',tab:'chat'})},
   newDm(){pickChar('和谁聊？','dmGo')},
   dmGo(el){const t=dmFor(el.dataset.id);closeSheet();go({v:'chat',id:t.id})},
   newGroupChat(){if(S.chars.length<2){toast('群聊至少要 2 个角色');return}
