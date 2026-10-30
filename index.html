@@ -65,6 +65,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .rej i{width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font:700 10px/15px var(--body);text-align:center;font-style:normal}
 .notice{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13.5px;color:var(--muted);min-height:40px;flex-wrap:wrap}
 .foot input{flex:1;min-width:0}
+/* 聊天's bottom bar: 聊天 · 动态 · 我 */
+.foot.tabbar{align-items:stretch;gap:0;padding-top:4px;padding-bottom:max(4px,calc(var(--sab) - 18px))}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;padding:4px 0;color:var(--muted);font-size:11px}
+.tabbar button svg{width:24px;height:24px}.tabbar button.on{color:var(--deep);font-weight:600}
+.tabbar span{position:relative}.tabbar .udot{position:absolute;top:-24px;right:-12px;width:8px;height:8px}
+.mrows{margin:4px 0 8px;gap:0}.xl .mrows .row{border:0;margin:0;padding:10px 8px}.xl .mrows .row+.row{border-top:1px solid var(--line)}.mrows .row .chev{margin-left:auto;color:var(--muted);font-size:18px}
 
 /* ---------- app page ---------- */
 .app{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;background:transparent;transform:scale(.28);opacity:0;pointer-events:none;transition:transform .38s cubic-bezier(.2,.85,.25,1),opacity .26s ease;border-radius:30px;overflow:hidden}
@@ -951,13 +957,13 @@ function render(keep){
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
   if(keep)$('#content').scrollTop=sc;r.after&&r.after();paintCanvas();
 }
-const APPWALL={threads:'messages',post:'messages',wallet:'messages',cal:'days',days:'days',books:'library',bookEdit:'library',entryEdit:'library',presets:'preset',presetEdit:'preset',itemEdit:'preset',think:'brain',stickers:'messages',maskEdit:'settings',settings:'settings',apiEdit:'settings'};
+const APPWALL={threads:'messages',contacts:'messages',post:'messages',wallet:'messages',cal:'days',days:'days',books:'library',bookEdit:'library',entryEdit:'library',presets:'preset',presetEdit:'preset',itemEdit:'preset',think:'brain',stickers:'messages',maskEdit:'settings',settings:'settings',apiEdit:'settings'};
 /* A home-screen app can hand the page a viewport shorter than the window it actually draws in. Nothing positioned
    fixed reaches past that viewport — but the root element's background does, which is why a flat #e3edf3 band shows
    up under the UI. Paint that background with whatever wallpaper is on screen so the band stops looking like a hole. */
 let painted;
 function paintCanvas(){
-  const foot=isOpen()&&!!appEl.querySelector('.foot'),wp=foot?'':isOpen()?viewWall(cur()):S.look.wallpaper,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
+  const foot=isOpen()&&!!appEl.querySelector('.foot:not(.tabbar)'),wp=foot?'':isOpen()?viewWall(cur()):S.look.wallpaper,wh=getComputedStyle(document.documentElement).getPropertyValue('--wall-h').trim();
   if(painted===wp+'|'+wh+foot)return;painted=wp+'|'+wh+foot;
   document.documentElement.style.backgroundColor=foot?'#f9fbfc':'';
   document.documentElement.style.backgroundImage=wp?`url("${String(wp).replace(/"/g,'%22')}")`:'';
@@ -1307,7 +1313,7 @@ function msgsHTML(t){
  /* swallow the tap that ends a long press, so holding a 红包 does not also open it */
  addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault()}},true);}
 function refreshChat(){const v=cur();if(!v||v.v!=='chat')return;const t=thread(v.id);const c=$('#content');if(!c||!t)return;c.innerHTML=msgsHTML(t);c.scrollTop=c.scrollHeight}
-const onFeed=()=>cur()?.v==='threads'&&cur().tab==='feed';
+const onFeed=()=>cur()?.v==='threads'&&['feed','me'].includes(cur().tab);
 const isOpen=()=>appEl.classList.contains('open');
 function viewing(t){const v=cur();if(!v||!isOpen())return false;return v.v==='chat'&&v.id===t.id}
 function onThreadUpdate(t){const v=cur();if(!v||!isOpen())return;
@@ -1753,20 +1759,27 @@ const base_=n=>n.replace(/\.[^.]+$/,'');
 const fileBtn=(label,attrs)=>`<span class="btn o filebtn">${label}<input type="file" ${attrs}></span>`;
 const ROLE={system:'系统',user:'用户',assistant:'角色'},MODE={both:'线上+线下',online:'仅线上',offline:'仅线下'};
 const VIEWS={
+/* 聊天 is laid out like WeChat: 聊天 · 动态 · 我 along the bottom. 通讯录, 表情包, 钱包 and 聊天设置 are rows on 我. */
 threads(v){
-  const tab=v.tab||'dm',TT=[['dm','单聊'],['group','群聊'],['feed','动态'],['people','通讯录'],['stk','表情包']];
-  if(tab==='stk'){const r=VIEWS.stickers(v);return{...r,title:'聊天',sub:'',body:tabs(TT,tab)+r.body}}
-  if(tab==='feed'){const r=VIEWS.plaza({...v,tab:v.pt||'feed',head:tabs(TT,tab)+tabs([['feed','全部'],['me','我的主页']],v.pt||'feed','ptab')});return{...r,title:'聊天'}}
-  if(tab==='people')return{title:'聊天',right:`<button class="tb" data-a="charMenu">添加</button>`,
-    body:tabs(TT,tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
-    (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">已删除的好友</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>聊天记录还留着</small></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">删除好友</button></span></div>`).join(''):'')+
-    `<div class="sec" style="display:flex;justify-content:space-between;align-items:center">我的面具 · 角色看到的是你戴着的那个<button class="tb" data-a="newMask">新面具</button></div>`+
-    S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>${m.handle?`@${esc(m.handle)} · `:''}${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
-  const list=S.threads.filter(t=>t.type===tab&&!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
+  const tab=['chats','feed','me'].includes(v.tab)?v.tab:'chats';
+  const bar=[['chats','聊天',ICONS.messages],['feed','动态',ICONS.plaza],['me','我',ICONS.contacts]].map(([k,l,ic])=>`<button class="${tab===k?'on':''}" data-a="tab" data-t="${k}">${ic}<span>${l}${k==='chats'&&S.threads.some(t=>t.unread)?'<i class="udot"></i>':''}</span></button>`).join('');
+  const nav={foot:bar,footCls:'tabbar'};
+  if(tab==='feed')return{...VIEWS.plaza({...v,tab:'feed'}),title:'动态',...nav};
+  if(tab==='me'){const r=VIEWS.plaza({...v,tab:'me'}),row=(a,ic,l,ex='')=>`<button class="row" data-a="${a}" ${ex}><span class="ic-g sm">${ICONS[ic]}</span><span class="meta"><b>${l}</b></span><span class="chev">›</span></button>`;
+    const i=r.body.indexOf('</div>',r.body.lastIndexOf('class="stats"'))+6;
+    return{...r,title:'我',...nav,body:r.body.slice(0,i)+`<div class="grp mrows">${row('open','contacts','通讯录','data-v="contacts"')}${row('open','stickers','表情包','data-v="stickers"')}${row('walletOpen','wallet','钱包')}${row('chatSet','messages','聊天设置')}</div>`+r.body.slice(i)}}
+  const list=S.threads.filter(t=>!(t.type==='dm'&&rel(charById(t.chars[0])||{rel:{}}).youDeleted)).sort((a,b)=>(b.t||0)-(a.t||0));
   const rows=list.map(t=>{const cs=t.chars.map(charById).filter(Boolean);const lm=t.msgs[t.msgs.length-1];
     return`<button class="row" data-a="openThread" data-id="${t.id}">${t.type==='dm'?av(cs[0]||{name:'?'},48):`<span class="stack">${cs.slice(0,3).map(c=>av(c,32)).join('')}</span>`}<span class="meta"><span class="xn"><b>${esc(threadTitle(t))}</b><i>${t.type==='dm'&&cs[0]?'@'+esc(cs[0].handle||cs[0].name)+' · ':''}${lm?ago(lm.t):''}${t.mode==='offline'?' · 线下':''}</i></span><small${t.unread?' class="new"':''}>${esc(lastPreview(t))}</small></span>${t.unread?'<i class="udot"></i>':''}</button>`}).join('');
-  return{title:'聊天',cls:'xl',right:`<button class="tb" data-a="newThread">新建</button>`,
-    body:tabs(TT,tab)+(rows||`<div class="empty"><big>${tab==='dm'?'很安静 T_T':'还没有群'}</big></div>`)};
+  return{title:'聊天',cls:'xl',right:`<button class="tb" data-a="newThread" aria-label="新建" style="font-size:26px;line-height:1;padding:0 10px">＋</button>`,...nav,
+    body:rows||`<div class="empty"><big>很安静 T_T</big></div>`};
+},
+contacts(v){
+  return{title:'通讯录',right:`<button class="tb" data-a="charMenu">添加</button>`,
+    body:(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||`<div class="empty"><big>还没有角色</big></div>`)+
+    (S.chars.some(c=>rel(c).youDeleted)?`<div class="sec">TA删了你 / 以前删掉的</div>`+S.chars.filter(c=>rel(c).youDeleted).map(c=>`<div class="row">${av(c)}<span class="meta"><b>${esc(dn(c))}</b></span><span class="side h"><button class="tb" data-a="reAdd" data-id="${c.id}">重新添加</button><button class="tb red" data-a="delChar" data-id="${c.id}">删除好友</button></span></div>`).join(''):'')+
+    `<div class="sec" style="display:flex;justify-content:space-between;align-items:center">我的面具 · 角色看到的是你戴着的那个<button class="tb" data-a="newMask">新面具</button></div>`+
+    S.masks.map(m=>`<div class="row">${av(m)}<button class="meta" data-a="editMask" data-id="${m.id}"><b>${esc(m.name)}</b><small>${m.handle?`@${esc(m.handle)} · `:''}${esc(m.persona?m.persona.replace(/\n/g,' '):'还没写人设')}</small></button><span class="side">${m.id===S.activeMask?'<span class="pill fill">戴着</span>':`<button class="tb" data-a="useMask" data-id="${m.id}">戴上</button>`}</span></div>`).join('')};
 },
 chat(v){
   const t=thread(v.id);if(!t)return{title:'不见了',body:''};if(t.unread){t.unread=0;save()}
@@ -2127,7 +2140,8 @@ const A={
       const heart=(ex.inner[0]||lines.slice(1).join(' ')).trim();if(heart)t.msgs[t.msgs.length-1].inner=heart;save();render()}
     catch(e){toast(e.message,5600);if(el.isConnected){el.disabled=false;el.textContent='申请加回'}}},
   /* threads */
-  newThread(){sheet(`<h3>新建</h3><button class="opt" data-a="newDm">单聊</button><button class="opt" data-a="newGroupChat">群聊</button>${CANCEL}`)},
+  newThread(){sheet(`<h3>新建</h3><button class="opt" data-a="newDm">发起单聊</button><button class="opt" data-a="newGroupChat">发起群聊</button><button class="opt" data-a="charMenu">添加角色</button>${CANCEL}`)},
+  chatSet(){go({v:'settings',tab:'chat'})},
   newDm(){pickChar('和谁聊？','dmGo')},
   dmGo(el){const t=dmFor(el.dataset.id);closeSheet();go({v:'chat',id:t.id})},
   newGroupChat(){if(S.chars.length<2){toast('群聊至少要 2 个角色');return}
