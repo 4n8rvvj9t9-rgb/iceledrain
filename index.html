@@ -1754,8 +1754,7 @@ const fileBtn=(label,attrs)=>`<span class="btn o filebtn">${label}<input type="f
 const ROLE={system:'系统',user:'用户',assistant:'角色'},MODE={both:'线上+线下',online:'仅线上',offline:'仅线下'};
 const VIEWS={
 threads(v){
-  const tab=v.tab||'dm',TT=[['dm','单聊'],['group','群聊'],['feed','动态'],['people','通讯录'],['stk','表情包']];
-  if(tab==='stk'){const r=VIEWS.stickers(v);return{...r,title:'聊天',sub:'',body:tabs(TT,tab)+r.body}}
+  const tab=v.tab||'dm',TT=[['dm','单聊'],['group','群聊'],['feed','动态'],['people','通讯录']];
   if(tab==='feed'){const r=VIEWS.plaza({...v,tab:v.pt||'feed',head:tabs(TT,tab)+tabs([['feed','全部'],['me','我的主页']],v.pt||'feed','ptab')});return{...r,title:'聊天'}}
   if(tab==='people')return{title:'聊天',right:`<button class="tb" data-a="charMenu">添加</button>`,
     body:tabs(TT,tab)+(S.chars.filter(c=>!rel(c).youDeleted).map(c=>`<button class="row" data-a="editChar" data-id="${c.id}">${av(c)}<span class="meta"><b>${esc(dn(c))}</b><small>${c.remark?esc(c.name)+' · ':''}${esc(c.sign||'@'+(c.handle||c.name))}</small></span>${rel(c).youBlocked?'<span class="pill">已拉黑</span>':rel(c).theyBlocked?'<span class="pill">拉黑了你</span>':''}</button>`).join('')||``)+
