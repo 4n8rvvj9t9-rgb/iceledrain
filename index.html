@@ -65,6 +65,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .rej i{width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font:700 10px/15px var(--body);text-align:center;font-style:normal}
 .notice{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13.5px;color:var(--muted);min-height:40px;flex-wrap:wrap}
 .foot input{flex:1;min-width:0}
+.minput{display:flex;gap:8px;align-items:flex-end}
+.minput textarea{flex:1;min-height:0;height:40px;max-height:120px;resize:none;border-radius:20px;padding:8px 14px}
+.minput .sq{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;padding:0}
+.minput .sq svg{width:20px;height:20px}
 /* X-style bottom bar: icons only */
 .foot.tabbar{align-items:center;gap:0;padding-top:6px;padding-bottom:max(6px,calc(var(--sab) - 14px))}
 .tabbar button{flex:1;position:relative;display:grid;place-items:center;height:40px;background:none;border:0;padding:0;color:var(--muted)}
@@ -645,7 +649,7 @@ const def=()=>({v:4,loc:null,wx:{},days:[],
   presets:[{id:'p1',name:'默认',items:DEFAULT_ITEMS()}],activePreset:'p1',
   offline:{style:'细腻，有画面感',words:300,pov:'third'},
   cards:[],personaTpls:[{id:'pt1',name:'基础模板',text:PERSONA_TPL}],
-  threads:[],feed:[],notes:[],
+  threads:[],feed:[],notes:[],novel:{rank:[],books:[]},
   stickers:{groups:[{id:'g1',name:'默认',items:[]}]},
   lastTick:0,events:[],bkKey:false,lastSeen:0,
   tok:{n:0,i:0,o:0,img:0,by:{},since:Date.now()}
@@ -673,7 +677,7 @@ function mergeState(d){
   s.presets.forEach(p=>(p.items||[]).forEach(i=>{if(i.content===ONLINE_OLD)i.content=ONLINE_DEF}));
   /* 论坛 信箱 日记 小剧场 小说 音乐 游戏 外卖 网购 are gone: drop what they kept, and the songs saved on the side */
   for(const x of d.music?.songs||[])if(x?.local)DB.del('song:'+x.id);
-  for(const k of ['soc','mail','mailAt','orders','shop','novel','diary','diaryAuto','diaryMark','theaters','music'])delete s[k];
+  for(const k of ['soc','mail','mailAt','orders','shop','diary','diaryAuto','diaryMark','theaters','music'])delete s[k];
   delete s.chat.mailAuto;delete s.lock;delete s.bubble;delete s.cycle;s.v=4;
   return s;
 }
@@ -779,8 +783,8 @@ const ICONS={
 /* Only what the chat needs: the chat itself (表情包 and 动态 live inside it), the AI's setup, the calendar whose
    纪念日 reach the prompt, and 设置 last. Fewer icons is less for the home screen to animate and blur. */
 const APPS=[
-  {id:'messages',name:'聊天',v:'threads'},{id:'library',name:'世界书',v:'books'},{id:'preset',name:'预设',v:'presets'},
-  {id:'brain',name:'思维链',v:'think'},{id:'days',name:'日历',v:'cal'},{id:'settings',name:'设置',v:'settings'}];
+  {id:'messages',name:'聊天',v:'threads'},{id:'novel',name:'小说',v:'novel'},{id:'library',name:'世界书',v:'books'},
+  {id:'preset',name:'预设',v:'presets'},{id:'brain',name:'思维链',v:'think'},{id:'settings',name:'设置',v:'settings'}];
 /* 图标顺序 lives in 设置 · 外观; icons it has never heard of keep their default place at the end */
 const appsOrdered=()=>{const o=S.look.order||[],at=a=>{const i=o.indexOf(a.id);return i<0?o.length+APPS.indexOf(a):i};return[...APPS].sort((a,b)=>at(a)-at(b))};
 function appIcon(a){const img=S.look.icons[a.id];const n=a.id==='messages'?S.threads.reduce((s,t)=>s+(t.unread||0),0):0;
@@ -957,7 +961,7 @@ function render(keep){
   for(const id in kept){const x=document.getElementById(id);if(x)x.value=kept[id]}
   if(keep)$('#content').scrollTop=sc;r.after&&r.after();paintCanvas();
 }
-const APPWALL={threads:'messages',post:'messages',wallet:'messages',cal:'days',days:'days',books:'library',bookEdit:'library',entryEdit:'library',presets:'preset',presetEdit:'preset',itemEdit:'preset',think:'brain',stickers:'messages',maskEdit:'settings',settings:'settings',apiEdit:'settings'};
+const APPWALL={threads:'messages',novel:'novel',novelRead:'novel',post:'messages',wallet:'messages',cal:'days',days:'days',books:'library',bookEdit:'library',entryEdit:'library',presets:'preset',presetEdit:'preset',itemEdit:'preset',think:'brain',stickers:'messages',maskEdit:'settings',settings:'settings',apiEdit:'settings'};
 /* A home-screen app can hand the page a viewport shorter than the window it actually draws in. Nothing positioned
    fixed reaches past that viewport — but the root element's background does, which is why a flat #e3edf3 band shows
    up under the UI. Paint that background with whatever wallpaper is on screen so the band stops looking like a hole. */
@@ -1621,9 +1625,60 @@ function shopTick(now){const me=mask().name;
     sysMsg(t,m.from==='me'?`${dn(c)}签收了你寄的快递`:`${dn(c)}寄给你的快递到了`);t.t=now;save();onThreadUpdate(t);
     logEvent(c?.id||null,m.from==='me'?`${c?.name}签收了${me}寄来的快递：${m.content}`:`${me}收到了${c?.name}寄的快递：${m.content}`);
     if(m.from==='me'){if(!busy.has(t.id)&&!call)reply(t,'（你刚刚签收了'+me+'寄给你的快递：'+m.content+'。）')}else if(!viewing(t)){t.unread=(t.unread||0)+1}}}
-/* ================= 作息 · TA 心里的事 ================= */
+/* ================= 雨书 · 作息 · TA 心里的事 ================= */
 let genBusy=false;
 const pj=(txt,arr)=>{const m=String(txt||'').match(arr?/\[[\s\S]*\]/:/\{[\s\S]*\}/);try{return m?JSON.parse(m[0]):null}catch(e){return null}};
+/* 雨书 */
+const NV=()=>S.novel||(S.novel={rank:[],books:[]});
+function leadNames(b){const L=b.leads||{},c=charById(L.charId),me=mask().name;return L.kind==='me'?me:L.kind==='char'?(c?.name||''):L.kind==='both'?`${me}和${c?.name||''}`:(L.other||'')}
+function leadsDesc(b){const L=b.leads||{},c=charById(L.charId),me=mask(),cut=x=>String(x||'').replace(/\s+/g,' ').slice(0,300),o=[];
+  if(L.kind==='me'||L.kind==='both')o.push(`${me.name}${me.persona?'（'+cut(me.persona)+'）':''}`);if((L.kind==='char'||L.kind==='both')&&c)o.push(`${c.name}（${cut(c.persona)}）`);if(L.kind==='other'&&L.other)o.push(L.other);
+  return o.length?`主角：${o.join('；')}。主角的名字就用这些名字。`:''}
+let nvBusy=false;
+/* 前情：one line per chapter, so the opening of the book survives however long it gets. Books saved before
+   b.sum existed only have the rolling b.recap string — keep feeding that one until every chapter has its own line. */
+function novelPrev(b){const n=b.chapters.length;if(!n)return'';
+  const sum=Array.isArray(b.sum)?b.sum:[],done=sum.filter(Boolean).length,o=[];
+  if(done){let L=b.chapters.map((c,i)=>`第${i+1}章 ${c.title}：${sum[i]||c.text.replace(/\s+/g,' ').slice(0,60)}`);
+    if(L.length>18)L=[...L.slice(0,4),`…（中间几章略）…`,...L.slice(-13)];
+    o.push('已经写过的章节：\n'+L.join('\n').slice(-2000))}
+  if(b.recap&&done<n)o.push('更早的前情：'+b.recap);
+  o.push(`第1章开头（后面不要和这里的设定打架）：${b.chapters[0].text.slice(0,400)}`);
+  o.push(`上一章（第${n}章 ${b.chapters[n-1].title}）结尾：${b.chapters[n-1].text.slice(-700)}`);
+  return o.join('\n\n')}
+async function novelChapter(b){const n=b.chapters.length+1;
+  const prev=novelPrev(b);
+  const txt=await callAI(`你是一位很会写网文的作者${b.genre?'，擅长'+b.genre:''}。文笔流畅，有画面感，节奏紧凑，对话生动，该狗血就狗血。`,[{role:'user',content:`书名：${b.title||'（还没起，请你起一个）'}\n${b.genre?'题材：'+b.genre+'\n':''}${b.brief?'想要的内容：'+b.brief+'\n':''}${leadsDesc(b)}\n${prev}\n\n写第${n}章，1500字左右。${b.title?'':'第一行写书名《…》，'}${b.title?'第一行':'第二行'}写章节标题（例如「第${n}章 雨夜」），之后是正文。正文写完之后，最后单独一行写：【摘要】一句话说清这一章发生了什么，40字以内。只输出这些。`}],{max:4096,tag:'novel'});
+  let ls=String(txt).trim().split('\n');if(!b.title){const m=(ls[0]||'').match(/《(.+?)》/);b.title=m?m[1]:'无题';if(m)ls=ls.slice(1)}
+  const head=(ls[0]||`第${n}章`).trim();let body=ls.slice(1).join('\n').trim()||String(txt).trim();
+  let sum='';const mm=body.match(/\n\s*【摘要】\s*([^\n]+)\s*$/);
+  if(mm){sum=mm[1].trim().slice(0,60);body=body.slice(0,mm.index).trim()}
+  if(!sum)sum=body.replace(/\s+/g,' ').slice(0,60);
+  b.chapters.push({title:head.slice(0,30),text:body,comments:[]});
+  (b.sum||(b.sum=[]))[b.chapters.length-1]=sum;b.ch=b.chapters.length-1;b.t=Date.now();save()}
+async function novelRank(){const txt=await callAI('你是网文平台的编辑，熟悉各种题材。',[{role:'user',content:'编一份今天的小说热门排行榜，10本，各种题材都要有，至少三本是狗血的古早虐恋或霸总。只输出 JSON 数组，每项：{"title":"书名","author":"笔名","tags":["题材"],"blurb":"一句话简介，30字内","hot":"热度，比如 98.6万"}'}],{max:2048,side:true,tag:'novel'});
+  const a=pj(txt,true);if(!Array.isArray(a)||!a.length)throw new Error('排行榜没生成出来，再试一次');NV().rank=a.slice(0,12);save()}
+function novelView(v){const N=NV(),tab=v.tab||'rank',chars=S.chars.filter(visible),head=tabs([['rank','排行榜'],['shelf','书架'],['write','写一本']],tab);
+  if(tab==='shelf'){const L=[...N.books].sort((a,b)=>b.t-a.t);return{title:'雨书',body:head+(L.map(b=>`<div class="row"><button class="meta" data-a="novelOpen" data-id="${b.id}"><b>《${esc(b.title)}》</b><small>${esc(b.genre)}${leadNames(b)?' · 主角 '+esc(leadNames(b).slice(0,24)):''} · ${b.chapters.length} 章</small></button><span class="side h"><span>${ago(b.t)}</span><button class="tb red" data-a="novelDel" data-id="${b.id}">删掉</button></span></div>`).join('')||`<div class="empty"><big>书架是空的</big></div>`)}}
+  if(tab==='write'){
+    return{title:'雨书',body:head+`<div class="panel"><h2>题材（可以不写）</h2><input type="text" id="nvG" value="${esc(v.g||'')}" aria-label="题材"></div>
+      <div class="panel"><h2>主角</h2><textarea id="nvO" aria-label="主角">${esc(v.o||'')}</textarea></div>
+      <div class="panel"><h2>书名和内容</h2><input type="text" id="nvT" value="${esc(v.ti||'')}" placeholder="书名（可以空着，让作者起）" aria-label="书名"><textarea id="nvC" placeholder="想看什么样的故事（可以空着）" aria-label="内容">${esc(v.co||'')}</textarea>
+        <button class="btn" data-a="novelWrite" style="align-self:flex-start">开写</button></div>`}}
+  return{title:'雨书',right:`<button class="tb" data-a="novelRank">刷新</button>`,body:head+(N.rank.map((r,i)=>`<div class="letter"><div class="lh"><span><b>No.${i+1} 《${esc(r.title)}》</b></span><span>${esc(r.hot||'')}</span></div><small class="hint">${esc(r.author||'')} · ${esc((r.tags||[]).join(' / '))}</small><p>${esc(r.blurb||'')}</p><button class="btn o" data-a="novelFromRank" data-i="${i}" style="align-self:flex-start">开始看</button></div>`).join('')||``)}}
+/* 看到哪一章记在书上（b.ch），不是记在导航栈上，所以下次打开还接着上次那里。老书没有 b.ch，退回最后一章。 */
+function novelCh(b){return Math.max(0,Math.min(b.ch??b.chapters.length-1,b.chapters.length-1))}
+function novelReadView(v){const b=NV().books.find(x=>x.id===v.id);if(!b)return{title:'不见了',body:''};const i=novelCh(b),ch=b.chapters[i],chars=S.chars.filter(visible),w=v.with||chars[0]?.id;
+  if(!ch)return{title:'《'+b.title+'》',body:`<div class="empty"><big>还没写好</big><button class="btn o" data-a="novelNext">写第一章</button></div>`};
+  return{title:'《'+b.title+'》',sub:ch.title,right:`<button class="tb" data-a="novelToc">目录</button>`,body:`<div class="letter"><p>${esc(ch.text)}</p></div>
+    ${(ch.comments||[]).map(x=>`<div class="letter"><div class="lh"><span><b>${esc(x.c==='me'?mask().name:dn(charById(x.c)))}</b></span><span>${ago(x.t)}</span></div><p>${esc(x.text)}</p></div>`).join('')}
+    <div class="minput"><textarea id="nvIn" rows="1" placeholder="说点什么…" aria-label="说点什么"></textarea><button class="sq" data-a="novelAsk" aria-label="发送">${ICONS.send}</button></div>
+    <div class="panel"><h2>一起看</h2><div class="chips">${chars.map(c=>`<button class="${w===c.id?'on':''}" data-a="novelWith" data-id="${c.id}">${esc(dn(c))}</button>`).join('')}</div><button class="btn o" data-a="novelAsk" style="align-self:flex-start">问问 TA 怎么看</button></div>
+    <div class="btns"><button class="btn o" data-a="shareChapter">分享这章</button>${i>0?'<button class="btn o" data-a="novelNav" data-d="-1">上一章</button>':''}<button class="btn" data-a="novelNav" data-d="1">${i<b.chapters.length-1?'下一章':'写下一章'}</button></div>`,
+    after(){if(v._c!==i){v._c=i;$('#content').scrollTop=0}}}}
+function keepNv(v){const g=k=>{const e=document.getElementById(k);return e?e.value:undefined};const a=g('nvG'),b=g('nvT'),c=g('nvC'),d=g('nvO');if(a!==undefined)v.g=a;if(b!==undefined)v.ti=b;if(c!==undefined)v.co=c;if(d!==undefined)v.o=d}
+function novelGo(b){if(nvBusy)return;nvBusy=true;const v=cur();if(v?.v==='novel')v.tab='shelf';go({v:'novelRead',id:b.id});toast('作者在写第一章…',60000);
+  novelChapter(b).then(()=>{$('#toast').hidden=true;const v=cur();if(v?.v==='novelRead'&&v.id===b.id)render()}).catch(e=>toast(e.message||'没写出来',4000)).finally(()=>nvBusy=false)}
 async function heartGen(c){const me=mask().name;
   const txt=await callAI(sysFor(c,'这是你心里最私密的角落，只有你自己知道。\n\n'+storyFor(c)),[{role:'user',content:`以${c.name}的内心写出：1. 你现在眼里的${me}是什么样的人、你对TA真实的看法（一段话，80字内）；2. 愿望清单 3到5条（想和${me}一起做的事、自己想实现的事），已经实现的标 done:true；3. 说不出口的话 2到4句，每句标一个心情（难过、委屈、开心、心动、想念、不安、嫉妒……）。${c.heart?'之前的心事：'+JSON.stringify({view:c.heart.view,wishes:c.heart.wishes}).slice(0,500)+'。有变化才改，没变化可以保留。':''}只输出 JSON：{"view":"…","wishes":[{"text":"…","done":false}],"unsaid":[{"mood":"…","text":"…"}]}`}],{max:1536,side:true});
   const h=pj(txt);if(!h||!h.view)throw new Error('TA 把心事藏起来了，再试一次');c.heart={view:String(h.view),wishes:(h.wishes||[]).slice(0,6),unsaid:(h.unsaid||[]).slice(0,5),t:Date.now()};save()}
@@ -1935,6 +1990,8 @@ stickers(v){
     
     ${g.items.length?`<div class="sgrid">${g.items.map(s=>`<button data-a="editSticker" data-id="${s.id}"><img src="${esc(s.src)}" alt="${esc(s.name)}" loading="lazy"><span>${esc(s.name)}</span></button>`).join('')}</div>`:''}</div>`:'')};
 },
+novel(v){return novelView(v)},
+novelRead(v){return novelReadView(v)},
 phone(v){const c=charById(v.id);if(!c)return{title:'不见了',body:''};
   if(v.force||!c.phone?.apps){v.force=0;phoneOpen(c,v.how||'sneak')}
   return{title:dn(c)+'的手机',cls:'pxv',sub:(c.phone.how==='open'?'当面看':'偷偷看')+' · '+ago(c.phone.t),right:`<button class="tb" data-a="phoneAgain">重新翻</button>`,
@@ -2026,8 +2083,8 @@ settings(v){
       </div>
     <div class="panel"><h2>天气和日子</h2>
       <label class="ck"><input type="checkbox" id="ch-world" data-s="chat" data-k="world" ${C.world?'checked':''}>TA知道天气、节日、生日和纪念日</label>
-      <label class="ck"><input type="checkbox" id="ch-time" data-s="chat" data-k="time" ${C.time!==false?'checked':''}>TA知道现在几点、隔了多久没聊</label>
-      <div class="btns"><button class="btn o" data-a="setCity">你的城市：${S.loc?esc(S.loc.name):'还没设'}</button><button class="btn o" data-a="open" data-v="cal" data-t="days">纪念日</button></div>
+      <label class="ck"><input type="checkbox" id="ch-time" data-s="chat" data-k="time" ${C.time!==false?'checked':''}>TA知道今天几号、星期几、现在几点、隔了多久没聊</label>
+      <div class="btns"><button class="btn o" data-a="setCity">你的城市：${S.loc?esc(S.loc.name):'还没设'}</button><button class="btn o" data-a="open" data-v="cal" data-t="days">日历 · 纪念日</button></div>
       </div>
     <div class="panel"><h2>上下文</h2>
       <label class="f">每次读取最近几条消息<span class="inline"><input type="range" id="ch-ctx" min="6" max="200" step="2" data-s="chat" data-k="ctx" value="${C.ctx}"><output>${C.ctx}</output></span></label>
@@ -2119,7 +2176,10 @@ const A={
   /* a shared card opens what was shared; old shares and things since deleted open as plain text */
   shareOpen(el){const t=thread(cur().id),m=t?.msgs[+el.dataset.i];if(!m)return;const r=m.ref||{};
     if(r.post&&S.feed.some(x=>x.id===r.post)){go({v:'post',id:r.post});return}
+    const b=r.book&&NV().books.find(x=>x.id===r.book);if(b&&b.chapters[r.ch]){b.ch=r.ch;save();go({v:'novelRead',id:b.id});return}
     sheet(`<h3>${esc(m.title)}</h3>${m.sub?`<p class="hint" style="text-align:center">${esc(m.sub)}</p>`:''}<div class="letter"><p>${esc(m.text||'（没有内容）')}</p></div>${CANCEL}`)},
+  shareChapter(){const v=cur(),b=NV().books.find(x=>x.id===v.id);if(!b)return;const ch=b.chapters[novelCh(b)];
+    if(ch)shareSheet({type:'share',kind:'novel',title:'《'+b.title+'》',sub:ch.title,text:ch.text,ref:{book:b.id,ch:novelCh(b)}})},
   sharePost(el){const p=S.feed.find(x=>x.id===el.dataset.id);if(p)shareSheet({type:'share',kind:'post',title:authorOf(p.author,p).name+'的动态',sub:'',text:p.text,ref:{post:p.id}})},
   /* 转发 puts a post of your own on the board that quotes the original; 分享给 TA sends it into a chat */
   tab(el){const v=cur();v.tab=el.dataset.t||null;v.err=0;render()},
@@ -2438,6 +2498,29 @@ const A={
   dl(){S.lastBackup=Date.now();save();if(cur()?.v==='data')setTimeout(()=>render(true),300);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bkJSON()],{type:'application/json'}));a.download='冰雨机备份-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove()},
   copyBk(){S.lastBackup=Date.now();save();copy(bkJSON(),'备份复制好了，存到备忘录里');if(cur()?.v==='data')render(true)},
   tokClr(el){confirmTap(el,()=>{S.tok=def().tok;save();render(true)})},
+  novelRank(){if(nvBusy)return;nvBusy=true;toast('去看看榜单…',2000);novelRank().then(()=>render(true)).catch(e=>toast(e.message||'没刷出来',4000)).finally(()=>nvBusy=false)},
+  novelFromRank(el){const r=NV().rank[+el.dataset.i];if(!r||nvBusy)return;const b={id:uid(),title:r.title,genre:(r.tags||[]).join('、')||'网文',brief:r.blurb||'',leads:{kind:'other',other:''},chapters:[],t:Date.now()};NV().books.push(b);save();novelGo(b)},
+  novelWrite(){const v=cur();keepNv(v);const genre=(v.g||'').trim();if(!genre&&!v.co){toast('写点想看的内容吧');return}if(nvBusy)return;
+    const b={id:uid(),title:v.ti||'',genre,brief:v.co||'',leads:{kind:'other',other:(v.o||'').trim()},chapters:[],t:Date.now()};NV().books.push(b);save();novelGo(b)},
+  novelOpen(el){go({v:'novelRead',id:el.dataset.id})},
+  novelWith(el){cur().with=el.dataset.id;render(true)},
+  novelNav(el){const v=cur(),b=NV().books.find(x=>x.id===v.id);if(!b)return;const i=novelCh(b)+ +el.dataset.d;
+    if(i<b.chapters.length){b.ch=Math.max(0,i);save();render();return}if(nvBusy)return;nvBusy=true;toast('作者在写下一章…',60000);
+    novelChapter(b).then(()=>{$('#toast').hidden=true;if(cur()===v)render()}).catch(e=>toast(e.message||'没写出来',4000)).finally(()=>nvBusy=false)},
+  novelToc(){const b=NV().books.find(x=>x.id===cur().id);if(!b||!b.chapters.length)return;const ci=novelCh(b);
+    sheet(`<h3>目录</h3><div class="mlist">`+b.chapters.map((c,i)=>`<button class="opt l" data-a="novelToCh" data-i="${i}"><span><b>${esc(c.title||'第'+(i+1)+'章')}</b></span><i>${i===ci?'在读':(c.comments||[]).length?'💬 '+c.comments.length:''}</i></button>`).join('')+`</div>`+CANCEL)},
+  novelToCh(el){const b=NV().books.find(x=>x.id===cur().id);if(!b)return;b.ch=+el.dataset.i;save();closeSheet();render()},
+  novelDel(el){confirmTap(el,()=>{const id=el.dataset.id,N=NV();N.books=N.books.filter(b=>b.id!==id);save();render(true)})},
+  novelNext(){A.novelNav({dataset:{d:'1'}})},
+  novelAsk(){const v=cur(),b=NV().books.find(x=>x.id===v.id),chars=S.chars.filter(visible),c=charById(v.with||chars[0]?.id);if(!b||!c||nvBusy)return;
+    const i=novelCh(b),ch=b.chapters[i],me=mask().name,inp=$('#nvIn'),say=(inp?.value||'').trim(),cm=(ch.comments||=[]);if(inp)inp.value='';if(say)cm.push({c:'me',text:say,t:Date.now()});nvBusy=true;toast(`${dn(c)}在${cm.length?'想':'看'}…`,30000);
+    const talk=cm.map(x=>(x.c==='me'?me:dn(charById(x.c)))+'：'+x.text).join('\n');
+    callAI(sysFor(c,`你和${me}在一起看一本网络小说。`+extraFor(c)),[{role:'user',content:`《${b.title}》${ch.title}
+${ch.text.slice(0,2500)}
+
+${talk?`你们刚才在聊这一章：\n${talk}\n\n接着${me}的话，用${c.name}的口吻回一句，自然聊天，30到100字。`:`看完这一章，用${c.name}的口吻说说你的感想或吐槽，可以联系到你和${me}，50到120字。`}只输出你说的话。`}],{max:1024,side:true,tag:'novel'})
+      .then(txt=>{$('#toast').hidden=true;cm.push({c:c.id,text:String(txt).trim(),t:Date.now()});logEvent(c.id,`${c.name}和${me}一起看了小说《${b.title}》${ch.title}，${c.name}说：「${String(txt)}」`);save();if(cur()===v)render(true)})
+      .catch(e=>toast(e.message||'TA 没说话',4000)).finally(()=>nvBusy=false)},
   routineGen(el){const c=charById(el.dataset.id||cur().id);if(!c||genBusy)return;genBusy=true;toast('排一排 TA 的作息…',20000);routineGen(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没生成出来',4000)).finally(()=>genBusy=false)},
   nowDoing(el){const c=charById(el.dataset.id);if(!c||genBusy)return;genBusy=true;toast('偷偷看一眼…',20000);nowDoing(c).then(()=>{$('#toast').hidden=true;render(true)}).catch(e=>toast(e.message||'没看到',4000)).finally(()=>genBusy=false)},
   persist(){(navigator.storage?.persist?navigator.storage.persist():Promise.resolve(false)).then(ok=>{toast(ok?'好了，浏览器不会随便清掉冰雨机的数据':'浏览器没答应，记得常备份');render(true)})},
